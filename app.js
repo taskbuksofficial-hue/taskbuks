@@ -119,16 +119,22 @@ function render() {
 // --- SETUP ---
 
 function setupNavigation() {
+    console.log("Setting up navigation...");
     const navItems = document.querySelectorAll('.nav-item');
     const sections = document.querySelectorAll('.page-section');
 
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
+            console.log("Nav item clicked:", item.dataset.target);
             navItems.forEach(nav => {
                 nav.classList.remove('text-primary', 'active');
                 nav.classList.add('text-slate-400', 'dark:text-gray-500');
             });
 
+            // Handle button style (active state)
+            // Note: This logic assumes the clicked button should become active. 
+            // For "Refer Now" button on Home, we don't want it to look like a tab, 
+            // but for now we keep the logic consistent to ensure visual feedback.
             const button = e.currentTarget;
             button.classList.remove('text-slate-400', 'dark:text-gray-500');
             button.classList.add('text-primary', 'active');
@@ -142,6 +148,7 @@ function setupNavigation() {
             });
         });
     });
+    console.log("Navigation setup complete. Items found:", navItems.length);
 }
 
 function setupGlobalListeners() {
