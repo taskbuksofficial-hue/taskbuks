@@ -30,8 +30,13 @@ const defaultState = {
 class Store {
     constructor() {
         // Load from local storage or use default
-        const saved = localStorage.getItem('taskBuksState_v2');
-        this.state = saved ? JSON.parse(saved) : defaultState;
+        try {
+            const saved = localStorage.getItem('taskBuksState_v2');
+            this.state = saved ? JSON.parse(saved) : defaultState;
+        } catch (e) {
+            console.warn("LocalStorage access failed (likely file:// protocol). Using default state.");
+            this.state = defaultState;
+        }
         this.listeners = new Set();
     }
 
