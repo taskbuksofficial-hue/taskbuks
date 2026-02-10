@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Task Buks</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22C55E", // Vibrant green from logo
+                        secondary: "#EAB308", // Gold from logo
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-header {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .gradient-banner {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+        }
+
+        .gold-glow {
+            box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth transitions for section switching */
+        .page-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300 min-h-screen pb-24">
+
+    <!-- Header -->
+    <div class="h-12 w-full"></div>
+    <header
+        class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 h-16 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-1">
+            <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Task<span
+                    class="text-primary">Buks</span></span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                <span class="material-icons-round text-secondary text-base">monetization_on</span>
+                <span class="text-sm font-bold user-balance">0</span>
+            </div>
+            <button
+                class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center relative text-slate-600 dark:text-gray-300">
+                <span class="material-icons-round">notifications</span>
+                <span
+                    class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="px-5 pt-6 pb-24">
+
+        <!-- HOME SECTION -->
+        <div id="home" class="page-section space-y-8">
+            <section class="relative overflow-hidden rounded-[24px] gradient-banner p-6 text-white ios-shadow">
+                <div class="relative z-10 w-2/3">
+                    <h2 class="text-3xl font-extrabold leading-tight mb-2">Refer <span
+                            class="text-secondary">&amp;</span> Earn</h2>
+                    <p class="text-sm opacity-90 mb-6 font-medium">Refer friends &amp; get bonus to earn you today.</p>
+                    <button
+                        class="bg-secondary text-slate-900 font-bold px-6 py-2.5 rounded-full text-sm hover:scale-105 transition-transform nav-item"
+                        data-target="refer">
+                        Refer Now
+                    </button>
+                </div>
+                <div class="absolute right-[-20px] bottom-[-20px] w-48 h-48 opacity-90">
+                    <img alt="referral illustration" class="w-full h-full object-contain"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsJqyd5E7tnIDG8bpBycQoy9Ph4dd7to2Xck_Dgsqk_v1-AIxKPXOLpH5MXV53yraYqyaHpjy47v44hGVIztS9ijwJQrjNhf8-TSx7bCkO1qxc0zJ4K4N9E-nqPu5q3XciJ96nENhcO3px7s1NdC0ojZLxSELyo2q4Z-GGJM7k0l19mz0jdcjARAQM_Rkslh6H9p9ebLp_3Rj_-2bRXD4CzYMjqXHTjXxQDGLGqSgv0fvlj4vSKm3VwSJ3I_srahODz20iftkzVLA" />
+                </div>
+            </section>
+
+            <section class="grid grid-cols-4 gap-4">
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="store.claimDailyBonus()">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl text-primary">redeem</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                        <span class="material-icons-round text-3xl text-secondary">stars</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                        <span class="material-icons-round text-3xl text-primary">sports_esports</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Play
+                        Games</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer nav-item" data-target="ongoing">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                        <span class="material-icons-round text-3xl text-secondary">assignment</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Task
+                        History</span>
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Top Offers For You!</h3>
+                    <button class="text-primary text-sm font-bold">View All</button>
+                </div>
+                <div id="task-container" class="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 snap-x no-scrollbar">
+                    <!-- Tasks injected by app.js -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ONGOING SECTION -->
+        <div id="ongoing" class="page-section hidden space-y-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Ongoing Tasks</h2>
+
+            <div id="ongoing-empty" class="flex flex-col items-center justify-center py-10 text-center">
+                <div class="w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                    <span class="material-icons-round text-6xl text-slate-300 dark:text-gray-600">assignment_late</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">No active tasks</h3>
+                <p class="text-sm text-slate-400 dark:text-gray-500 max-w-[200px]">Start a task from the Home screen to
+                    see it here.</p>
+                <button class="mt-6 text-primary font-bold text-sm"
+                    onclick="document.querySelector('[data-target=home]').click()">Browse Tasks</button>
+            </div>
+
+            <div id="ongoing-list" class="space-y-4">
+                <!-- Injected by app.js -->
+            </div>
+        </div>
+
+        <!-- REFER SECTION -->
+        <div id="refer" class="page-section hidden space-y-6">
+            <!-- Header (Simulated specific to this page as per screenshot) -->
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <button class="material-icons-round text-slate-900 dark:text-white"
+                        onclick="document.querySelector('[data-target=home]').click()">arrow_back</button>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Refer & Earn</h2>
+                </div>
+                <a class="text-primary font-bold text-sm" href="#">View Referrals</a>
+            </div>
+
+            <!-- Main Info Card -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-6 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="space-y-6">
+                    <!-- Step 1 -->
+                    <div class="flex gap-4">
+                        <div
+                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
+                            <span class="material-icons-round text-primary">share</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Share Your Link</h3>
+                            <p class="text-xs text-slate-400">Share the link with your friends</p>
+                        </div>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="flex gap-4">
+                        <div
+                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
+                            <span class="material-icons-round text-primary">task_alt</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Let them complete an offer</h3>
+                            <p class="text-xs text-slate-400">Let them download and complete 2 offers</p>
+                        </div>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="flex gap-4">
+                        <div
+                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
+                            <span class="material-icons-round text-primary">currency_rupee</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">You both earn ₹10</h3>
+                            <p class="text-xs text-slate-400">You both earn easy money</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Section -->
+            <div
+                class="bg-green-50 dark:bg-green-900/10 rounded-[20px] p-4 border border-dashed border-primary/30 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Referral Code</p>
+                    <p id="referral-code" class="text-2xl font-black text-primary tracking-widest">...</p>
+                </div>
+                <button
+                    class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
+                    onclick="copyToClipboard(document.getElementById('referral-code').innerText)">
+                    <span class="material-icons-round">content_copy</span>
+                </button>
+            </div>
+
+            <div class="text-center space-y-4">
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Share Your Invite Link</h3>
+                <div class="flex justify-center gap-6">
+                    <button class="flex flex-col items-center gap-1 group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-none group-active:scale-95 transition-transform">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png"
+                                class="w-6 h-6 invert brightness-0">
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-medium">WhatsApp</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-[#0088cc] text-white flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none group-active:scale-95 transition-transform">
+                            <span class="material-icons-round text-xl">send</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-medium">Telegram</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 group"
+                        onclick="navigator.share({title: 'Task Buks', text: 'Join Task Buks!', url: 'https://taskbuks.com'})">
+                        <div
+                            class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-none group-active:scale-95 transition-transform">
+                            <span class="material-icons-round text-xl">share</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-medium">more</span>
+                    </button>
+                </div>
+                <p class="text-[10px] font-bold text-slate-400">Trusted By 9L+ Customers</p>
+            </div>
+
+            <!-- Referral List Placeholder -->
+            <div>
+                <div
+                    class="bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow flex items-center justify-between border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full"></div>
+                        <div>
+                            <h4 class="font-bold text-sm dark:text-white">Amit</h4>
+                            <p class="text-[10px] text-slate-400">Joined today</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WALLET SECTION -->
+        <div id="wallet" class="page-section hidden space-y-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">My Wallet</h2>
+
+            <div class="bg-slate-900 dark:bg-black text-white p-6 rounded-[24px] relative overflow-hidden shadow-xl">
+                <div class="relative z-10">
+                    <p class="text-slate-400 text-sm font-medium mb-1">Total Balance</p>
+                    <h3 class="text-4xl font-black user-balance">0</h3>
+                </div>
+                <div class="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-primary/20 to-transparent"></div>
+                <button class="mt-6 w-full bg-primary text-white font-bold py-3 rounded-xl disabled:opacity-50"
+                    disabled>Withdraw (Min ₹500)</button>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-lg mb-4 dark:text-white">Recent Transactions</h3>
+                <div id="transaction-list"
+                    class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 ios-shadow space-y-2">
+                    <!-- Injected by app.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="profile" class="page-section hidden space-y-6">
+            <!-- Header -->
+            <div
+                class="flex items-center gap-4 text-white p-4 bg-primary rounded-[24px] shadow-lg shadow-green-200 dark:shadow-none">
+                <div class="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center bg-white/20">
+                    <span class="material-icons-round text-4xl">person</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold">Sumit Kumar</h2>
+                    <p class="text-white/80 text-sm font-medium">+91 89500 13181</p>
+                </div>
+                <button class="ml-auto bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                    <span class="material-icons-round text-white">edit</span>
+                </button>
+            </div>
+
+            <!-- Details Form -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-6 ios-shadow border border-gray-100 dark:border-gray-700 space-y-5">
+                <!-- Email -->
+                <div class="relative">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Email Address</label>
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 py-2">
+                        <span class="font-medium text-slate-900 dark:text-white">sumitkumards07@gmail.com</span>
+                        <span
+                            class="text-[10px] text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span class="material-icons-round text-[10px]">error</span> Un-Verified
+                        </span>
+                    </div>
+                </div>
+
+                <!-- DOB -->
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Date Of Birth</label>
+                    <input type="text" placeholder="YYYY-MM-DD"
+                        class="w-full border-0 border-b border-gray-200 dark:border-gray-600 bg-transparent py-2 px-0 focus:ring-0 text-slate-900 dark:text-white placeholder-slate-300">
+                </div>
+
+                <!-- Gender -->
+                <div>
+                    <label
+                        class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Gender</label>
+                    <div class="flex gap-4">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" class="peer sr-only" checked>
+                            <div
+                                class="border border-green-500 text-green-600 dark:text-green-400 font-bold text-center py-2 rounded-xl peer-checked:bg-green-500 peer-checked:text-white transition-colors">
+                                Male</div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" class="peer sr-only">
+                            <div
+                                class="border border-gray-200 dark:border-gray-600 text-slate-400 font-bold text-center py-2 rounded-xl peer-checked:bg-green-500 peer-checked:text-white transition-colors">
+                                Female</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verify Banner -->
+            <div
+                class="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 p-3 rounded-xl text-center">
+                <p class="text-xs text-orange-800 dark:text-orange-200 font-medium">
+                    <span class="underline font-bold cursor-pointer">Verify</span> your email to get more rewarding
+                    offers.
+                </p>
+            </div>
+
+            <!-- Community Banner -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700">
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm mb-4 text-center">Join Our Community For
+                    Early Updates!</h3>
+                <div class="flex gap-3">
+                    <button
+                        class="flex-1 bg-[#25D366] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-none hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png"
+                            class="w-4 h-4 invert brightness-0"> Whatsapp
+                    </button>
+                    <button
+                        class="flex-1 bg-[#0088cc] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-sm">send</span> Telegram
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Links -->
+            <div class="space-y-3">
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+                    onclick="store.toggleTheme()">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">language</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Language / Theme</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">help_outline</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">FAQs</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">chat_bubble_outline</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Feedback</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">groups</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">About Us</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">visibility</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Privacy Policy</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">description</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Terms & Conditions</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Logout -->
+            <button
+                class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 dark:shadow-none flex items-center justify-center gap-2">
+                <span class="material-icons-round">logout</span> Log Out
+            </button>
+
+            <p class="text-center text-xs font-bold text-primary pb-4">Version V2.4.9</p>
+        </div>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <!-- Bottom Nav -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
+        <button class="flex flex-col items-center gap-1 text-primary active nav-item" data-target="home">
+            <span class="material-icons-round">home</span>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="ongoing">
+            <span class="material-icons-round">update</span>
+            <span class="text-[10px] font-bold">Ongoing</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="wallet">
+            <span class="material-icons-round">account_balance_wallet</span>
+            <span class="text-[10px] font-bold">Wallet</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item" data-target="refer">
+            <span class="material-icons-round">person_add_alt</span>
+            <span class="text-[10px] font-bold">Refer</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="profile">
+            <span class="material-icons-round">person</span>
+            <span class="text-[10px] font-bold">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Load scripts sequentially (No Modules for file:// support) -->
+    <script src="api.js"></script>
+    <script src="store.js"></script>
+    <script src="controller.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
