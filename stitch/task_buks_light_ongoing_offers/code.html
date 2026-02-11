@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Task Buks - Ongoing Offers</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22C55E", // Vibrant green matching the logo style
+                        gold: "#EAB308",
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#121212",
+                        charcoal: "#334155",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #22C55E;
+            border-radius: 3px 3px 0 0;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-gray-100 dark:bg-zinc-950 flex justify-center items-center min-h-screen">
+<div class="w-full max-w-[400px] h-[852px] bg-background-light dark:bg-background-dark relative overflow-hidden shadow-2xl flex flex-col border-[8px] border-charcoal dark:border-zinc-800 rounded-[50px]">
+<div class="h-11 px-8 flex justify-between items-center w-full z-20">
+<span class="text-sm font-semibold text-charcoal dark:text-zinc-300">9:41</span>
+<div class="flex items-center space-x-2">
+<span class="material-icons-outlined text-[18px] text-charcoal dark:text-zinc-300">signal_cellular_alt</span>
+<span class="material-icons-outlined text-[18px] text-charcoal dark:text-zinc-300">wifi</span>
+<span class="material-icons-outlined text-[18px] text-charcoal dark:text-zinc-300">battery_full</span>
+</div>
+</div>
+<header class="px-6 py-4 flex justify-between items-center">
+<div class="flex items-center gap-1">
+<span class="text-2xl font-extrabold text-primary">Task</span>
+<span class="text-2xl font-extrabold text-gold">Buks</span>
+</div>
+<div class="flex items-center space-x-4">
+<div class="bg-gray-100 dark:bg-zinc-800 p-2 rounded-full">
+<span class="material-icons-outlined text-charcoal dark:text-zinc-300">account_circle</span>
+</div>
+<div class="bg-gray-100 dark:bg-zinc-800 p-2 rounded-full relative">
+<span class="material-icons-outlined text-charcoal dark:text-zinc-300">notifications</span>
+<span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-zinc-800 rounded-full"></span>
+</div>
+</div>
+</header>
+<nav class="flex border-b border-gray-100 dark:border-zinc-800">
+<a class="flex-1 text-center py-4 text-sm font-semibold text-gray-400 dark:text-zinc-500" href="#">
+                All Offers
+            </a>
+<a class="flex-1 text-center py-4 text-sm font-bold text-primary relative active-tab" href="#">
+                Ongoing
+            </a>
+<a class="flex-1 text-center py-4 text-sm font-semibold text-gray-400 dark:text-zinc-500" href="#">
+                Completed
+            </a>
+</nav>
+<main class="flex-1 flex flex-col items-center justify-center px-8 text-center">
+<div class="relative w-64 h-64 mb-8">
+<div class="absolute inset-0 bg-green-50 dark:bg-green-900/10 rounded-full scale-90"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative">
+<div class="w-32 h-32 bg-primary rounded-xl shadow-lg relative flex items-center justify-center overflow-hidden">
+<div class="absolute h-full w-4 bg-white/20"></div>
+<div class="absolute w-full h-4 bg-white/20"></div>
+<span class="material-icons-outlined text-white text-6xl">card_giftcard</span>
+</div>
+<div class="absolute -top-4 -right-2 bg-gold w-10 h-10 rounded-full flex items-center justify-center shadow-md animate-bounce">
+<span class="material-icons-outlined text-white text-xl">monetization_on</span>
+</div>
+<div class="absolute top-12 -left-6 bg-gold w-8 h-8 rounded-full flex items-center justify-center shadow-md animate-pulse">
+<span class="material-icons-outlined text-white text-sm">monetization_on</span>
+</div>
+<div class="absolute -bottom-4 right-8 bg-gold w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+<span class="material-icons-outlined text-white text-2xl">stars</span>
+</div>
+</div>
+</div>
+</div>
+<h2 class="text-2xl font-bold text-charcoal dark:text-white mb-3">No Ongoing Offers</h2>
+<p class="text-gray-500 dark:text-zinc-400 text-base leading-relaxed mb-8">
+                You haven't started any tasks yet. <br/>
+                Explore our best offers and start earning today!
+            </p>
+<button class="w-full bg-primary hover:bg-green-600 transition-colors text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 dark:shadow-none">
+                Explore Offers
+            </button>
+</main>
+<footer class="bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-zinc-800 px-6 py-4 pb-8 flex justify-between items-center">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<span class="material-icons-outlined text-gray-400 group-hover:text-primary dark:text-zinc-500">home</span>
+<span class="text-[10px] font-bold text-gray-400 group-hover:text-primary dark:text-zinc-500 uppercase tracking-tighter">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<span class="material-icons-outlined text-primary">schedule</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-tighter">Ongoing</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center -mt-8 border-4 border-white dark:border-zinc-900 shadow-md">
+<span class="material-icons-outlined text-primary">currency_rupee</span>
+</div>
+<span class="text-[10px] font-bold text-gray-400 group-hover:text-primary dark:text-zinc-500 uppercase tracking-tighter">Earn</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<span class="material-icons-outlined text-gray-400 group-hover:text-primary dark:text-zinc-500">person_add</span>
+<span class="text-[10px] font-bold text-gray-400 group-hover:text-primary dark:text-zinc-500 uppercase tracking-tighter">Refer</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<span class="material-icons-outlined text-gray-400 group-hover:text-primary dark:text-zinc-500">person_outline</span>
+<span class="text-[10px] font-bold text-gray-400 group-hover:text-primary dark:text-zinc-500 uppercase tracking-tighter">Profile</span>
+</div>
+</footer>
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-charcoal dark:bg-zinc-700 rounded-full"></div>
+</div>
+
+</body></html>

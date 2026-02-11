@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Task Buks Light Brand Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22C55E", // Vibrant green from logo
+                        secondary: "#EAB308", // Gold from logo
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .ios-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
+        .glass-header { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .gradient-banner { background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300">
+<div class="h-12 w-full"></div>
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 h-16 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+<div class="flex items-center gap-1">
+<span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Task<span class="text-primary">Buks</span></span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-slate-600 dark:text-gray-300">
+<span class="material-icons-round">account_circle</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center relative text-slate-600 dark:text-gray-300">
+<span class="material-icons-round">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+</button>
+</div>
+</header>
+<main class="px-5 pt-6 pb-24 space-y-8">
+<section class="relative overflow-hidden rounded-[24px] gradient-banner p-6 text-white ios-shadow">
+<div class="relative z-10 w-2/3">
+<h2 class="text-3xl font-extrabold leading-tight mb-2">Refer <span class="text-secondary">&amp;</span> Earn</h2>
+<p class="text-sm opacity-90 mb-6 font-medium">Refer friends &amp; get bonus to earn you today.</p>
+<button class="bg-secondary text-slate-900 font-bold px-6 py-2.5 rounded-full text-sm hover:scale-105 transition-transform">
+                    Refer Now
+                </button>
+</div>
+<div class="absolute right-[-20px] bottom-[-20px] w-48 h-48 opacity-90">
+<img alt="referral illustration" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsJqyd5E7tnIDG8bpBycQoy9Ph4dd7to2Xck_Dgsqk_v1-AIxKPXOLpH5MXV53yraYqyaHpjy47v44hGVIztS9ijwJQrjNhf8-TSx7bCkO1qxc0zJ4K4N9E-nqPu5q3XciJ96nENhcO3px7s1NdC0ojZLxSELyo2q4Z-GGJM7k0l19mz0jdcjARAQM_Rkslh6H9p9ebLp_3Rj_-2bRXD4CzYMjqXHTjXxQDGLGqSgv0fvlj4vSKm3VwSJ3I_srahODz20iftkzVLA"/>
+</div>
+<div class="flex justify-center gap-1.5 mt-4">
+<div class="w-4 h-1.5 bg-white rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+</div>
+</section>
+<section class="grid grid-cols-4 gap-4">
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+<span class="material-icons-round text-3xl text-primary">redeem</span>
+</div>
+<span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily Bonus</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+<span class="material-icons-round text-3xl text-secondary">stars</span>
+</div>
+<span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x Bonus</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+<span class="material-icons-round text-3xl text-primary">sports_esports</span>
+</div>
+<span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Play Games</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+<span class="material-icons-round text-3xl text-secondary">assignment</span>
+</div>
+<span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Task History</span>
+</div>
+</section>
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Top Offers For You!</h3>
+<button class="text-primary text-sm font-bold">View All</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 snap-x no-scrollbar">
+<div class="min-w-[200px] bg-white dark:bg-gray-800 p-4 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow snap-start">
+<div class="w-14 h-14 bg-indigo-500 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+<img alt="Fotos AI" class="w-10 h-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDq5TlMA6symkk6XKAes7jsOVejrkeb3XmL62FpmIAWMVrjVaKWXfcQW8KdNVbdN1cIHhBqAZs3e6HUyfs9uLTgmyDoFputwvjkdJleHY_6JzcXC3ikTilVh2pVRIFHS8LamVQKVq2iVmNuQ_ZHm4879z-aUTlAw8mqdxCPngSvUvHM9fTOUmKezNlilqBagT01n-OmJet7Vq-JHuw7qAlMyV2ZoEKv3-zRRbXRRwUug-WaIyNMADFrb5W9cK8T-jvPZzTFEzbIuw"/>
+</div>
+<h4 class="font-bold text-base mb-1 dark:text-white">Fotos AI</h4>
+<p class="text-[11px] text-slate-400 dark:text-gray-400 line-clamp-2 mb-4 leading-snug">Get your insurance photos and took...</p>
+<div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-full p-1 group">
+<span class="flex-1 text-center text-[11px] font-bold text-slate-400">Start</span>
+<div class="bg-primary px-3 py-1.5 rounded-full flex items-center gap-1">
+<span class="text-[11px] font-bold text-white">Get ₹5</span>
+</div>
+</div>
+</div>
+<div class="min-w-[200px] bg-white dark:bg-gray-800 p-4 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow snap-start">
+<div class="w-14 h-14 bg-cyan-500 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+<span class="text-white text-2xl font-black">M</span>
+</div>
+<h4 class="font-bold text-base mb-1 dark:text-white">Bajaj Markets</h4>
+<p class="text-[11px] text-slate-400 dark:text-gray-400 line-clamp-2 mb-4 leading-snug">Get your markets for Bajaj station...</p>
+<div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-full p-1">
+<span class="flex-1 text-center text-[11px] font-bold text-slate-400">Start</span>
+<div class="bg-primary px-3 py-1.5 rounded-full flex items-center gap-1">
+<span class="text-[11px] font-bold text-white">Get ₹150</span>
+</div>
+</div>
+</div>
+<div class="min-w-[200px] bg-white dark:bg-gray-800 p-4 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow snap-start">
+<div class="w-14 h-14 bg-purple-600 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+<span class="material-icons-round text-white text-3xl">psychology</span>
+</div>
+<h4 class="font-bold text-base mb-1 dark:text-white">Foundit</h4>
+<p class="text-[11px] text-slate-400 dark:text-gray-400 line-clamp-2 mb-4 leading-snug">Earn life more material task...</p>
+<div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-full p-1">
+<span class="flex-1 text-center text-[11px] font-bold text-slate-400">Start</span>
+<div class="bg-primary px-3 py-1.5 rounded-full flex items-center gap-1">
+<span class="text-[11px] font-bold text-white">Get ₹10</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Fresh Opportunities</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 ios-shadow">
+<div class="w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center">
+<span class="material-icons-round text-white">local_fire_department</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm dark:text-white">Daily Streak</h4>
+<p class="text-xs text-slate-400 dark:text-gray-400">Complete tasks 7 days in a row</p>
+</div>
+<div class="text-right">
+<span class="block font-bold text-primary">₹50</span>
+<span class="text-[10px] text-slate-400">Bonus</span>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 ios-shadow">
+<div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+<span class="material-icons-round text-white">share</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm dark:text-white">Social Share</h4>
+<p class="text-xs text-slate-400 dark:text-gray-400">Share your referral link today</p>
+</div>
+<div class="text-right">
+<span class="block font-bold text-primary">₹2</span>
+<span class="text-[10px] text-slate-400">Bonus</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-icons-round">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500">
+<span class="material-icons-round">update</span>
+<span class="text-[10px] font-bold">Ongoing</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500">
+<span class="material-icons-round">currency_rupee</span>
+<span class="text-[10px] font-bold">Earn</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500">
+<span class="material-icons-round">person_add_alt</span>
+<span class="text-[10px] font-bold">Refer</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500">
+<span class="material-icons-round">person</span>
+<span class="text-[10px] font-bold">Profile</span>
+</button>
+</nav>
+<div class="fixed bottom-24 right-4 z-50">
+<button class="w-12 h-12 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-lg" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons-round">dark_mode</span>
+</button>
+</div>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+</body></html>
