@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Task Buks - Refer &amp; Earn</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22C55E", // Green
+                        accent: "#EAB308",  // Gold
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                    },
+                    fontFamily: {
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gold-glow {
+            box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
+        }
+        .bottom-nav-blur {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        .dark .bottom-nav-blur {
+            background-color: rgba(15, 23, 42, 0.8);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen pb-24">
+<header class="sticky top-0 z-50 px-6 py-4 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+<div class="flex items-center gap-1">
+<span class="text-2xl font-extrabold text-primary">Task</span>
+<span class="text-2xl font-extrabold text-accent">Buks</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+<span class="material-icons-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+<span class="material-icons-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<main class="px-6 pt-4 space-y-8 max-w-md mx-auto">
+<div class="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-green-600 p-8 text-white shadow-xl shadow-green-200/50 dark:shadow-none">
+<div class="relative z-10">
+<h1 class="text-3xl font-extrabold mb-2">Refer &amp; Earn</h1>
+<p class="text-green-50 opacity-90 max-w-[200px] leading-relaxed">Refer friends &amp; get bonus to earn you today.</p>
+<button class="mt-6 bg-accent hover:bg-yellow-500 text-slate-900 font-bold px-6 py-3 rounded-full transition-transform active:scale-95 shadow-lg">
+                    Refer Now
+                </button>
+</div>
+<div class="absolute -right-4 -bottom-4 w-48 h-48 opacity-20">
+<img alt="referral illustration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG7-6yTyDvaYlCHgPtawKQ_EC8Hdp0QgahS9i4gijRhPGXYeaAlJzm96Y7JDhiDAaquzN2p73uXfdrCDaomSWzTm4n4eZx-F9uREXdMvpj3xDhiCKO-SEEsMIyTaTEE3bAan_j6qe2wgtFTqSRbzkxB1LugYtrcYMc0RRbmp5ulmrEdt6Xyc4D5jA_onapNtQR6PQzPNOzWp7PfVv4v4o6l19Pp-bJDlfYaqvtbu7QMM92emfc2qlEZHjtDO3Y7zoMzKBB1TgjXd4"/>
+</div>
+<div class="absolute top-4 right-4 text-accent/40 rotate-12">
+<span class="material-icons-outlined text-6xl">monetization_on</span>
+</div>
+</div>
+<section class="space-y-4">
+<h2 class="text-lg font-bold px-1">How it Works</h2>
+<div class="grid grid-cols-1 gap-4">
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
+                        1
+                    </div>
+<div>
+<h3 class="font-semibold text-sm">Invite Friends</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Share your link with your friends</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
+                        2
+                    </div>
+<div>
+<h3 class="font-semibold text-sm">Friends Install</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">They complete their first task</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
+                        3
+                    </div>
+<div>
+<h3 class="font-semibold text-sm">You Get Reward</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Earn ₹50 for every referral</p>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 gold-glow text-center space-y-4">
+<span class="text-xs font-bold uppercase tracking-widest text-slate-400">Your Referral Code</span>
+<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 p-2 pl-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600">
+<span class="text-xl font-black tracking-widest text-slate-800 dark:text-slate-100">BUKS8829</span>
+<button class="bg-accent text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-yellow-500 transition-colors">
+<span class="material-icons-outlined text-sm">content_copy</span>
+                    Copy
+                </button>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="text-lg font-bold px-1">Share Link Via</h2>
+<div class="flex justify-between items-center px-2">
+<div class="flex flex-col items-center gap-2">
+<button class="w-14 h-14 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-none">
+<svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"></path></svg>
+</button>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">WhatsApp</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<button class="w-14 h-14 rounded-2xl bg-[#1877F2] text-white flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
+<svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+</button>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Facebook</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<button class="w-14 h-14 rounded-2xl bg-[#0088cc] text-white flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
+<svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"></path></svg>
+</button>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Telegram</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<button class="w-14 h-14 rounded-2xl bg-slate-800 text-white flex items-center justify-center shadow-lg shadow-slate-200 dark:shadow-none">
+<span class="material-icons-outlined">share</span>
+</button>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">More</span>
+</div>
+</div>
+</section>
+<section class="pt-8 pb-12 text-center">
+<h2 class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-6">Trusted by 10M+ Users</h2>
+<div class="flex items-center justify-center gap-8 opacity-40 grayscale contrast-125 dark:invert">
+<img alt="Google" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjYhou-aOsNUTnklnwV5v_oDXTbMjoFmfC7Em9rCSMsKq65t4Hp_8IzuCgsk65Xe5MMIN6YCaNaQjyrgqftQldBC5ejZt1_DhvFtoTzGE8oA4ujwHa4Du8n1trcaWA4ksud88SYCAI_iMq3MeNjro5sSgSrOb64yJ36PKj8qOzViDH3cfAPFJwymKfwDI599TQRPHnPjK4bbJUff1th5403Bz2qdGvpIq_PsNvzWGDk_mZa9eGIiu6ghwgRlTG9OJupCE7avegyfA"/>
+<img alt="Amazon" class="h-5 pt-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjTk9KJ9Wlm6xKDLQm8cbPDbOhtDKzh73lhokp4m3kAUuGd3gHbs2S-XQeNyF7S2zYB1dKw6QWBR4NTuGDbunSPeIpnzmEueC8C4Z8CTtIs1oM2BfRqj-gKqtWu91kdeQtBbuAhY_Q-vLnIr8wd1IJHqlNl6_qpV7A_StKJ0olRcK2TIYLfHKHA-nzubFceIspP3ceYw2Yzd3I21ARnilbzvYfbhOwTM_dguDlckWuL1vl9ga5S_oeWx-7mPGYnNJq_RkBSdLK9u4"/>
+<img alt="PhonePe" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNmTJu2aV55dc7QeL3vLtbhvGt5aC8BnKPn2PEUhmojyYZrR55_QAmXc4Z1J3p7CEa9IPN1mknnDIQfKtXbiQpjdZXUmcqPHyYjLN0hvJ9SW_jgUPLe-6QWGTenY8R5PYH8w4QauUwuiGBIFS9150HCstrt71tGA5AsgoRQY2lj1hQUCbTh1ZFlJvSPIhtGCLRPxBVoJFjcapJ7jIQw4pWDHVtA6n4deQ6-qtZgtHwsNGT2QlNwXoZPAZf01MAEv0mY9hxfFuhfV8"/>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 bottom-nav-blur border-t border-slate-200 dark:border-slate-800 px-6 py-3 pb-8 flex items-center justify-between">
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-outlined">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-outlined">history</span>
+<span class="text-[10px] font-medium">Ongoing</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-outlined">payments</span>
+<span class="text-[10px] font-medium">Earn</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-icons-outlined font-bold">person_add</span>
+<span class="text-[10px] font-bold">Refer</span>
+<div class="w-1 h-1 bg-primary rounded-full mt-0.5"></div>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</nav>
+<div class="fixed top-20 right-4 z-50">
+<button class="bg-slate-800 text-white dark:bg-white dark:text-slate-800 p-2 rounded-full shadow-lg" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons-outlined block dark:hidden">dark_mode</span>
+<span class="material-icons-outlined hidden dark:block">light_mode</span>
+</button>
+</div>
+
+</body></html>
