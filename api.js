@@ -5,14 +5,33 @@
 
 // REPLACE WITH YOUR COMPUTER'S LOCAL IP (Simulate "Cloud")
 // const BASE_URL = "http://10.0.2.2:3000"; // For Emulator
-const BASE_URL = "http://172.20.54.180:3000"; // For Physical Device
+const LOCAL_IP_URL = "http://172.20.54.180:3000"; // For Physical Device
+
+const getBaseUrl = () => {
+    // If running on Vercel or any other web host
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
+        return window.location.origin;
+    }
+    // If running in APK (file://) or locally on Mac
+    return LOCAL_IP_URL;
+};
+
+const BASE_URL = getBaseUrl();
+window.API_BASE_URL = BASE_URL; // Global for debug
+
+let authToken = null;
 
 // Helper
 const fetchJson = async (endpoint, options = {}) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     try {
         const res = await fetch(`${BASE_URL}${endpoint}`, {
-            headers: { 'Content-Type': 'application/json' },
-            ...options
+            ...options,
+            headers: { ...headers, ...options.headers }
         });
         if (!res.ok) throw new Error(`API Error: ${res.status}`);
         return await res.json();
@@ -22,8 +41,10 @@ const fetchJson = async (endpoint, options = {}) => {
     }
 };
 
-// Attach to window for global access
 window.api = {
+    setToken(token) {
+        authToken = token;
+    },
     // 1. Get User Profile
     async getProfile() {
         return await fetchJson('/api/profile');
@@ -49,7 +70,7 @@ window.api = {
 
     // 5. Claim Daily Bonus
     async claimDailyBonus() {
-        return await fetchJson('/api/bonus', {
+        return await fetchJson('/api/bonus/claim', {
             method: 'POST'
         });
     },
@@ -58,5 +79,24 @@ window.api = {
         // Verification logic often stays client-side for simple prototypes
         // or hits a verification endpoint
         return { status: "success", reward: 5 };
+    },
+
+    // 7. Clerk Login
+    async loginWithClerk(token) {
+        return await fetchJson('/auth/clerk', {
+            method: 'POST',
+            body: JSON.stringify({ token })
+        });
+    },
+
+    async claimVideoReward() {
+        return await fetchJson('/api/reward/video', {
+            method: 'POST'
+        });
+    },
+
+    // 8. Get CPX Surveys
+    async getSurveys() {
+        return await fetchJson('/api/surveys');
     }
 };

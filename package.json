@@ -1,0 +1,22 @@
+{
+    "name": "task-buks-unified",
+    "version": "1.0.0",
+    "description": "Task Buks Unified App",
+    "scripts": {
+        "dev": "cd backend && npm run dev",
+        "build": "cd backend && npm install && npm run build",
+        "start": "cd backend && npm start"
+    },
+    "dependencies": {
+        "@clerk/clerk-sdk-node": "^4.13.23",
+        "@fastify/cors": "^10.0.2",
+        "dotenv": "^16.4.7",
+        "fastify": "^5.2.1",
+        "pg": "^8.13.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.1",
+        "@types/pg": "^8.11.11",
+        "typescript": "^5.7.3"
+    }
+}

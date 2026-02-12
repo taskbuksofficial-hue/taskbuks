@@ -35,10 +35,10 @@ export interface Task {
     id: string;
     title: string;
     description?: string;
-    payout_amount: number;
+    reward: number;
     icon_url?: string;
-    action_url: string;
     category: string;
+    bg_color: string;
     is_active: boolean;
     created_at: Date;
 }
