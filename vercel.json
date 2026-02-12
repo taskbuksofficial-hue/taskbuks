@@ -24,9 +24,21 @@
         {
             "src": "controller.js",
             "use": "@vercel/static"
+        },
+        {
+            "src": "app-ads.txt",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "ads.js",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
+        {
+            "src": "/app-ads.txt",
+            "dest": "/app-ads.txt"
+        },
         {
             "src": "/api/(.*)",
             "dest": "backend/src/app.ts",
@@ -41,7 +53,7 @@
             "dest": "backend/src/app.ts"
         },
         {
-            "src": "/(.*).(js|css|png|jpg|svg|json|webp)",
+            "src": "/(.*).(js|css|png|jpg|svg|json|webp|txt)",
             "dest": "/$1.$2"
         },
         {
