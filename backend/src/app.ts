@@ -36,7 +36,7 @@ const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 
 import { clerkLogin } from './controllers/authController';
-import { getProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys } from './controllers/appController';
+import { getProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback } from './controllers/appController';
 
 // Auth Routes
 server.post('/auth/clerk', clerkLogin);
@@ -52,9 +52,13 @@ server.post('/api/reward/video', { preHandler: [authenticate] }, claimVideoRewar
 // Postbacks (Public - S2S)
 server.get('/api/postback/adgem', handleAdGemPostback);
 server.get('/api/postback/cpx', handleCPXPostback);
+server.get('/api/postback/rapidreach', handleRapidReachPostback);
 
 // Surveys (Protected)
 server.get('/api/surveys', { preHandler: [authenticate] }, getCPXSurveys);
+
+// Transactions (Protected)
+server.get('/api/transactions', { preHandler: [authenticate] }, getTransactions);
 
 // Export server for Vercel
 export default async (req: any, res: any) => {

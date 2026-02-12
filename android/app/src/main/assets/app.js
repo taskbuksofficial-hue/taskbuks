@@ -16,8 +16,25 @@
 
         // 1. Balance
         document.querySelectorAll('.user-balance').forEach(el =>
-            el.textContent = wallet.currentBalance
+            el.textContent = `₹${parseFloat(wallet.currentBalance || 0).toFixed(2)}`
         );
+
+        // Lifetime Earnings
+        document.querySelectorAll('.user-lifetime-earnings').forEach(el =>
+            el.textContent = `₹${parseFloat(wallet.lifetimeEarnings || 0).toFixed(2)}`
+        );
+
+        // Withdraw progress
+        const progressBar = document.getElementById('withdraw-progress-bar');
+        const progressText = document.getElementById('withdraw-progress-text');
+        const withdrawBtn = document.getElementById('withdraw-btn');
+        if (progressBar) {
+            const balance = parseFloat(wallet.currentBalance || 0);
+            const pct = Math.min((balance / 500) * 100, 100);
+            progressBar.style.width = `${pct}%`;
+            if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹500`;
+            if (withdrawBtn) withdrawBtn.disabled = balance < 500;
+        }
 
         // 2. Tasks (Home)
         const taskContainer = document.getElementById('task-container');
@@ -105,27 +122,27 @@
             console.log("Initializing CPX Research for user:", user.id);
 
             // Configuration for CPX Research
-            window.config = {
-                general: {
-                    app_id: "31412",
-                    ext_user_id: user.id,
-                    email: user.emailAddresses?.[0]?.emailAddress || "",
-                    username: user.firstName || "User",
-                },
-                storage: {
-                    "cpx-research-container": "Full Content"
-                },
+            window.cpx = {
+                app_id: "31412",
+                ext_user_id: user.id,
+                email: user.emailAddresses?.[0]?.emailAddress || "",
+                username: user.firstName || "User",
+                secure_hash: "deprecated_on_frontend_use_backend_for_security",
                 style: {
-                    width: "100%",
-                    height: "100%",
-                    padding_top: "20px"
+                    text: {
+                        new_tab: "Surveys"
+                    }
                 }
             };
 
             const script = document.createElement('script');
             script.src = "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js";
+            script.async = true;
+            script.onload = () => {
+                console.log("CPX Script Loaded");
+                window.cpxInitialized = true;
+            };
             document.body.appendChild(script);
-            window.cpxInitialized = true;
         }
 
         // 3.5 Render API Surveys (if any)
@@ -171,22 +188,32 @@
         if (txList) {
             const txs = transactions || [];
             if (txs.length === 0) {
-                txList.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">No transactions yet</div>`;
+                txList.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">
+                    <span class="material-icons-round text-4xl block mb-2 opacity-30">receipt_long</span>
+                    No transactions yet.<br><span class="text-xs">Complete tasks to start earning!</span>
+                </div>`;
             } else {
-                txList.innerHTML = txs.map(tx => `
-                    <div class="flex items-center justify-between py-3 border-b border-gray-50 dark:border-gray-800 last:border-0">
+                txList.innerHTML = txs.map(tx => {
+                    const isCredit = tx.type === 'credit';
+                    const date = tx.created_at || tx.date;
+                    const icon = isCredit ? 'south_west' : 'north_east';
+                    const iconBg = isCredit ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400';
+                    const amountColor = isCredit ? 'text-green-500' : 'text-red-500';
+                    const sign = isCredit ? '+' : '-';
+                    return `
+                    <div class="flex items-center justify-between py-3 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
                         <div class="flex items-center gap-3">
-                             <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
-                                <span class="material-icons-round text-sm">north_east</span>
+                             <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center">
+                                <span class="material-icons-round text-sm">${icon}</span>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-slate-200">${tx.description}</p>
-                                <p class="text-[10px] text-slate-400">${new Date(tx.date).toLocaleDateString()}</p>
+                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">${tx.description}</p>
+                                <p class="text-[10px] text-slate-400">${date ? new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</p>
                             </div>
                         </div>
-                        <span class="text-sm font-bold text-green-500">+₹${tx.amount}</span>
+                        <span class="text-sm font-bold ${amountColor}">${sign}₹${parseFloat(tx.amount).toFixed(2)}</span>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
     }
