@@ -53,6 +53,7 @@ server.post('/api/reward/video', { preHandler: [authenticate] }, claimVideoRewar
 server.get('/api/postback/adgem', handleAdGemPostback);
 server.get('/api/postback/cpx', handleCPXPostback);
 server.get('/api/postback/rapidreach', handleRapidReachPostback);
+server.get('/api/pb/rr', handleRapidReachPostback); // Short alias (< 100 chars)
 
 // Surveys (Protected)
 server.get('/api/surveys', { preHandler: [authenticate] }, getCPXSurveys);
