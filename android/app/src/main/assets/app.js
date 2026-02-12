@@ -218,6 +218,94 @@
         }
     }
 
+    // --- DAILY BONUS RENDERING ---
+
+    function renderStreak() {
+        const state = store.getState();
+        const streak = state.dailyStreak?.currentStreak || 0;
+        const claimed = state.dailyStreak?.isClaimedToday || false;
+
+        // Update streak badge
+        const badge = document.getElementById('streak-badge');
+        if (badge) badge.textContent = `🔥 ${streak} Day Streak`;
+
+        // Update 7-day pills
+        document.querySelectorAll('.streak-day').forEach(el => {
+            const day = parseInt(el.dataset.day);
+            const pill = el.querySelector('div');
+            if (day <= streak) {
+                pill.className = 'w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-primary bg-primary text-white transition-all shadow-md shadow-primary/20';
+                pill.innerHTML = '<span class="material-icons-round text-base">check</span>';
+            }
+        });
+
+        // Update claim button
+        const btn = document.getElementById('claim-bonus-btn');
+        if (btn) {
+            if (claimed) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">check_circle</span> Claimed Today!';
+                btn.className = 'w-full bg-gray-200 dark:bg-gray-700 text-slate-400 font-bold py-3 rounded-xl text-sm cursor-not-allowed';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">redeem</span> Claim ₹1 Daily Bonus';
+                btn.className = 'w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all';
+            }
+        }
+    }
+
+    // Global function for the onclick
+    window.claimDailyBonusUI = async function () {
+        const state = store.getState();
+        if (state.dailyStreak?.isClaimedToday) {
+            showToast('Already claimed today!');
+            return;
+        }
+
+        await controller.claimDailyBonus();
+
+        // After claiming, show the modal
+        const streak = store.getState().dailyStreak?.currentStreak || 1;
+        const amount = streak >= 7 ? 2 : 1;
+
+        // Set earned amount
+        const amountEl = document.getElementById('bonus-earned-amount');
+        if (amountEl) amountEl.textContent = amount;
+
+        // Build mini streak pills in modal
+        const modalPills = document.getElementById('modal-streak-pills');
+        if (modalPills) {
+            let html = '';
+            for (let i = 1; i <= 7; i++) {
+                const isComplete = i <= streak;
+                const isDay7 = i === 7;
+                const reward = isDay7 ? '₹2' : '₹1';
+                const bg = isComplete
+                    ? 'bg-primary text-white border-primary'
+                    : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
+                html += `
+                    <div class="flex flex-col items-center">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold border-2 ${bg}">
+                            ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : reward}
+                        </div>
+                        <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>
+                    </div>`;
+            }
+            modalPills.innerHTML = html;
+        }
+
+        // Show modal
+        const modal = document.getElementById('bonus-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Re-render streak and balance
+        renderStreak();
+        render();
+    };
+
     // --- SETUP ---
 
     function setupNavigation() {
@@ -320,7 +408,7 @@
         setupNavigation();
         setupGlobalListeners();
         setupCarousel();
-        store.subscribe(render);
+        store.subscribe(() => { render(); renderStreak(); });
 
         // Show Loading Overlay
         const loadingOverlay = document.createElement('div');
