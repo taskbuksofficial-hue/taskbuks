@@ -301,27 +301,44 @@ export const handleRapidReachPostback = async (req: FastifyRequest, reply: Fasti
         const query = req.query as any;
         const userId = query.user_id || query.u;
         const amount = parseFloat(query.amount || query.a || '0');
-        const transId = query.trans_id || query.t || query.transaction_id;
+        const transId = query.trans_id || query.t || query.transaction_id || `rr_${Date.now()}`;
         const status = query.status || query.s || 'completed';
 
-        if (!userId || !amount || !transId) {
-            return reply.status(400).send({ error: 'Missing required parameters' });
-        }
+        console.log(`RapidReach Postback received:`, JSON.stringify(query));
+        console.log(`Parsed: user=${userId}, amount=${amount}, trans=${transId}, status=${status}`);
 
-        console.log(`RapidReach Postback: user=${userId}, amount=${amount}, trans=${transId}, status=${status}`);
-
-        if (status !== 'completed' && status !== '1') {
-            return reply.send({ status: 'ignored', reason: 'Not a completed transaction' });
+        if (!userId || !amount) {
+            console.error('RapidReach: Missing user_id or amount');
+            return reply.status(200).send('1'); // Always return 1 to avoid retries
         }
 
         // Check for duplicate
         const existing = await db.query(
             "SELECT id FROM transactions WHERE description LIKE $1",
-            [`%RapidReach:${transId}%`]
+            [`%RR:${transId}%`]
         );
         if (existing.rows.length > 0) {
-            return reply.send({ status: 'duplicate' });
+            console.log('RapidReach: Duplicate transaction', transId);
+            return reply.status(200).send('1');
         }
+
+        // Ensure user exists (create minimal record if not)
+        const userCheck = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+        if (userCheck.rows.length === 0) {
+            // Store the postback data even without a user — log it
+            console.warn(`RapidReach: User ${userId} not found in DB. Storing anyway.`);
+            // Create a minimal user entry so FK constraint is satisfied
+            await db.query(
+                "INSERT INTO users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
+                [userId, `${userId}@postback.taskbuks.app`]
+            );
+        }
+
+        // Ensure wallet exists (upsert)
+        await db.query(
+            "INSERT INTO wallets (user_id, balance) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING",
+            [userId]
+        );
 
         // Credit wallet
         await db.query(
@@ -332,12 +349,13 @@ export const handleRapidReachPostback = async (req: FastifyRequest, reply: Fasti
         // Record transaction
         await db.query(
             "INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, 'credit')",
-            [userId, amount, `Survey Completed (RapidReach:${transId})`]
+            [userId, amount, `Survey Completed (RR:${transId})`]
         );
 
-        return reply.send({ status: 'ok' });
+        console.log(`RapidReach: Successfully credited ${amount} to ${userId}`);
+        return reply.status(200).send('1');
     } catch (error) {
         console.error("RapidReach postback error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
+        return reply.status(200).send('1'); // Return 1 even on error to prevent retries
     }
 };
