@@ -93,6 +93,22 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -232,6 +248,108 @@
                     <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="3"></div>
                 </div>
             </section>
+
+            <!-- Daily Bonus Section -->
+            <section id="daily-bonus-section"
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-icons-round text-amber-500">card_giftcard</span>
+                        <h3 class="font-bold text-base dark:text-white">Daily Bonus</h3>
+                    </div>
+                    <span id="streak-badge"
+                        class="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">🔥 0 Day
+                        Streak</span>
+                </div>
+
+                <!-- 7-Day Streak Pills -->
+                <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="1">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="2">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="3">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="4">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="5">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="6">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                            ₹1</div>
+                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
+                    </div>
+                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="7">
+                        <div
+                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
+                            ₹2</div>
+                        <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-slate-400 text-center mb-3">Claim your bonus daily to maintain the streak &
+                    earn extra bonus!</p>
+
+                <button id="claim-bonus-btn"
+                    class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                    onclick="window.claimDailyBonusUI()">
+                    <span class="material-icons-round text-sm align-middle mr-1">redeem</span>
+                    Claim ₹1 Daily Bonus
+                </button>
+            </section>
+
+            <!-- Bonus Reward Modal -->
+            <div id="bonus-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-6"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div class="bg-white dark:bg-gray-800 rounded-[28px] p-6 w-full max-w-sm text-center relative shadow-2xl"
+                    style="animation: modalBounce 0.4s ease-out;">
+                    <button
+                        onclick="document.getElementById('bonus-modal').classList.add('hidden'); document.getElementById('bonus-modal').classList.remove('flex');"
+                        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <span class="material-icons-round text-slate-500 text-lg">close</span>
+                    </button>
+
+                    <p class="text-sm font-bold text-slate-500 mb-3">You've Earned</p>
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <span class="text-3xl">🪙</span>
+                        <span id="bonus-earned-amount"
+                            class="text-4xl font-black text-slate-900 dark:text-white">1</span>
+                    </div>
+
+                    <div class="text-6xl mb-4">🎁</div>
+
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">Congratulations!</h3>
+                    <p class="text-sm text-slate-400 mb-4">You have successfully claimed<br>your daily reward.</p>
+
+                    <!-- Mini streak in modal -->
+                    <div id="modal-streak-pills" class="flex justify-center gap-1.5 mb-3">
+                        <!-- Filled by JS -->
+                    </div>
+                    <p class="text-[10px] text-slate-400">Claim your bonus daily to maintain the streak & earn extra
+                        bonus!</p>
+                </div>
+            </div>
 
             <!-- Top Offer Section -->
             <section id="top-offer-section" class="space-y-3">
