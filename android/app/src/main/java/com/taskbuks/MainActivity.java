@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "TaskBuksUnityAds";
     private static final String UNITY_GAME_ID = "5524357"; // REPLACE WITH YOUR ACTUAL UNITY GAME ID
-    private static final boolean TEST_MODE = true;
+    private static final boolean TEST_MODE = false;
 
     private static final String INTERSTITIAL_ID = "Interstitial_Android";
     private static final String REWARDED_ID = "Rewarded_Android";
@@ -69,12 +69,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onInitializationComplete() {
                 Log.d(TAG, "Unity Ads Initialization Complete");
-                loadBanner();
+                runOnUiThread(() -> {
+                    loadBanner();
+                    Toast.makeText(MainActivity.this, "Ads Ready", Toast.LENGTH_SHORT).show();
+                });
             }
 
             @Override
             public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {
                 Log.e(TAG, "Unity Ads Initialization Failed: [" + error + "] " + message);
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Ad Init Failed: " + message, Toast.LENGTH_LONG).show());
             }
         });
 
@@ -138,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         
         layout.addView(mBannerView);
         mBannerView.load();
+        mBannerView.bringToFront();
     }
 
     public class WebAppInterface {
@@ -173,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
                         Log.e(TAG, "Interstitial load failed: " + message);
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "Ad not available", Toast.LENGTH_SHORT).show());
                     }
                 });
             });
@@ -214,6 +220,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
                         Log.e(TAG, "Rewarded load failed: " + message);
+                        runOnUiThread(() -> {
+                            Toast.makeText(MainActivity.this, "Video ad not available", Toast.LENGTH_SHORT).show();
+                            // Still tell WebView so user gets feedback
+                            myWebView.post(() -> myWebView.loadUrl("javascript:window.showToast && window.showToast('Video ad not available right now')"));
+                        });
                     }
                 });
             });
