@@ -105,27 +105,27 @@
             console.log("Initializing CPX Research for user:", user.id);
 
             // Configuration for CPX Research
-            window.config = {
-                general: {
-                    app_id: "31412",
-                    ext_user_id: user.id,
-                    email: user.emailAddresses?.[0]?.emailAddress || "",
-                    username: user.firstName || "User",
-                },
-                storage: {
-                    "cpx-research-container": "Full Content"
-                },
+            window.cpx = {
+                app_id: "31412",
+                ext_user_id: user.id,
+                email: user.emailAddresses?.[0]?.emailAddress || "",
+                username: user.firstName || "User",
+                secure_hash: "deprecated_on_frontend_use_backend_for_security",
                 style: {
-                    width: "100%",
-                    height: "100%",
-                    padding_top: "20px"
+                    text: {
+                        new_tab: "Surveys"
+                    }
                 }
             };
 
             const script = document.createElement('script');
             script.src = "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js";
+            script.async = true;
+            script.onload = () => {
+                console.log("CPX Script Loaded");
+                window.cpxInitialized = true;
+            };
             document.body.appendChild(script);
-            window.cpxInitialized = true;
         }
 
         // 3.5 Render API Surveys (if any)
