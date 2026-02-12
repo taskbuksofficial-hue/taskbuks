@@ -8,16 +8,41 @@
         {
             "src": "index.html",
             "use": "@vercel/static"
+        },
+        {
+            "src": "app.js",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "api.js",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "store.js",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "controller.js",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "backend/src/app.ts"
+            "dest": "backend/src/app.ts",
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            }
         },
         {
             "src": "/auth/(.*)",
             "dest": "backend/src/app.ts"
+        },
+        {
+            "src": "/(.*).(js|css|png|jpg|svg|json|webp)",
+            "dest": "/$1.$2"
         },
         {
             "src": "/(.*)",

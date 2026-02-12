@@ -1,57 +1,57 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { OAuth2Client } from 'google-auth-library';
-import { db } from '../config/db';
+import { Clerk } from '@clerk/clerk-sdk-node';
+import * as db from '../config/db';
 import { User } from '../types';
 
-const client = new OAuth2Client();
+// Initialize Clerk (will need CLERK_SECRET_KEY in .env)
+const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
-export const googleLogin = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { idToken } = req.body as { idToken: string };
+export const clerkLogin = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { token } = req.body as { token: string };
 
-    if (!idToken) {
-        return reply.status(400).send({ error: 'Missing idToken' });
+    if (!token) {
+        return reply.status(400).send({ error: 'Missing session token' });
     }
 
     try {
-        // 1. Verify Google Token
-        const ticket = await client.verifyIdToken({
-            idToken,
-            // audience: process.env.GOOGLE_CLIENT_ID, // Specify the CLIENT_ID of the app that accesses the backend
-        });
-        const payload = ticket.getPayload();
+        // 1. Verify Clerk Token
+        // In a real mobile app, you might verify the JWT from the Authorizaton header.
+        // For this hybrid approach, we'll verify the session token passed in the body.
+        const client = await clerk.clients.verifyClient(token);
 
-        if (!payload) {
-            return reply.status(401).send({ error: 'Invalid token payload' });
+        if (!client) {
+            return reply.status(401).send({ error: 'Invalid session' });
         }
 
-        const { sub: googleId, email, name, picture } = payload;
+        const userId = client.sessions[0].userId;
+        const userDetails = await clerk.users.getUser(userId);
 
-        // 2. Check if user exists in DB
+        const email = userDetails.emailAddresses[0].emailAddress;
+        const name = `${userDetails.firstName} ${userDetails.lastName}`;
+        const picture = userDetails.imageUrl;
+        const clerkId = userDetails.id;
+
+        // 2. Check/Create User in DB
         const existingUserResult = await db.query(
-            'SELECT * FROM users WHERE email = $1',
-            [email]
+            'SELECT * FROM users WHERE id = $1', // Assuming we use Clerk ID as our ID now, or map it
+            [clerkId]
         );
 
         let user: User;
 
         if (existingUserResult.rows.length > 0) {
-            // User exists, update info if needed (optional)
             user = existingUserResult.rows[0];
-            // Update last login?
         } else {
-            // Create new user
-            // Generate a simple referral code from name or random
-            const referralCode = (name?.substring(0, 4).toUpperCase() || 'USER') + Math.floor(1000 + Math.random() * 9000);
+            const referralCode = (userDetails.firstName?.substring(0, 4).toUpperCase() || 'USER') + Math.floor(1000 + Math.random() * 9000);
 
             const newUserResult = await db.query(
                 `INSERT INTO users (id, email, full_name, avatar_url, referral_code, created_at)
                  VALUES ($1, $2, $3, $4, $5, NOW())
                  RETURNING *`,
-                [googleId, email, name, picture, referralCode]
+                [clerkId, email, name, picture, referralCode]
             );
             user = newUserResult.rows[0];
 
-            // Create a Wallet for the new user
             await db.query(
                 `INSERT INTO wallets (user_id, balance, updated_at)
                  VALUES ($1, 0.00, NOW())`,
@@ -59,14 +59,10 @@ export const googleLogin = async (req: FastifyRequest, reply: FastifyReply) => {
             );
         }
 
-        // 3. Return User Data (and maybe a session token for your app)
-        return reply.send({
-            user,
-            token: 'session_token_placeholder' // In prod, generate a JWT here
-        });
+        return reply.send({ user, token: 'session_verified' });
 
     } catch (error) {
-        console.error('Login Error:', error);
-        return reply.status(401).send({ error: 'Authentication failed' });
+        console.error('Clerk Login Error:', error);
+        return reply.status(401).send({ error: 'Authentication failed', details: (error as any).message });
     }
 };

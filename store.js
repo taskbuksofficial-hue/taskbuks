@@ -17,7 +17,8 @@ const defaultState = {
     tasks: {
         available: [], // Fetched from API
         ongoing: [],
-        completed: []
+        completed: [],
+        surveys: [] // Fetched from CPX API
     },
     transactions: [],
     ui: {
