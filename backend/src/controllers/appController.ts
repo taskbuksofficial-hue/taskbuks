@@ -9,6 +9,10 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
         const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
         const walletResult = await db.query('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+        const earningsResult = await db.query(
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'credit'",
+            [userId]
+        );
 
         if (userResult.rows.length === 0) {
             return reply.status(404).send({ error: 'User not found' });
@@ -16,11 +20,13 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
 
         const user = userResult.rows[0];
         const wallet = walletResult.rows[0] || { balance: 0 };
+        const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
 
         return reply.send({
             ...user,
-            balance: wallet.balance,
-            isEmailVerified: true // Simplified
+            balance: parseFloat(wallet.balance) || 0,
+            lifetimeEarnings,
+            isEmailVerified: true
         });
     } catch (error) {
         console.error("getProfile error:", error);
@@ -270,6 +276,68 @@ export const getCPXSurveys = async (req: FastifyRequest, reply: FastifyReply) =>
 
     } catch (error) {
         console.error("getCPXSurveys error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+
+export const getTransactions = async (req: FastifyRequest, reply: FastifyReply) => {
+    const userId = (req as any).userId;
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+    try {
+        const result = await db.query(
+            'SELECT id, amount, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            [userId]
+        );
+        return reply.send(result.rows);
+    } catch (error) {
+        console.error("getTransactions error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+
+export const handleRapidReachPostback = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const query = req.query as any;
+        const userId = query.user_id;
+        const amount = parseFloat(query.amount || '0');
+        const transId = query.trans_id || query.transaction_id;
+        const status = query.status || 'completed';
+
+        if (!userId || !amount || !transId) {
+            return reply.status(400).send({ error: 'Missing required parameters' });
+        }
+
+        console.log(`RapidReach Postback: user=${userId}, amount=${amount}, trans=${transId}, status=${status}`);
+
+        if (status !== 'completed' && status !== '1') {
+            return reply.send({ status: 'ignored', reason: 'Not a completed transaction' });
+        }
+
+        // Check for duplicate
+        const existing = await db.query(
+            "SELECT id FROM transactions WHERE description LIKE $1",
+            [`%RapidReach:${transId}%`]
+        );
+        if (existing.rows.length > 0) {
+            return reply.send({ status: 'duplicate' });
+        }
+
+        // Credit wallet
+        await db.query(
+            'UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2',
+            [amount, userId]
+        );
+
+        // Record transaction
+        await db.query(
+            "INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, 'credit')",
+            [userId, amount, `Survey Completed (RapidReach:${transId})`]
+        );
+
+        return reply.send({ status: 'ok' });
+    } catch (error) {
+        console.error("RapidReach postback error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });
     }
 };

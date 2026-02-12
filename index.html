@@ -453,20 +453,77 @@
         <div id="wallet" class="page-section hidden space-y-6">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white">My Wallet</h2>
 
-            <div class="bg-slate-900 dark:bg-black text-white p-6 rounded-[24px] relative overflow-hidden shadow-xl">
-                <div class="relative z-10">
-                    <p class="text-slate-400 text-sm font-medium mb-1">Total Balance</p>
-                    <h3 class="text-4xl font-black user-balance">0</h3>
+            <!-- Balance Card -->
+            <div class="relative overflow-hidden rounded-[24px] shadow-xl"
+                style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full"
+                        style="background: radial-gradient(circle, rgba(16,185,129,0.4), transparent);"></div>
+                    <div class="absolute -left-10 -bottom-10 w-32 h-32 rounded-full"
+                        style="background: radial-gradient(circle, rgba(59,130,246,0.4), transparent);"></div>
                 </div>
-                <div class="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-primary/20 to-transparent"></div>
-                <button class="mt-6 w-full bg-primary text-white font-bold py-3 rounded-xl disabled:opacity-50"
-                    disabled>Withdraw (Min ₹500)</button>
+                <div class="relative z-10 p-6">
+                    <p class="text-slate-400 text-xs font-medium tracking-wider uppercase mb-1">Available Balance</p>
+                    <h3 class="text-4xl font-black text-white user-balance">₹0.00</h3>
+
+                    <div class="flex items-center gap-6 mt-5">
+                        <div>
+                            <p class="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Lifetime Earned
+                            </p>
+                            <p class="text-white font-bold text-lg user-lifetime-earnings">₹0.00</p>
+                        </div>
+                        <div class="h-8 w-px bg-white/10"></div>
+                        <div>
+                            <p class="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Pending</p>
+                            <p class="text-white font-bold text-lg">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- Withdraw Section -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-sm dark:text-white">Withdraw Progress</h3>
+                    <span id="withdraw-progress-text" class="text-xs font-bold text-primary">₹0 / ₹500</span>
+                </div>
+                <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div id="withdraw-progress-bar" class="h-full rounded-full transition-all duration-700 ease-out"
+                        style="width: 0%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                </div>
+                <button id="withdraw-btn"
+                    class="mt-4 w-full font-bold py-3.5 rounded-xl text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-white shadow-lg shadow-primary/20 hover:shadow-primary/40"
+                    disabled>
+                    <span class="material-icons-round text-sm align-middle mr-1">account_balance</span>
+                    Withdraw to UPI (Min ₹500)
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border border-amber-100 dark:border-amber-900/20 rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-transform nav-item"
+                    data-target="home" onclick="if(window.ads) window.ads.showRewarded()">
+                    <span class="material-icons-round text-2xl text-amber-500 mb-2 block">play_circle</span>
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-white">Watch & Earn</h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5">₹10 per video ad</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/10 dark:to-indigo-900/10 border border-purple-100 dark:border-purple-900/20 rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-transform nav-item"
+                    data-target="surveys">
+                    <span class="material-icons-round text-2xl text-purple-500 mb-2 block">poll</span>
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-white">Surveys</h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Earn up to ₹200</p>
+                </div>
+            </div>
+
+            <!-- Transactions -->
             <div>
-                <h3 class="font-bold text-lg mb-4 dark:text-white">Recent Transactions</h3>
+                <h3 class="font-bold text-lg mb-4 dark:text-white flex items-center gap-2">
+                    <span class="material-icons-round text-primary text-xl">receipt_long</span>
+                    Recent Transactions
+                </h3>
                 <div id="transaction-list"
-                    class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 ios-shadow space-y-2">
+                    class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 ios-shadow space-y-1">
                     <!-- Injected by app.js -->
                 </div>
             </div>

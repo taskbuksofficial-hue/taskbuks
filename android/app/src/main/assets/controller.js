@@ -28,14 +28,19 @@ window.controller = {
 
         try {
             // Parallel Fetch
-            const [profile, offers, streakStatus] = await Promise.all([
+            const [profile, offers, streakStatus, transactions] = await Promise.all([
                 api.getProfile(),
                 api.getOffers(),
-                api.getStreakStatus()
+                api.getStreakStatus(),
+                api.getTransactions().catch(() => [])
             ]);
 
             store.setState({
                 user: profile,
+                wallet: {
+                    currentBalance: parseFloat(profile.balance) || 0,
+                    lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0
+                },
                 tasks: {
                     ...store.getState().tasks,
                     available: offers
@@ -45,6 +50,7 @@ window.controller = {
                     currentStreak: streakStatus.streak,
                     isClaimedToday: streakStatus.claimedToday
                 },
+                transactions: transactions || [],
                 ui: { ...store.getState().ui, isLoading: false }
             });
         } catch (error) {
