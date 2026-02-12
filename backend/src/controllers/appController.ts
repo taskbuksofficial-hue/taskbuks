@@ -299,10 +299,10 @@ export const getTransactions = async (req: FastifyRequest, reply: FastifyReply) 
 export const handleRapidReachPostback = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
         const query = req.query as any;
-        const userId = query.user_id;
-        const amount = parseFloat(query.amount || '0');
-        const transId = query.trans_id || query.transaction_id;
-        const status = query.status || 'completed';
+        const userId = query.user_id || query.u;
+        const amount = parseFloat(query.amount || query.a || '0');
+        const transId = query.trans_id || query.t || query.transaction_id;
+        const status = query.status || query.s || 'completed';
 
         if (!userId || !amount || !transId) {
             return reply.status(400).send({ error: 'Missing required parameters' });
