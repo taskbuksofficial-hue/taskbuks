@@ -18,6 +18,10 @@ var unityAdsInitialized = false;
     script.onload = function () {
         console.log('[UnityAds] SDK loaded, initializing...');
         initUnityAds();
+        // Check env after a slight delay to allow native bridge injection
+        setTimeout(() => {
+            if (window.ads && window.ads.checkEnvironment) window.ads.checkEnvironment();
+        }, 1000);
     };
     script.onerror = function () {
         console.warn('[UnityAds] Failed to load SDK');
@@ -202,10 +206,32 @@ window.ads = {
             if (shown) return;
         }
 
-        // 3. No Ad Available
-        console.warn("[SmartAd] No ad provider available");
-        if (window.showToast) window.showToast('⚠️ No Ad Available (Check Connection/Fill)');
-        if (callback) callback(0); // Proceed without reward
+        // 3. No Ad Available - Optimization
+        console.warn("[SmartAd] No ad provider available. Triggering reload.");
+
+        // Retry loading logic
+        if (unityAdsInitialized && !unityAdsReady) {
+            loadUnityRewardedAd(); // Force retry
+            if (window.showToast) window.showToast('⏳ Ad Loading... Please wait 5s and try again.');
+        } else {
+            if (window.showToast) window.showToast('⚠️ No Ad Filled. Checking connection...');
+            // Force init if completely failed
+            if (!unityAdsInitialized) initUnityAds();
+        }
+
+        if (callback) callback(0); // Proceed without reward (or should we block?)
+    },
+
+    checkEnvironment: function () {
+        if (window.Android && window.Android.showRewarded) {
+            if (window.showToast) window.showToast('📱 Native App Mode Detected');
+        } else {
+            console.log("Running in Web Mode");
+            // Only toast if we are debugging
+            if (window.location.search.includes('testAds=true')) {
+                if (window.showToast) window.showToast('🌐 Web Browser Mode');
+            }
+        }
     },
 
     setBannerVisible: function (visible, containerId) {
