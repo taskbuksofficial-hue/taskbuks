@@ -471,224 +471,278 @@ window.miniGames = {
     },
 
     // ─── LUDO (kept from before) ───────────────────────────
-    // ─── LUDO (Original 4-Token Version) ───────────────────
+    // ─── LUDO (Vertical Dark Theme) ────────────────────────
     ludo: {
         canvas: null, ctx: null, cellSize: 0, boardSize: 15,
-        players: [], // { color, tokens: [], path: [], startPos, baseCenter }
+        players: [],
         turn: 0, dice: 0, isRolling: false, gameOver: false,
-        safeSquares: [0, 8, 13, 21, 26, 34, 39, 47], // Relative to common path (0-51)
-        animId: null,
+        safeSquares: [0, 8, 13, 21, 26, 34, 39, 47],
+
+        // Layout Config
+        layout: { boardY: 0, boardSize: 0, topH: 0, botH: 0 },
 
         init() {
             this.canvas = document.getElementById('ludo-canvas');
             if (!this.canvas) return;
             this.ctx = this.canvas.getContext('2d');
             const container = this.canvas.parentElement;
-            const size = Math.min(container.clientWidth, 360);
-            this.canvas.width = size; this.canvas.height = size;
-            this.cellSize = size / this.boardSize;
+            const w = Math.min(container.clientWidth, 360);
+            const h = w * 1.5; // Vertical Aspect Ratio
+            this.canvas.width = w; this.canvas.height = h;
 
-            // Setup Players (Reference: Green=Bottom-Left Start, Red=Top-Right Start)
-            // Common Path: 52 squares. 
-            // Green Start: Index 0. Red Start: Index 26.
+            // Calculate Layout
+            // Top Section (20%): CPU Info
+            // Board (Square): Centered
+            // Bottom Section (20%): Player Info
+            const boardSize = w * 0.95; // 95% width
+            const padX = (w - boardSize) / 2;
+            const topH = (h - boardSize) / 2;
+
+            this.layout = { boardX: padX, boardY: topH, boardSize: boardSize, topH: topH };
+            this.cellSize = boardSize / this.boardSize;
+
+            // Setup Players
             this.players = [
-                { id: 0, name: 'You', color: '#22C55E', tokens: [-1, -1, -1, -1], baseColor: '#dcfce7', startNode: 0 },
-                { id: 1, name: 'CPU', color: '#EF4444', tokens: [-1, -1, -1, -1], baseColor: '#fee2e2', startNode: 26 }
+                { id: 0, name: 'You', color: '#22C55E', tokens: [-1, -1, -1, -1], avatar: '👤' },
+                { id: 1, name: 'CPU', color: '#EF4444', tokens: [-1, -1, -1, -1], avatar: '🤖' }
             ];
 
-            this.turn = 0; // 0 = Human to start
-            this.dice = 0;
-            this.isRolling = false;
-            this.gameOver = false;
+            this.turn = 0; this.dice = 0; this.isRolling = false; this.gameOver = false;
 
-            // Add click listener for token selection
             this.canvas.onclick = (e) => this.handleClick(e);
-
-            this.updateStatus("Your turn! Tap the dice to roll.");
+            this.updateStatus("Your turn!");
             this.draw();
         },
 
-        // Convert path index to (x,y) coordinates
         getCoord(playerIndex, pos) {
-            // Internal path logic:
-            // -1: Base
-            // 0-50: Main board loop (52 steps)
-            // 51-56: Home straight (Final is 56)
-            // Note: Each player views their start as 0 relative to movement, but we map to absolute board coords.
-
             const cs = this.cellSize;
-            // Define the visual path on 15x15 grid
-            // Mapping complex Ludo path is hard effectively in generic function, so using lookup for standard board
-            // Bottom-Left Start (Green) moves Right then Up...
+            const { boardX, boardY } = this.layout;
+
+            // Transform logic identical to before but mapped to new offset
+            // Local Coord (0-14)
+            let lx = 0, ly = 0;
 
             if (pos === -1) {
-                // Base positions
-                const p = this.players[playerIndex];
-                // Distribute 4 tokens in 2x2 grid in corners
-                // Green: Top-Left (actually Ludo standard is: Red=TL, Green=TR, Yellow=BR, Blue=BL? 
-                // Let's stick to our specific layout: Green Starts Bottom-Left area (1,6).
-                // So Base is Bottom-Left (0-5, 9-14).
-                const bx = playerIndex === 0 ? 1 : 10;
-                const by = playerIndex === 0 ? 10 : 1;
-                // Tokens inside base
-                // 0: bx+1, by+1
-                // 1: bx+3, by+1
-                // 2: bx+1, by+3
-                // 3: bx+3, by+3
-                // Actual tokens logic handled in draw
-                return { x: 0, y: 0 }; // Placeholder
+                // Base - Drawn separately in draw()
+                return null;
             }
 
-            // Relative Position to Absolute Board Coordinate
-            // Let's use a predefined path array for P1 (Green) starting at (1,6) -> (6,6) -> ...
-            // And P2 (Red) is valid shift of 26 steps.
-
-            // Simplified Path Nodes (x,y) for 52 steps starting from Green's start
             const pathNodes = [
-                { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 }, // 0-4
-                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 }, // 5-10
-                { x: 7, y: 14 }, // 11 (Middle Bottom)
-                { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 }, // 12-17
-                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }, // 18-23
-                { x: 14, y: 7 }, // 24 (Middle Right)
-                { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 }, // 25-30
-                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 }, // 31-36
-                { x: 7, y: 0 }, // 37 (Middle Top)
-                { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 }, // 38-43
-                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 }, // 44-49
-                { x: 0, y: 7 }, // 50 (Middle Left)
-                { x: 0, y: 8 }  // 51 (Overlap start, should not reach here usually as it goes into home)
+                { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 },
+                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 },
+                { x: 7, y: 14 },
+                { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 },
+                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 },
+                { x: 14, y: 7 },
+                { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 },
+                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 },
+                { x: 7, y: 0 },
+                { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 },
+                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 },
+                { x: 0, y: 7 },
+                { x: 0, y: 8 }
             ];
 
-            // Normalize pos based on player offset
-            // P1 (Green) offset 0.
-            // P2 (Red) offset 26.
             let offset = playerIndex === 0 ? 0 : 26;
 
-            if (pos > 50) { // Home Stretch (51-56)
-                // Green Home Stretch: From (1,7) rightwards to center
-                // Red Home Stretch: From (13,7) leftwards to center
-
-                const step = pos - 51; // 0 to 5
-                if (playerIndex === 0) {
-                    // Green Home: (1,7) -> (2,7) -> ... (6,7)
-                    return { x: 1 + step, y: 7 };
-                } else {
-                    // Red Home: (13,7) -> (12,7) -> ... (8,7)
-                    return { x: 13 - step, y: 7 };
-                }
+            if (pos > 50) {
+                const step = pos - 51;
+                if (playerIndex === 0) { lx = 1 + step; ly = 7; }
+                else { lx = 13 - step; ly = 7; }
+            } else {
+                let absIndex = (pos + offset) % 52;
+                lx = pathNodes[absIndex].x;
+                ly = pathNodes[absIndex].y;
             }
 
-            // Main Path
-            // Calculate absolute index 0-51
-            let absIndex = (pos + offset) % 52;
-            return pathNodes[absIndex];
+            return { x: boardX + lx * cs + cs / 2, y: boardY + ly * cs + cs / 2 };
         },
 
         draw() {
             const ctx = this.ctx;
-            const cs = this.cellSize; // ~24px
             const W = this.canvas.width;
+            const H = this.canvas.height;
+            const { boardX, boardY, boardSize } = this.layout;
+            const cs = this.cellSize;
 
-            ctx.clearRect(0, 0, W, W);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, W, W);
+            // 1. Background (Dark Indigo)
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, H);
+            bgGradient.addColorStop(0, '#1e1b4b'); // Deep Blue
+            bgGradient.addColorStop(1, '#0f172a'); // Slate 900
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, W, H);
 
-            // Draw 4 Quadrants (Bases)
-            // TL (Red Base in standard? No let's stick to our P1/P2)
-            // We defined P1(Green) -> Start 0. In visual path 0 is (1,8) -> Bottom Left area.
-            // So P1 Base is Bottom-Left. P2 Base is Top-Right.
-
-            const drawBase = (x, y, color, label) => {
-                ctx.fillStyle = color;
-                ctx.fillRect(x * cs, y * cs, 6 * cs, 6 * cs);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect((x + 1) * cs, (y + 1) * cs, 4 * cs, 4 * cs);
-                // 4 slots
-                ctx.fillStyle = color; // faint slots
-                [[1.5, 1.5], [3.5, 1.5], [1.5, 3.5], [3.5, 3.5]].forEach(([dx, dy]) => {
-                    ctx.beginPath();
-                    ctx.arc((x + dx) * cs, (y + dy) * cs, cs * 0.3, 0, Math.PI * 2);
-                    ctx.fill();
-                });
+            // Helper for rounded rectangle
+            const roundedRect = (ctx, x, y, width, height, radius) => {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
             };
 
-            // Draw Bases
-            // P1 (Green): Bottom Left (0, 9) -> 6x6
-            drawBase(0, 9, '#22C55E', 'YOU');
-            // P2 (Red): Top Right (9, 0) -> 6x6
-            drawBase(9, 0, '#EF4444', 'CPU');
-            // Others (Inactive): Top Left, Bottom Right
-            drawBase(0, 0, '#e5e7eb', '');
-            drawBase(9, 9, '#e5e7eb', '');
+            // 2. Player Info Areas
+            const drawAvatar = (pid, name, color, isTop) => {
+                const y = isTop ? boardY * 0.4 : H - boardY * 0.4;
+                const x = W / 2;
 
-            // Draw Grid steps
-            ctx.strokeStyle = '#9ca3af';
-            ctx.lineWidth = 1;
+                // Active Glow
+                if (this.turn === pid) {
+                    ctx.shadowBlur = 20; ctx.shadowColor = color;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
 
-            // We can just draw the path squares
+                // Avatar Circle
+                ctx.beginPath();
+                ctx.arc(x, y, 24, 0, Math.PI * 2);
+                ctx.fillStyle = this.turn === pid ? '#fff' : '#334155';
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+
+                // Inner
+                ctx.beginPath();
+                ctx.arc(x, y, 22, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                // Text
+                ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff'; ctx.fillText(pid === 0 ? '👤' : '🤖', x, y);
+
+                // Name
+                ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = this.turn === pid ? '#fff' : '#64748b';
+                ctx.fillText(name, x, y + 40);
+
+                // Dice (if active)
+                if (this.turn === pid) {
+                    const dx = x + 60; const dy = y;
+                    ctx.fillStyle = '#fff';
+                    roundedRect(ctx, dx - 18, dy - 18, 36, 36, 8);
+                    ctx.fill();
+                    // Pips (simple text)
+                    if (this.dice > 0) {
+                        ctx.fillStyle = '#000'; ctx.font = '24px sans-serif';
+                        const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                        ctx.fillText(pips[this.dice - 1], dx, dy + 2);
+                    } else {
+                        // Rolling Hints
+                        if (pid === 0 && !this.isRolling) {
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif';
+                            ctx.fillText("TAP", dx, dy);
+                        }
+                    }
+                }
+            };
+
+            drawAvatar(1, 'CPU Opponent', '#EF4444', true);  // Top
+            drawAvatar(0, 'You', '#22C55E', false); // Bottom
+
+            // 3. Game Board Background (White base for colors)
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(boardX, boardY, boardSize, boardSize);
+
+            // 4. Colored Quadrants
+            // TL (Red), TR (Green - P2 Start?), BL (Blue), BR (Yellow)
+            // Wait, our P1 is Green (Bottom-Left), P2 is Red (Top-Right).
+            // Let's color bases to match standard scheme somewhat but adapted.
+            // P1 (Green) Base -> Bottom Left.
+            // P2 (Red) Base -> Top Right.
+            // Dummy Bases -> Top Left (Yellow?), Bottom Right (Blue?).
+
+            const drawQuad = (bx, by, color) => {
+                ctx.fillStyle = color;
+                ctx.fillRect(boardX + bx * cs, boardY + by * cs, 6 * cs, 6 * cs);
+                // White inner
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(boardX + (bx + 1) * cs, boardY + (by + 1) * cs, 4 * cs, 4 * cs);
+            };
+
+            drawQuad(0, 0, '#eab308'); // TL Yellow
+            drawQuad(9, 0, '#ef4444'); // TR Red (CPU Base)
+            drawQuad(0, 9, '#22c55e'); // BL Green (You Base)
+            drawQuad(9, 9, '#3b82f6'); // BR Blue
+
+            // 5. Grid Cells
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+            // Draw all cells (15x15) - overlaying board
+            // Actually efficient way: Draw paths
             const pathNodes = [
-                { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 }, // 0-4
-                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 }, // 5-10
-                { x: 7, y: 14 }, // 11
-                { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 }, // 12-17
-                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }, // 18-23
-                { x: 14, y: 7 }, // 24
-                { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 }, // 25-30
-                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 }, // 31-36
-                { x: 7, y: 0 }, // 37
-                { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 }, // 38-43
-                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 }, // 44-49
-                { x: 0, y: 7 }, // 50
-                { x: 0, y: 8 }  // 51
+                { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 },
+                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 },
+                { x: 7, y: 14 },
+                { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 },
+                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 },
+                { x: 14, y: 7 },
+                { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 },
+                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 },
+                { x: 7, y: 0 },
+                { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 },
+                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 },
+                { x: 0, y: 7 },
+                { x: 0, y: 8 }
             ];
 
             pathNodes.forEach((n, i) => {
-                const x = n.x * cs; const y = n.y * cs;
+                const x = boardX + n.x * cs, y = boardY + n.y * cs;
                 ctx.fillStyle = '#fff';
-                // Safe Zones
-                if (i === 0) ctx.fillStyle = '#22C55E50'; // Green Start
-                if (i === 8) ctx.fillStyle = '#e5e7eb'; // Star
-                if (i === 26) ctx.fillStyle = '#EF444450'; // Red Start
-                if (i === 13 || i === 21 || i === 34 || i === 39 || i === 47) ctx.fillStyle = '#f3f4f6'; // Other safe
+                // Safe Zones / Starts
+                if (i === 0) ctx.fillStyle = '#22C55E'; // Green Start
+                if (i === 8) ctx.fillStyle = '#e2e8f0'; // Star
+                if (i === 26) ctx.fillStyle = '#EF4444'; // Red Start
+                if ([13, 21, 34, 39, 47].includes(i)) ctx.fillStyle = '#e2e8f0';
 
                 ctx.fillRect(x, y, cs, cs);
                 ctx.strokeRect(x, y, cs, cs);
 
-                // Draw Star on safe zones
+                // Stars
                 if ([8, 13, 21, 34, 39, 47].includes(i)) {
-                    ctx.fillStyle = '#9ca3af';
-                    ctx.font = `${cs * 0.5}px Arial`;
+                    ctx.fillStyle = '#94a3b8'; ctx.font = `${cs * 0.5}px Arial`;
                     ctx.fillText('★', x + cs * 0.2, y + cs * 0.75);
                 }
-                // Arrows on start
-                if (i === 0) { ctx.fillStyle = '#22C55E'; ctx.fillText('➜', x + cs * 0.2, y + cs * 0.75); }
-                if (i === 26) { ctx.fillStyle = '#EF4444'; ctx.fillText('➜', x + cs * 0.2, y + cs * 0.75); }
+                // Arrows (Start Arrows)
+                if (i === 0) { ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.5}px Arial`; ctx.fillText('➜', x + cs * 0.1, y + cs * 0.7); }
+                if (i === 26) { ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.5}px Arial`; ctx.fillText('➜', x + cs * 0.1, y + cs * 0.7); }
             });
 
             // Home Streaks
-            // Green (1,7) -> (5,7)
-            for (let k = 1; k <= 5; k++) {
-                ctx.fillStyle = '#22C55E'; ctx.fillRect(k * cs, 7 * cs, cs, cs); ctx.strokeRect(k * cs, 7 * cs, cs, cs);
+            for (let k = 1; k <= 5; k++) { // Green
+                ctx.fillStyle = '#22C55E'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs);
             }
-            // Red (13,7) -> (9,7)
-            for (let k = 13; k >= 9; k--) {
-                ctx.fillStyle = '#EF4444'; ctx.fillRect(k * cs, 7 * cs, cs, cs); ctx.strokeRect(k * cs, 7 * cs, cs, cs);
+            for (let k = 13; k >= 9; k--) { // Red
+                ctx.fillStyle = '#EF4444'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs);
             }
+            // Vertical Homes (Blue/Yellow - Visual only)
+            for (let k = 1; k <= 5; k++) { ctx.fillStyle = '#eab308'; ctx.fillRect(boardX + 7 * cs, boardY + k * cs, cs, cs); ctx.strokeRect(boardX + 7 * cs, boardY + k * cs, cs, cs); }
+            for (let k = 13; k >= 9; k--) { ctx.fillStyle = '#3b82f6'; ctx.fillRect(boardX + 7 * cs, boardY + k * cs, cs, cs); ctx.strokeRect(boardX + 7 * cs, boardY + k * cs, cs, cs); }
 
-            // Center (Home)
+            // Center Home
             ctx.beginPath();
-            ctx.moveTo(6 * cs, 6 * cs); ctx.lineTo(9 * cs, 6 * cs); ctx.lineTo(7.5 * cs, 7.5 * cs); ctx.fillStyle = '#EF4444'; ctx.fill(); // Top Red? No.
-            // Triangles... simplified center square
-            ctx.fillStyle = '#fcd34d'; ctx.fillRect(6 * cs, 6 * cs, 3 * cs, 3 * cs);
-            ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText('HOME', 7.5 * cs, 7.5 * cs);
+            ctx.moveTo(boardX + 6 * cs, boardY + 6 * cs);
+            ctx.lineTo(boardX + 9 * cs, boardY + 6 * cs);
+            ctx.lineTo(boardX + 9 * cs, boardY + 9 * cs);
+            ctx.lineTo(boardX + 6 * cs, boardY + 9 * cs);
+            ctx.fillStyle = '#f8fafc'; ctx.fill();
+            // Triangles
+            const cx = boardX + 7.5 * cs, cy = boardY + 7.5 * cs;
+            const tri = (c, x1, y1, x2, y2) => {
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.fillStyle = c; ctx.fill();
+            }
+            tri('#eab308', boardX + 6 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 6 * cs); // Top
+            tri('#ef4444', boardX + 9 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 9 * cs); // Right
+            tri('#3b82f6', boardX + 9 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 9 * cs); // Bottom
+            tri('#22c55e', boardX + 6 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 6 * cs); // Left
 
-            // Draw Tokens
+            // 6. Draw Tokens (3D Style)
             this.players.forEach(p => {
-                // Count tokens at same position to offset them
                 const posCounts = {};
-                p.tokens.forEach(pos => { posCounts[pos] = (posCounts[pos] || 0) + 1; });
+                p.tokens.forEach(pos => posCounts[pos] = (posCounts[pos] || 0) + 1);
                 const posDrawn = {};
 
                 p.tokens.forEach((pos, idx) => {
@@ -699,46 +753,44 @@ window.miniGames = {
                         const by = p.id === 0 ? 9 : 0;
                         const offX = (idx % 2) * 2 + 1.5;
                         const offY = Math.floor(idx / 2) * 2 + 1.5;
-                        tx = (bx + offX) * cs;
-                        ty = (by + offY) * cs;
+                        tx = boardX + (bx + offX) * cs;
+                        ty = boardY + (by + offY) * cs;
                     } else if (pos === 999) {
-                        // Won (Center)
-                        tx = 7.5 * cs + (Math.random() - 0.5) * cs;
-                        ty = 7.5 * cs + (Math.random() - 0.5) * cs;
+                        tx = boardX + 7.5 * cs + (Math.random() - 0.5) * cs * 0.5;
+                        ty = boardY + 7.5 * cs + (Math.random() - 0.5) * cs * 0.5;
                     } else {
-                        // Path
                         const c = this.getCoord(p.id, pos);
-                        tx = c.x * cs + cs / 2;
-                        ty = c.y * cs + cs / 2;
-
-                        // Offset if multiple tokens
+                        tx = c.x; ty = c.y;
                         if (posCounts[pos] > 1) {
-                            const count = posCounts[pos];
                             const i = posDrawn[pos] || 0;
-                            tx += (i - (count - 1) / 2) * (cs / 3);
+                            tx += (i - (posCounts[pos] - 1) / 2) * (cs / 3);
                             posDrawn[pos] = i + 1;
                         }
                     }
 
-                    // Highlight movable tokens
-                    const canMove = p.id === this.turn && this.dice > 0 && this.canMove(p.id, idx);
+                    // Shadow
+                    ctx.beginPath();
+                    ctx.ellipse(tx, ty + cs * 0.2, cs * 0.3, cs * 0.1, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+
+                    // Body (Gradient)
+                    const grad = ctx.createRadialGradient(tx - cs * 0.1, ty - cs * 0.1, cs * 0.05, tx, ty, cs * 0.35);
+                    grad.addColorStop(0, '#fff');
+                    grad.addColorStop(0.3, p.color);
+                    grad.addColorStop(1, '#000'); // Darken edges
 
                     ctx.beginPath();
                     ctx.arc(tx, ty, cs * 0.35, 0, Math.PI * 2);
-                    ctx.fillStyle = p.color;
+                    ctx.fillStyle = grad;
                     ctx.fill();
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#fff';
-                    if (canMove) {
-                        ctx.strokeStyle = '#000'; // Highlight
-                        ctx.lineWidth = 3;
-                        // Add pulsing effect?
+                    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+
+                    // Highlight if movable
+                    if (this.turn === p.id && this.dice > 0 && this.canMove(p.id, idx)) {
+                        // Selection Ring
                         ctx.beginPath();
                         ctx.arc(tx, ty, cs * 0.45, 0, Math.PI * 2);
-                        ctx.strokeStyle = `rgba(0,0,0,${0.3 + Math.sin(Date.now() / 200) * 0.2})`;
-                        ctx.stroke();
-                    } else {
-                        ctx.stroke();
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
                     }
                 });
             });
@@ -748,88 +800,62 @@ window.miniGames = {
 
         canMove(pid, tid) {
             const pos = this.players[pid].tokens[tid];
-            if (pos === 999) return false; // Already won
-            if (this.dice === 0) return false;
-
-            if (pos === -1) {
-                return this.dice === 6;
-            }
-
-            // Check if move exceeds 56 (win)
-            // Path: 0-50 (main) -> 51-55 (home stretch) -> 56 (Home)
-            // Current pos logic:
-            // IF pos < 100: It's on main track 0-50.
-            // Be careful with wrap around.
-            // Let's standardize:
-            // Token progress: 0 to 56.
-            // 0 = Start. 50 = End of loop. 51-55 = Home stretch. 56 = Home.
-            // BUT our `pathNodes` logic expects absolute board index.
-            // Let's redefine `tokens` to store PROGRESS (0-56).
-            // -1 = Base.
-            // 0 = Just exited base (on Start square).
-            // 50 = Last common square.
-            // 56 = Home.
-
-            // Adjust getCoord to use progress.
+            if (pos === 999 || this.dice === 0) return false;
+            if (pos === -1) return this.dice === 6;
             return pos + this.dice <= 56;
         },
 
+        // Handle Click (Needs to map click to board space or Dice area)
         handleClick(e) {
-            if (this.turn !== 0 || this.dice === 0 || this.isRolling || this.gameOver) return;
-
+            if (this.gameOver) return;
             const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const cs = this.cellSize;
+            // Scale click coordinates based on canvas display vs actual size
+            const scaleX = this.canvas.width / rect.width;
+            const scaleY = this.canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
 
-            // Find clicked token
-            // We check which token's visual position checks out.
-            // Simple: distance check.
-            let clickedToken = -1;
+            // Check Dice Click Area (Bottom for Player)
+            const { boardY } = this.layout;
+            const H = this.canvas.height;
+            const W = this.canvas.width;
 
-            // We need to re-calculate positions to check click.
-            // This is slightly inefficient but fine.
-            this.players[0].tokens.forEach((pos, idx) => {
-                if (clickedToken !== -1) return;
-
-                let tx, ty;
-                if (pos === -1) {
-                    const bx = 0, by = 9;
-                    const offX = (idx % 2) * 2 + 1.5;
-                    const offY = Math.floor(idx / 2) * 2 + 1.5;
-                    tx = (bx + offX) * cs;
-                    ty = (by + offY) * cs;
-                } else if (pos === 999) {
-                    return; // Can't move finished
-                } else {
-                    // Logic to map PROGRESS to COORD
-                    // Progress 0 = Start Node (0 or 26).
-                    const pStart = 0; // Green start index in pathNodes
-                    // ...
-                    // Wait, `getCoord` needs to be robust.
-                    // Let's update `getCoord` to take PROGRESS.
-                    // See updated getCoord below (implicit).
-                    const c = this.getCoord(0, pos);
-                    tx = c.x * cs + cs / 2;
-                    ty = c.y * cs + cs / 2;
+            // Player Dice Area (Bottom Center-ish)
+            // Defined in draw as: x=W/2+60, y=H-boardY*0.4
+            if (this.turn === 0 && !this.isRolling && this.dice === 0) {
+                const dx = W / 2 + 60; const dy = H - boardY * 0.4;
+                const dist = Math.sqrt((x - dx) ** 2 + (y - dy) ** 2);
+                if (dist < 40) {
+                    this.rollDice();
+                    return;
                 }
+            }
 
-                const dist = Math.sqrt((x - tx) ** 2 + (y - ty) ** 2);
-                if (dist < cs * 0.5) {
-                    clickedToken = idx;
-                }
-            });
+            // Check Token Click
+            if (this.turn === 0 && this.dice > 0) {
+                const cs = this.cellSize;
+                const { boardX, boardY } = this.layout;
 
-            if (clickedToken !== -1) {
-                if (this.canMove(0, clickedToken)) {
-                    this.moveToken(0, clickedToken);
-                } else {
-                    // Start auto-move if only 1 valid move?
-                    if (this.players[0].tokens[clickedToken] === -1 && this.dice !== 6) {
-                        this.updateStatus("Need a 6 to start!");
-                    } else {
-                        this.updateStatus("Invalid move!");
+                let clickedToken = -1;
+                this.players[0].tokens.forEach((pos, idx) => {
+                    let tx, ty;
+                    if (pos === -1) {
+                        // Base
+                        const bx = 0; const by = 9;
+                        const offX = (idx % 2) * 2 + 1.5;
+                        const offY = Math.floor(idx / 2) * 2 + 1.5;
+                        tx = boardX + (bx + offX) * cs;
+                        ty = boardY + (by + offY) * cs;
+                    } else if (pos === 999) return;
+                    else {
+                        const c = this.getCoord(0, pos);
+                        tx = c.x; ty = c.y;
                     }
+                    if (Math.sqrt((x - tx) ** 2 + (y - ty) ** 2) < cs * 0.6) clickedToken = idx;
+                });
+
+                if (clickedToken !== -1 && this.canMove(0, clickedToken)) {
+                    this.moveToken(0, clickedToken);
                 }
             }
         },
@@ -837,60 +863,32 @@ window.miniGames = {
         moveToken(pid, tid) {
             const p = this.players[pid];
             const oldPos = p.tokens[tid];
-            let newPos;
-
-            if (oldPos === -1) newPos = 0; // Moves to start
-            else newPos = oldPos + this.dice;
-
+            let newPos = oldPos === -1 ? 0 : oldPos + this.dice;
             p.tokens[tid] = newPos;
 
-            // Check win
+            // Win
             if (newPos === 56) {
-                p.tokens[tid] = 999; // Mark as done
-                this.updateStatus(pid === 0 ? "Token Home! 🎉" : "CPU Token Home!");
+                p.tokens[tid] = 999;
                 if (p.tokens.every(t => t === 999)) {
                     this.gameOver = true;
-                    this.updateStatus(pid === 0 ? "YOU WON THE MATCH! 🏆" : "CPU WON! 😢");
+                    this.updateStatus(pid === 0 ? "🏆 YOU WON!" : "💀 CPU WON");
                     if (pid === 0 && window.showToast) window.showToast("🏆 LUDO CHAMPION! +50 Coins!");
-                    this.draw();
-                    return;
+                    this.draw(); return;
                 }
-                // Bonus turn for home? Standard says yes.
-                this.dice = 0;
-                this.draw();
-                if (pid === 1) setTimeout(() => this.cpuTurn(), 1000);
-                return;
             }
-
-            // Capturing Logic
-            // Need absolute board position to compare.
-            // Progress 0-50 maps to board path indices.
-            // Green Start = 0 (abs 0).
-            // Red Start = 26 (abs 26).
-            // So Red Progress 0 = Abs 26.
-            // collisionIndex = (progress + startOffset) % 52 (if progress < 51)
-
+            // Capture
             if (newPos < 51) {
                 const myOffset = pid === 0 ? 0 : 26;
                 const myAbs = (newPos + myOffset) % 52;
-
-                // Is this a safe square?
-                const isSafe = [0, 8, 13, 21, 26, 34, 39, 47].includes(myAbs);
-
-                if (!isSafe) {
-                    const opponentId = pid === 0 ? 1 : 0;
-                    const opp = this.players[opponentId];
-                    const oppOffset = opponentId === 0 ? 0 : 26;
-
+                if (![0, 8, 13, 21, 26, 34, 39, 47].includes(myAbs)) {
+                    const oppId = pid === 0 ? 1 : 0;
+                    const opp = this.players[oppId];
+                    const oppOffset = oppId === 0 ? 0 : 26;
                     opp.tokens.forEach((tPos, tIdx) => {
-                        if (tPos !== -1 && tPos !== 999 && tPos < 51) {
-                            const oppAbs = (tPos + oppOffset) % 52;
-                            if (oppAbs === myAbs) {
-                                // CAPTURE!
-                                opp.tokens[tIdx] = -1; // Send home
-                                this.updateStatus(pid === 0 ? "You cut CPU! ⚔️" : "CPU cut you! 💔");
-                                // Bonus turn for capture? Standard says yes.
-                                // We'll implement if desired, but for now stick to simple structure.
+                        if (tPos >= 0 && tPos < 51 && tPos !== 999) {
+                            if ((tPos + oppOffset) % 52 === myAbs) {
+                                opp.tokens[tIdx] = -1; // Cut
+                                window.showToast?.("🔪 Cut!");
                             }
                         }
                     });
@@ -899,15 +897,13 @@ window.miniGames = {
 
             this.draw();
 
-            // Next turn
             if (this.dice === 6) {
-                this.updateStatus("Rolled 6! Roll again.");
-                this.dice = 0;
-                this.draw();
+                this.dice = 0; this.updateStatus("Roll again!");
                 if (pid === 1) setTimeout(() => this.cpuTurn(), 1000);
             } else {
                 this.turn = pid === 0 ? 1 : 0;
                 this.dice = 0;
+                this.updateStatus(this.turn === 0 ? "Your Turn" : "CPU Turn");
                 this.draw();
                 if (this.turn === 1) setTimeout(() => this.cpuTurn(), 1000);
                 else this.updateStatus("Your turn!");
@@ -982,92 +978,343 @@ window.miniGames = {
 
 
     // ─── SNAKE AND LADDERS (kept from before) ──────────────
+    // ─── SNAKE & LADDERS (Vertical Dark Theme) ─────────────
     snl: {
-        canvas: null, ctx: null, boardSize: 10, cellSize: 0,
-        playerPos: 0, cpuPos: 0, dice: 0, turn: 'player',
-        isRolling: false, gameOver: false,
-        snakes: { 98: 78, 95: 56, 93: 73, 87: 36, 64: 60, 62: 19, 54: 34, 17: 7 },
-        ladders: { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 51: 67, 72: 91, 80: 99 },
+        canvas: null, ctx: null, cellSize: 0, boardSize: 10,
+        players: [], turn: 0, dice: 0, isRolling: false, gameOver: false,
+        snakes: {}, ladders: {}, // Map start->end
+
+        // Layout Config
+        layout: { boardY: 0, boardSize: 0, topH: 0, botH: 0 },
 
         init() {
             this.canvas = document.getElementById('snl-canvas');
             if (!this.canvas) return;
             this.ctx = this.canvas.getContext('2d');
-            const size = Math.min(this.canvas.parentElement.clientWidth, 360);
-            this.canvas.width = size; this.canvas.height = size;
-            this.cellSize = size / this.boardSize;
-            this.playerPos = 0; this.cpuPos = 0; this.dice = 0;
-            this.turn = 'player'; this.isRolling = false; this.gameOver = false;
-            this.updateStatus('Roll the dice to start!');
+            const container = this.canvas.parentElement;
+            const w = Math.min(container.clientWidth, 360);
+            const h = w * 1.6; // Vertical Aspect Ratio
+            this.canvas.width = w; this.canvas.height = h;
+
+            // Calculate Layout
+            // Top (10%): Title
+            // Middle: Board
+            // Bottom (20%): Controls
+            const boardSize = w * 0.96; // 96% width
+            const padX = (w - boardSize) / 2;
+            const topH = (h - boardSize) * 0.4;
+
+            this.layout = { boardX: padX, boardY: topH, boardSize: boardSize, topH: topH };
+            this.cellSize = boardSize / this.boardSize;
+
+            // Setup Game
+            this.players = [
+                { id: 0, name: 'You', color: '#fbbf24', pos: 1, avatar: '👤' }, // Yellow
+                { id: 1, name: 'Com', color: '#ef4444', pos: 1, avatar: '🤖' }  // Red
+            ];
+
+            this.turn = 0; this.dice = 0; this.isRolling = false; this.gameOver = false;
+
+            // Define Snakes (Head -> Tail)
+            this.snakes = {
+                16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78
+            };
+            // Define Ladders (Bottom -> Top)
+            this.ladders = {
+                1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100
+            };
+
+            this.canvas.onclick = (e) => this.handleClick(e);
             this.draw();
         },
 
-        getCellCoords(pos) {
-            if (pos <= 0) return { x: 0, y: this.boardSize - 1 };
-            const p = pos - 1, row = Math.floor(p / this.boardSize);
-            const col = row % 2 === 0 ? p % this.boardSize : this.boardSize - 1 - p % this.boardSize;
-            return { x: col, y: this.boardSize - 1 - row };
+        // Convert 1-100 to (x,y)
+        getCoord(pos) {
+            if (pos < 1) pos = 1; if (pos > 100) pos = 100;
+            const cs = this.cellSize;
+            const { boardX, boardY } = this.layout;
+
+            // Row 0 is bottom (1-10)
+            const row = Math.floor((pos - 1) / 10); // 0-9
+            const col = (pos - 1) % 10;
+
+            let x, y;
+            // Rows 0, 2, 4... Left to Right
+            // Rows 1, 3, 5... Right to Left
+            if (row % 2 === 0) {
+                x = col;
+            } else {
+                x = 9 - col;
+            }
+            // Invert Y (Row 0 is bottom)
+            y = 9 - row;
+
+            return {
+                x: boardX + x * cs + cs / 2,
+                y: boardY + y * cs + cs / 2
+            };
         },
 
         draw() {
-            const ctx = this.ctx, cs = this.cellSize, w = this.canvas.width;
-            ctx.clearRect(0, 0, w, w);
-            const colors = ['#f0fdf4', '#fef9c3', '#ede9fe', '#fce7f3', '#e0f2fe', '#fef3c7'];
-            for (let i = 1; i <= 100; i++) {
-                const { x, y } = this.getCellCoords(i);
-                ctx.fillStyle = colors[i % colors.length]; ctx.fillRect(x * cs, y * cs, cs, cs);
-                ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.strokeRect(x * cs, y * cs, cs, cs);
-                ctx.fillStyle = '#64748b'; ctx.font = `bold ${cs * 0.22}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-                ctx.fillText(i, x * cs + cs / 2, y * cs + 2);
+            const ctx = this.ctx;
+            const W = this.canvas.width;
+            const H = this.canvas.height;
+            const { boardX, boardY, boardSize } = this.layout;
+            const cs = this.cellSize;
+
+            // 1. Background (Dark Indigo)
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(0, 0, W, H);
+
+            // 2. Title Area
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText("Snake & Ladders", W / 2, boardY / 2);
+
+            // 3. Board Grid
+            const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7']; // Vibrant pattern
+
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const x = boardX + c * cs;
+                    const y = boardY + r * cs;
+
+                    // Logic to find number for coloring consistency
+                    // Visual row 9 is actual row 0.
+                    const actualRow = 9 - r;
+                    const isLeftToRight = actualRow % 2 === 0;
+                    const colIndex = isLeftToRight ? c : 9 - c;
+                    const num = actualRow * 10 + colIndex + 1;
+
+                    ctx.fillStyle = colors[(num) % colors.length];
+                    ctx.fillRect(x, y, cs, cs);
+
+                    // Grid lines
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.strokeRect(x, y, cs, cs);
+
+                    // Number
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                    ctx.fillText(num, x + 2, y + 2);
+                }
             }
-            Object.entries(this.snakes).forEach(([h, t]) => { const hc = this.getCellCoords(+h), tc = this.getCellCoords(t); ctx.beginPath(); ctx.moveTo(hc.x * cs + cs / 2, hc.y * cs + cs / 2); ctx.lineTo(tc.x * cs + cs / 2, tc.y * cs + cs / 2); ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 3; ctx.stroke(); ctx.font = `${cs * 0.35}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🐍', hc.x * cs + cs / 2, hc.y * cs + cs / 2 + cs * 0.15); });
-            Object.entries(this.ladders).forEach(([b, t]) => { const bc = this.getCellCoords(+b), tc = this.getCellCoords(t); const ox = cs * 0.15; ctx.beginPath(); ctx.moveTo(bc.x * cs + cs / 2 - ox, bc.y * cs + cs / 2); ctx.lineTo(tc.x * cs + cs / 2 - ox, tc.y * cs + cs / 2); ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.beginPath(); ctx.moveTo(bc.x * cs + cs / 2 + ox, bc.y * cs + cs / 2); ctx.lineTo(tc.x * cs + cs / 2 + ox, tc.y * cs + cs / 2); ctx.stroke(); ctx.font = `${cs * 0.3}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🪜', bc.x * cs + cs / 2, bc.y * cs + cs / 2 + cs * 0.15); });
-            if (this.playerPos > 0) { const p = this.getCellCoords(this.playerPos); ctx.beginPath(); ctx.arc(p.x * cs + cs * 0.35, p.y * cs + cs * 0.65, cs * 0.2, 0, Math.PI * 2); ctx.fillStyle = '#22C55E'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = `bold ${cs * 0.18}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('P', p.x * cs + cs * 0.35, p.y * cs + cs * 0.65); }
-            if (this.cpuPos > 0) { const p = this.getCellCoords(this.cpuPos); ctx.beginPath(); ctx.arc(p.x * cs + cs * 0.65, p.y * cs + cs * 0.65, cs * 0.2, 0, Math.PI * 2); ctx.fillStyle = '#EF4444'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = `bold ${cs * 0.18}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('C', p.x * cs + cs * 0.65, p.y * cs + cs * 0.65); }
-            const f = this.getCellCoords(100); ctx.fillStyle = '#FFD700'; ctx.fillRect(f.x * cs + 1, f.y * cs + 1, cs - 2, cs - 2); ctx.fillStyle = '#000'; ctx.font = `bold ${cs * 0.22}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏆100', f.x * cs + cs / 2, f.y * cs + cs / 2);
+
+            // 4. Draw Snakes & Ladders
+            this.drawLadders(ctx);
+            this.drawSnakes(ctx);
+
+            // 5. Bottom Control Panel
+            const panelY = boardY + boardSize + 20;
+            const panelH = H - panelY;
+
+            // Panel BG
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, panelY - 20, W, panelH + 20); // Extend a bit up
+
+            // Avatar Left (You)
+            const drawPanelAvatar = (pid, x, label) => {
+                const y = panelY + 40;
+                // Box
+                const active = this.turn === pid;
+                ctx.fillStyle = active ? '#334155' : '#1e293b'; // Highlight if active
+                if (active) {
+                    ctx.shadowColor = this.players[pid].color; ctx.shadowBlur = 10;
+                    ctx.fillRect(x - 40, y - 30, 80, 60);
+                    ctx.shadowBlur = 0;
+                }
+                ctx.strokeStyle = '#475569'; ctx.strokeRect(x - 40, y - 30, 80, 60);
+
+                // Avatar
+                ctx.font = '24px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(this.players[pid].avatar, x, y - 5);
+                ctx.font = '12px sans-serif'; ctx.fillStyle = '#94a3b8';
+                ctx.fillText(label, x, y + 20);
+            };
+
+            drawPanelAvatar(0, W * 0.2, "You");
+            drawPanelAvatar(1, W * 0.8, "Com");
+
+            // Dice Center
+            const dx = W / 2, dy = panelY + 40;
+            // Dice Box
+            ctx.fillStyle = '#dc2626'; // Red dice
+            const ds = 50;
+            // roundedRect helper
+            ctx.fillRect(dx - ds / 2, dy - ds / 2, ds, ds);
+            ctx.strokeStyle = '#bd0f0f'; ctx.lineWidth = 2; ctx.strokeRect(dx - ds / 2, dy - ds / 2, ds, ds);
+
+            // Pips
+            ctx.fillStyle = '#fff'; ctx.font = '32px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            // Show dice value or rolling state
+            if (this.dice > 0) ctx.fillText(pips[this.dice - 1], dx, dy);
+            else ctx.fillText("?", dx, dy);
+
+            // Message
+            ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif';
+            if (this.gameOver) ctx.fillText(this.players[this.turn].name + " Won!", dx, dy - 40);
+            else ctx.fillText(this.turn === 0 ? "Your Turn" : "Com Turn", dx, dy - 40);
+
+
+            // 6. Draw Tokens on Board
+            this.players.forEach((p, i) => {
+                const c = this.getCoord(p.pos);
+                // Offset if share pos
+                let tx = c.x, ty = c.y;
+                if (this.players[0].pos === this.players[1].pos) {
+                    tx += (i === 0 ? -5 : 5);
+                }
+
+                // Shadow
+                ctx.beginPath(); ctx.ellipse(tx, ty + cs * 0.3, cs * 0.2, cs * 0.1, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fill();
+
+                // Pawn Body (Cone shape)
+                ctx.beginPath();
+                ctx.moveTo(tx, ty - cs * 0.4);
+                ctx.lineTo(tx + cs * 0.15, ty + cs * 0.3);
+                ctx.lineTo(tx - cs * 0.15, ty + cs * 0.3);
+                ctx.closePath();
+                ctx.fillStyle = p.color; ctx.fill(); ctx.stroke();
+
+                // Head
+                ctx.beginPath(); ctx.arc(tx, ty - cs * 0.4, cs * 0.15, 0, Math.PI * 2);
+                ctx.fillStyle = p.color; ctx.fill(); ctx.stroke();
+            });
+
+            if (this.isRolling && !this.gameOver) requestAnimationFrame(() => this.draw());
+        },
+
+        drawLadders(ctx) {
+            const cs = this.cellSize;
+            ctx.lineWidth = 4; ctx.strokeStyle = '#fbbf24'; // Wood
+
+            for (let start in this.ladders) {
+                const end = this.ladders[start];
+                const c1 = this.getCoord(parseInt(start));
+                const c2 = this.getCoord(end);
+
+                ctx.beginPath(); ctx.moveTo(c1.x - 5, c1.y); ctx.lineTo(c2.x - 5, c2.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(c1.x + 5, c1.y); ctx.lineTo(c2.x + 5, c2.y); ctx.stroke();
+
+                // Rungs
+                const dist = Math.sqrt((c2.x - c1.x) ** 2 + (c2.y - c1.y) ** 2);
+                const steps = Math.floor(dist / (cs / 2));
+                for (let i = 1; i < steps; i++) {
+                    const t = i / steps;
+                    const rx = c1.x + (c2.x - c1.x) * t;
+                    const ry = c1.y + (c2.y - c1.y) * t;
+                    ctx.beginPath(); ctx.moveTo(rx - 5, ry); ctx.lineTo(rx + 5, ry); ctx.stroke();
+                }
+            }
+        },
+
+        drawSnakes(ctx) {
+            // Snake Style: Curvy body, Head at Start (High num), Tail at End (Low num)
+            for (let start in this.snakes) {
+                const end = this.snakes[start]; // start > end
+                const head = this.getCoord(parseInt(start));
+                const tail = this.getCoord(end);
+
+                // Bezier Control Points (Randomized or calculated for 'S' shape)
+                const seed = parseInt(start) * 123;
+                const deterministic = (s) => ((Math.sin(s) * 10000) % 1);
+
+                const cx1 = head.x + (tail.x - head.x) * 0.33 + (deterministic(seed) - 0.5) * 50;
+                const cy1 = head.y + (tail.y - head.y) * 0.33 + (deterministic(seed + 1) - 0.5) * 50;
+                const cx2 = head.x + (tail.x - head.x) * 0.66 + (deterministic(seed + 2) - 0.5) * 50;
+                const cy2 = head.y + (tail.y - head.y) * 0.66 + (deterministic(seed + 3) - 0.5) * 50;
+
+                ctx.beginPath();
+                ctx.moveTo(head.x, head.y);
+                ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tail.x, tail.y);
+
+                ctx.lineWidth = 6; ctx.strokeStyle = (parseInt(start) % 2 === 0) ? '#22c55e' : '#ef4444'; // Green or Red snake
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                // Head
+                ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                // Eyes
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(head.x - 2, head.y - 2, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(head.x + 2, head.y - 2, 2, 0, Math.PI * 2); ctx.fill();
+            }
+        },
+
+        handleClick(e) {
+            if (this.gameOver || this.turn !== 0 || this.isRolling) return;
+
+            this.rollDice();
         },
 
         rollDice() {
-            if (this.isRolling || this.gameOver || this.turn !== 'player') return;
+            if (this.isRolling || this.gameOver) return;
             this.isRolling = true;
-            const diceEl = document.getElementById('snl-dice');
-            const de = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
             let c = 0;
-            const ri = setInterval(() => { if (diceEl) diceEl.textContent = de[Math.floor(Math.random() * 6)]; c++; if (c > 10) { clearInterval(ri); this.dice = Math.floor(Math.random() * 6) + 1; if (diceEl) diceEl.textContent = de[this.dice - 1]; this.moveToken('player'); } }, 80);
+            const ri = setInterval(() => {
+                this.dice = Math.floor(Math.random() * 6) + 1;
+                this.draw();
+                c++;
+                if (c > 15) {
+                    clearInterval(ri);
+                    this.isRolling = false;
+                    this.moveDetails(this.turn);
+                }
+            }, 60);
         },
 
-        moveToken(who) {
+        moveDetails(pid) {
+            const p = this.players[pid];
+            const oldPos = p.pos;
+            const newPos = oldPos + this.dice;
+
+            if (newPos > 100) {
+                // Stay pattern
+                this.nextTurn();
+                return;
+            }
+
+            p.pos = newPos;
+            this.draw();
+
+            // Check Win
+            if (newPos === 100) {
+                this.gameOver = true;
+                this.draw();
+                if (pid === 0 && window.showToast) window.showToast("🏆 You reached 100!");
+                return;
+            }
+
+            // Check Snake/Ladder
             setTimeout(() => {
-                const isP = who === 'player'; let pos = isP ? this.playerPos : this.cpuPos;
-                const np = pos + this.dice;
-                if (np > 100) { this.updateStatus(`${isP ? 'You' : 'CPU'} rolled ${this.dice}. Too high!`); this.finishTurn(who); return; }
-                if (np === 100) { if (isP) this.playerPos = 100; else this.cpuPos = 100; this.gameOver = true; this.draw(); if (isP) { this.updateStatus('🎉 You Win! +40 coins!'); if (window.showToast) window.showToast('🎉 Snake & Ladders won! +40 coins!'); } else this.updateStatus('CPU Wins!'); return; }
-                pos = np; let msg = `${isP ? 'You' : 'CPU'} rolled ${this.dice} → ${pos}.`;
-                if (this.snakes[pos]) { pos = this.snakes[pos]; msg += ` 🐍 Down to ${pos}!`; }
-                if (this.ladders[pos]) { pos = this.ladders[pos]; msg += ` 🪜 Up to ${pos}!`; }
-                if (isP) this.playerPos = pos; else this.cpuPos = pos;
-                this.updateStatus(msg); this.draw(); this.finishTurn(who);
-            }, 300);
+                if (this.snakes[newPos]) {
+                    p.pos = this.snakes[newPos];
+                    window.showToast?.("🐍 Snake catch!");
+                    this.draw();
+                } else if (this.ladders[newPos]) {
+                    p.pos = this.ladders[newPos];
+                    window.showToast?.("🪜 Ladder up!");
+                    this.draw();
+                }
+                this.nextTurn();
+            }, 500);
         },
 
-        finishTurn(who) {
+        nextTurn() {
             if (this.gameOver) return;
-            if (who === 'player') { if (this.dice === 6) { this.isRolling = false; return; } this.turn = 'cpu'; this.isRolling = false; setTimeout(() => this.cpuTurn(), 1000); }
-            else { if (this.dice === 6) { setTimeout(() => this.cpuTurn(), 1000); return; } this.turn = 'player'; this.isRolling = false; }
+            if (this.dice === 6) {
+                if (this.turn === 1) setTimeout(() => this.rollDice(), 1000);
+            } else {
+                this.turn = this.turn === 0 ? 1 : 0;
+                this.draw();
+                if (this.turn === 1) setTimeout(() => this.rollDice(), 1000);
+            }
         },
 
-        cpuTurn() {
-            if (this.gameOver) return;
-            this.updateStatus('CPU rolling...');
-            const diceEl = document.getElementById('snl-dice');
-            const de = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-            let c = 0;
-            const ri = setInterval(() => { if (diceEl) diceEl.textContent = de[Math.floor(Math.random() * 6)]; c++; if (c > 10) { clearInterval(ri); this.dice = Math.floor(Math.random() * 6) + 1; if (diceEl) diceEl.textContent = de[this.dice - 1]; this.moveToken('cpu'); } }, 80);
-        },
-
-        updateStatus(msg) { const el = document.getElementById('snl-status'); if (el) el.textContent = msg; },
         restart() { this.init(); }
-    }
+    },
 };
 /**
  * Task Buks App
