@@ -219,7 +219,7 @@
 
                     <!-- Slide 3: Daily Bonus Reminder -->
                     <div class="min-w-full snap-center relative overflow-hidden bg-gradient-to-br from-indigo-600 to-purple-700 h-48 flex items-center cursor-pointer"
-                        onclick="window.controller.claimDailyBonus()">
+                        onclick="document.getElementById('daily-bonus-popup').classList.remove('hidden'); document.getElementById('daily-bonus-popup').classList.add('flex');">
                         <div class="relative z-10 p-6 text-white w-2/3">
                             <h2 class="text-2xl font-extrabold leading-tight mb-1">Daily Bonus</h2>
                             <p class="text-xs opacity-90 mb-4 font-medium">Don't forget to claim your daily login
@@ -266,75 +266,84 @@
                 </div>
             </section>
 
-            <!-- Daily Bonus Section -->
-            <section id="daily-bonus-section"
-                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
+            <!-- Daily Bonus Popup Modal -->
+            <div id="daily-bonus-popup" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div id="daily-bonus-section"
+                    class="bg-white dark:bg-gray-800 rounded-[28px] p-5 w-full max-w-sm relative shadow-2xl"
+                    style="animation: modalBounce 0.4s ease-out;">
+                    <button
+                        onclick="document.getElementById('daily-bonus-popup').classList.add('hidden'); document.getElementById('daily-bonus-popup').classList.remove('flex');"
+                        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center z-10">
+                        <span class="material-icons-round text-slate-500 text-lg">close</span>
+                    </button>
+                    <div class="flex items-center gap-2 mb-4">
                         <span class="material-icons-round text-amber-500">card_giftcard</span>
                         <h3 class="font-bold text-base dark:text-white">Daily Bonus</h3>
+                        <span id="streak-badge"
+                            class="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-auto">🔥
+                            0 Day
+                            Streak</span>
                     </div>
-                    <span id="streak-badge"
-                        class="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">🔥 0 Day
-                        Streak</span>
+
+                    <!-- 7-Day Streak Pills -->
+                    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar justify-center">
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="1">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="2">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="3">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="4">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="5">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="6">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                ₹1</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="7">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
+                                ₹2</div>
+                            <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 text-center mb-3">Claim your bonus daily to maintain the streak
+                        &
+                        earn extra bonus!</p>
+
+                    <button id="claim-bonus-btn"
+                        class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                        onclick="window.claimDailyBonusUI()">
+                        <span class="material-icons-round text-sm align-middle mr-1">redeem</span>
+                        Claim ₹1 Daily Bonus
+                    </button>
                 </div>
-
-                <!-- 7-Day Streak Pills -->
-                <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="1">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="2">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="3">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="4">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="5">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="6">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                            ₹1</div>
-                        <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
-                    </div>
-                    <div class="streak-day flex flex-col items-center min-w-[48px]" data-day="7">
-                        <div
-                            class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
-                            ₹2</div>
-                        <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
-                    </div>
-                </div>
-
-                <p class="text-[11px] text-slate-400 text-center mb-3">Claim your bonus daily to maintain the streak &
-                    earn extra bonus!</p>
-
-                <button id="claim-bonus-btn"
-                    class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
-                    onclick="window.claimDailyBonusUI()">
-                    <span class="material-icons-round text-sm align-middle mr-1">redeem</span>
-                    Claim ₹1 Daily Bonus
-                </button>
-            </section>
+            </div>
 
             <!-- Bonus Reward Modal -->
             <div id="bonus-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-6"
@@ -367,6 +376,57 @@
                         bonus!</p>
                 </div>
             </div>
+
+            <section class="grid grid-cols-4 gap-4">
+                <div class="flex flex-col items-center gap-2 cursor-pointer"
+                    onclick="document.getElementById('daily-bonus-popup').classList.remove('hidden'); document.getElementById('daily-bonus-popup').classList.add('flex');">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl text-primary">redeem</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                        <span class="material-icons-round text-3xl text-secondary">stars</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer"
+                    onclick="window.controller.openAdGemOfferWall()">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl text-primary">sports_esports</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Play
+                        Games</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewarded()">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <svg viewBox="0 0 24 24" class="w-10 h-10 fill-red-600">
+                            <path
+                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.612 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                        </svg>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Watch
+                        Video</span>
+                </div>
+            </section>
+
+            <!-- Play & Earn Section -->
+            <section class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">🎮 Play & Earn</h3>
+                    <button class="text-primary text-sm font-bold nav-item" data-target="games">View All</button>
+                </div>
+                <div id="task-container" class="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 snap-x no-scrollbar">
+                    <!-- Tasks injected by app.js -->
+                </div>
+            </section>
 
             <!-- Games Grid Section -->
             <section id="games-section" class="space-y-4">
@@ -599,56 +659,6 @@
 
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <section class="grid grid-cols-4 gap-4">
-                <div class="flex flex-col items-center gap-2 cursor-pointer"
-                    onclick="window.controller.claimDailyBonus()">
-                    <div
-                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
-                        <span class="material-icons-round text-3xl text-primary">redeem</span>
-                    </div>
-                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily
-                        Bonus</span>
-                </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer">
-                    <div
-                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
-                        <span class="material-icons-round text-3xl text-secondary">stars</span>
-                    </div>
-                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x
-                        Bonus</span>
-                </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer"
-                    onclick="window.controller.openAdGemOfferWall()">
-                    <div
-                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
-                        <span class="material-icons-round text-3xl text-primary">sports_esports</span>
-                    </div>
-                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Play
-                        Games</span>
-                </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewarded()">
-                    <div
-                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
-                        <svg viewBox="0 0 24 24" class="w-10 h-10 fill-red-600">
-                            <path
-                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.612 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                        </svg>
-                    </div>
-                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Watch
-                        Video</span>
-                </div>
-            </section>
-
-            <section class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Top Offers For You!</h3>
-                    <button class="text-primary text-sm font-bold">View All</button>
-                </div>
-                <div id="task-container" class="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 snap-x no-scrollbar">
-                    <!-- Tasks injected by app.js -->
                 </div>
             </section>
         </div>
@@ -1284,7 +1294,7 @@
     <script src="store.js"></script>
     <script src="controller.js"></script>
     <script src="md5.js"></script>
-    <script src="app.js?v=1.16"></script>
+    <script src="app.js?v=1.17"></script>
 </body>
 
 </html>
