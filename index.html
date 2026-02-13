@@ -887,112 +887,189 @@
 
 
 
-        <!-- REFER SECTION -->
-        <div id="refer" class="page-section hidden space-y-6">
-            <!-- Header (Simulated specific to this page as per screenshot) -->
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <button class="material-icons-round text-slate-900 dark:text-white"
-                        onclick="document.querySelector('[data-target=home]').click()">arrow_back</button>
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Refer & Earn</h2>
+        <!-- REFER SECTION — Apple Quality -->
+        <div id="refer" class="page-section hidden space-y-5">
+
+            <!-- Section Header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center"
+                        style="background:rgba(0,0,0,0.04);"
+                        onclick="document.querySelector('[data-target=home]').click()">
+                        <span class="material-icons-round text-slate-600"
+                            style="font-size:20px;">arrow_back_ios_new</span>
+                    </button>
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Invite
+                            Friends</p>
+                        <h2 class="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white">Refer &
+                            Earn</h2>
+                    </div>
                 </div>
-                <a class="text-primary font-bold text-sm" href="#">View Referrals</a>
+                <div class="w-11 h-11 rounded-full flex items-center justify-center"
+                    style="background:rgba(16,185,129,0.08);">
+                    <span class="material-icons-round" style="color:#10b981; font-size:24px;">people</span>
+                </div>
             </div>
 
-            <!-- Main Info Card -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-[24px] p-6 ios-shadow border border-gray-100 dark:border-gray-700">
-                <div class="space-y-6">
+            <!-- Hero Reward Banner -->
+            <div class="relative overflow-hidden rounded-[24px]"
+                style="background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05) inset;">
+                <!-- Ambient glow -->
+                <div class="absolute inset-0 pointer-events-none">
+                    <div class="absolute -right-12 -top-12 w-44 h-44 rounded-full"
+                        style="background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%);"></div>
+                    <div class="absolute -left-8 -bottom-8 w-36 h-36 rounded-full"
+                        style="background: radial-gradient(circle, rgba(234,179,8,0.15) 0%, transparent 70%);"></div>
+                </div>
+                <div class="relative z-10 p-6 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4"
+                        style="background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 8px 24px rgba(16,185,129,0.3);">
+                        <span class="material-icons-round text-white" style="font-size:32px;">card_giftcard</span>
+                    </div>
+                    <h3 class="text-[28px] font-black text-white tracking-tight leading-tight">Earn ₹10</h3>
+                    <p class="text-[13px] mt-1" style="color:rgba(255,255,255,0.5);">For every friend who joins &
+                        completes 2 offers</p>
+                    <div class="flex items-center justify-center gap-2 mt-3">
+                        <span class="text-[11px] font-bold px-3 py-1 rounded-full"
+                            style="background:rgba(16,185,129,0.15); color:#34d399;">You earn ₹10</span>
+                        <span class="text-white/30">+</span>
+                        <span class="text-[11px] font-bold px-3 py-1 rounded-full"
+                            style="background:rgba(234,179,8,0.15); color:#fbbf24;">They earn ₹10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works — Steps -->
+            <div>
+                <h3 class="text-[13px] font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                    <span class="material-icons-round" style="font-size:16px; color:#6366f1;">auto_awesome</span>
+                    How It Works
+                </h3>
+                <div class="space-y-2.5">
                     <!-- Step 1 -->
-                    <div class="flex gap-4">
-                        <div
-                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
-                            <span class="material-icons-round text-primary">share</span>
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">share</span>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Share Your Link</h3>
-                            <p class="text-xs text-slate-400">Share the link with your friends</p>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">Share Your Link</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Send your invite link to friends</p>
                         </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(59,130,246,0.08); color:#3b82f6;">1</span>
                     </div>
                     <!-- Step 2 -->
-                    <div class="flex gap-4">
-                        <div
-                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
-                            <span class="material-icons-round text-primary">task_alt</span>
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">task_alt</span>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Let them complete an offer</h3>
-                            <p class="text-xs text-slate-400">Let them download and complete 2 offers</p>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">They Complete 2 Offers</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Your friend downloads & completes offers</p>
                         </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(245,158,11,0.08); color:#f59e0b;">2</span>
                     </div>
                     <!-- Step 3 -->
-                    <div class="flex gap-4">
-                        <div
-                            class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center shrink-0">
-                            <span class="material-icons-round text-primary">currency_rupee</span>
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">currency_rupee</span>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">You both earn ₹10</h3>
-                            <p class="text-xs text-slate-400">You both earn easy money</p>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">You Both Earn ₹10</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Credited instantly to your wallet</p>
                         </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(16,185,129,0.08); color:#10b981;">3</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Code Section -->
-            <div
-                class="bg-green-50 dark:bg-green-900/10 rounded-[20px] p-4 border border-dashed border-primary/30 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Referral Code</p>
-                    <p id="referral-code" class="text-2xl font-black text-primary tracking-widest">...</p>
+            <!-- Referral Code Card -->
+            <div class="rounded-[22px] p-5 text-center"
+                style="background: linear-gradient(145deg, rgba(16,185,129,0.06), rgba(34,197,94,0.03)); border: 1px solid rgba(16,185,129,0.12); box-shadow: 0 2px 8px rgba(16,185,129,0.06);">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Your Referral Code</p>
+                <div class="flex items-center justify-center gap-3">
+                    <p id="referral-code" class="text-[28px] font-black tracking-[0.2em]" style="color:#10b981;">...</p>
+                    <button class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90"
+                        style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16,185,129,0.3);"
+                        onclick="copyToClipboard(document.getElementById('referral-code').innerText)">
+                        <span class="material-icons-round text-white" style="font-size:18px;">content_copy</span>
+                    </button>
                 </div>
-                <button
-                    class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-                    onclick="copyToClipboard(document.getElementById('referral-code').innerText)">
-                    <span class="material-icons-round">content_copy</span>
-                </button>
             </div>
 
+            <!-- Share Section -->
             <div class="text-center space-y-4">
-                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Share Your Invite Link</h3>
-                <div class="flex justify-center gap-6">
-                    <button class="flex flex-col items-center gap-1 group">
-                        <div
-                            class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-none group-active:scale-95 transition-transform">
+                <h3 class="text-[13px] font-bold text-slate-800 dark:text-white">Share Your Invite</h3>
+                <div class="flex justify-center gap-5">
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="window.open('https://wa.me/?text=Join%20TaskBuks%20and%20earn%20real%20money!%20Use%20my%20code:%20' + document.getElementById('referral-code').innerText)">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 6px 20px rgba(37,211,102,0.3);">
                             <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png"
-                                class="w-6 h-6 invert brightness-0">
+                                class="w-7 h-7 invert brightness-0">
                         </div>
-                        <span class="text-[10px] text-slate-500 font-medium">WhatsApp</span>
+                        <span class="text-[10px] text-slate-500 font-semibold">WhatsApp</span>
                     </button>
-                    <button class="flex flex-col items-center gap-1 group">
-                        <div
-                            class="w-12 h-12 rounded-full bg-[#0088cc] text-white flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none group-active:scale-95 transition-transform">
-                            <span class="material-icons-round text-xl">send</span>
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="window.open('https://t.me/share/url?text=Join%20TaskBuks!%20Code:%20' + document.getElementById('referral-code').innerText)">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #0088cc, #229ED9); box-shadow: 0 6px 20px rgba(0,136,204,0.3);">
+                            <span class="material-icons-round text-white" style="font-size:24px;">send</span>
                         </div>
-                        <span class="text-[10px] text-slate-500 font-medium">Telegram</span>
+                        <span class="text-[10px] text-slate-500 font-semibold">Telegram</span>
                     </button>
-                    <button class="flex flex-col items-center gap-1 group"
-                        onclick="navigator.share({title: 'Task Buks', text: 'Join Task Buks!', url: 'https://taskbuks.com'})">
-                        <div
-                            class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-none group-active:scale-95 transition-transform">
-                            <span class="material-icons-round text-xl">share</span>
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="navigator.share({title: 'TaskBuks', text: 'Join TaskBuks and earn real money! Use my code: ' + document.getElementById('referral-code').innerText, url: 'https://taskbuks.com'})">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 6px 20px rgba(99,102,241,0.3);">
+                            <span class="material-icons-round text-white" style="font-size:24px;">ios_share</span>
                         </div>
-                        <span class="text-[10px] text-slate-500 font-medium">more</span>
+                        <span class="text-[10px] text-slate-500 font-semibold">More</span>
                     </button>
                 </div>
-                <p class="text-[10px] font-bold text-slate-400">Trusted By 9L+ Customers</p>
+                <div class="flex items-center justify-center gap-1.5">
+                    <span class="material-icons-round" style="font-size:12px; color:#10b981;">verified</span>
+                    <p class="text-[10px] font-bold text-slate-300">Trusted by 9L+ users</p>
+                </div>
             </div>
 
-            <!-- Referral List Placeholder -->
+            <!-- Your Referrals -->
             <div>
-                <div
-                    class="bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow flex items-center justify-between border border-gray-100 dark:border-gray-700">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-100 rounded-full"></div>
-                        <div>
-                            <h4 class="font-bold text-sm dark:text-white">Amit</h4>
-                            <p class="text-[10px] text-slate-400">Joined today</p>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style="background:rgba(168,85,247,0.08);">
+                            <span class="material-icons-round" style="color:#a855f7; font-size:18px;">group</span>
                         </div>
+                        <h3 class="font-bold text-[14px] text-slate-800">Your Referrals</h3>
+                    </div>
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                        style="color:#a855f7; background:rgba(168,85,247,0.08);">1 friend</span>
+                </div>
+                <div class="rounded-[18px] overflow-hidden"
+                    style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                                style="background: linear-gradient(135deg, #6366f1, #818cf8);">
+                                <span class="text-white font-bold text-[13px]">A</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-[13px] text-slate-800">Amit</h4>
+                                <p class="text-[11px] text-slate-400">Joined today</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                            style="background:rgba(16,185,129,0.08); color:#10b981;">+₹10 earned</span>
                     </div>
                 </div>
             </div>
@@ -1436,7 +1513,7 @@
     <script src="store.js"></script>
     <script src="controller.js"></script>
     <script src="md5.js"></script>
-    <script src="app.js?v=1.20"></script>
+    <script src="app.js?v=1.21"></script>
 </body>
 
 </html>
