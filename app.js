@@ -84,7 +84,10 @@ window.miniGames = {
                         <button onclick="window.miniGames.trivia.init(document.getElementById('generic-game-body'))"
                             class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm">Play Again</button>
                     </div>`;
-                if (this.score >= 3 && window.showToast) window.showToast('🎉 Trivia passed! +5 coins!');
+                if (this.score >= 3) {
+                    if (window.showToast) window.showToast('🎉 Trivia passed! +5 coins!');
+                    if (window.controller) window.controller.addCoins(5, 'Trivia Quiz Won');
+                }
                 return;
             }
             const q = this.selected[this.current];
@@ -158,6 +161,7 @@ window.miniGames = {
                             const body = document.getElementById('generic-game-body');
                             body.innerHTML = `<div class="text-center py-8"><div class="text-6xl mb-4">🎉</div><h3 class="text-2xl font-black mb-2 dark:text-white">You Won!</h3><p class="text-sm text-slate-400 mb-2">Completed in ${this.moves} moves. +20 coins!</p><button onclick="window.miniGames.memory.init(document.getElementById('generic-game-body'))" class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm mt-4">Play Again</button></div>`;
                             if (window.showToast) window.showToast('🎉 Memory Game won! +20 coins!');
+                            if (window.controller) window.controller.addCoins(20, 'Memory Game Won');
                         }, 500);
                     } else { this.render(); }
                 } else {
@@ -205,6 +209,7 @@ window.miniGames = {
                 this.guesses.push({ val, dir: '=' });
                 this.render(null, `🎉 Correct! The number was ${this.target}! +15 coins!`);
                 if (window.showToast) window.showToast('🎉 Number Guess won! +15 coins!');
+                if (window.controller) window.controller.addCoins(15, 'Number Guess Won');
             } else if (this.attempts >= this.maxAttempts) {
                 this.guesses.push({ val, dir: val < this.target ? 'up' : 'down' });
                 this.render(null, `Game Over! The number was ${this.target}.`);
@@ -237,7 +242,10 @@ window.miniGames = {
             if (this.round > this.maxRounds) {
                 clearInterval(this.timer);
                 container.innerHTML = `<div class="text-center py-8"><div class="text-6xl mb-4">${this.score >= 7 ? '🎉' : '😅'}</div><h3 class="text-2xl font-black mb-2 dark:text-white">${this.score}/${this.maxRounds}</h3><p class="text-sm text-slate-400 mb-4">${this.score >= 7 ? 'Great reflexes! +12 coins!' : 'Keep practicing!'}</p><button onclick="window.miniGames.colorMatch.init(document.getElementById('generic-game-body'))" class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm">Play Again</button></div>`;
-                if (this.score >= 7 && window.showToast) window.showToast('🎉 Color Match won! +12 coins!');
+                if (this.score >= 7) {
+                    if (window.showToast) window.showToast('🎉 Color Match won! +12 coins!');
+                    if (window.controller) window.controller.addCoins(12, 'Color Match Won');
+                }
                 return;
             }
             // Pick a random color NAME and display it in a DIFFERENT color
@@ -318,7 +326,10 @@ window.miniGames = {
                 if (won) { this.streak++; if (this.streak > this.best) this.best = this.streak; }
                 else { this.streak = 0; }
                 const msg = won ? (this.streak >= 3 ? `🎉 ${result.toUpperCase()}! Streak ${this.streak}! +10 coins!` : `✅ ${result.toUpperCase()}! Streak: ${this.streak}`) : `❌ It was ${result.toUpperCase()}! Streak reset.`;
-                if (this.streak === 3 && window.showToast) window.showToast('🎉 Coin Flip streak! +10 coins!');
+                if (this.streak === 3) {
+                    if (window.showToast) window.showToast('🎉 Coin Flip streak! +10 coins!');
+                    if (window.controller) window.controller.addCoins(10, 'Coin Flip Streak');
+                }
                 setTimeout(() => this.render(null, { won, msg }), 300);
             }, 600);
         }
@@ -338,7 +349,10 @@ window.miniGames = {
             if (this.round >= this.maxRounds) {
                 const won = this.score > this.cpuScore;
                 container.innerHTML = `<div class="text-center py-8"><div class="text-6xl mb-4">${won ? '🎉' : '😅'}</div><h3 class="text-2xl font-black mb-2 dark:text-white">${won ? 'You Win!' : this.score === this.cpuScore ? 'Draw!' : 'CPU Wins!'}</h3><p class="text-lg font-bold text-slate-500 mb-2">You: ${this.score} vs CPU: ${this.cpuScore}</p><p class="text-sm text-slate-400 mb-4">${won ? '+15 coins!' : 'Try again!'}</p><button onclick="window.miniGames.diceRoll.init(document.getElementById('generic-game-body'))" class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm">Play Again</button></div>`;
-                if (won && window.showToast) window.showToast('🎉 Dice Roll won! +15 coins!');
+                if (won) {
+                    if (window.showToast) window.showToast('🎉 Dice Roll won! +15 coins!');
+                    if (window.controller) window.controller.addCoins(15, 'Dice Roll Won');
+                }
                 return;
             }
             container.innerHTML = `
@@ -466,6 +480,7 @@ window.miniGames = {
                 if (this.score >= 50) {
                     if (msg) msg.textContent = '🎉 Great run! +20 coins!';
                     if (window.showToast) window.showToast('🎉 Dino Runner! +20 coins!');
+                    if (window.controller) window.controller.addCoins(20, 'Dino Runner');
                 } else { if (msg) msg.textContent = `Need 50+ to earn coins. You got ${this.score}.`; }
                 document.removeEventListener('keydown', this._keyHandler);
                 return;
@@ -772,7 +787,10 @@ window.miniGames = {
                 if (p.tokens.every(t => t === 999)) {
                     this.gameOver = true;
                     this.updateStatus(pid === 0 ? "🏆 YOU WON!" : "💀 CPU WON");
-                    if (pid === 0 && window.showToast) window.showToast("🏆 LUDO CHAMPION! +50 Coins!");
+                    if (pid === 0) {
+                        if (window.showToast) window.showToast("🏆 LUDO CHAMPION! +50 Coins!");
+                        if (window.controller) window.controller.addCoins(50, 'Ludo Champion');
+                    }
                     this.draw(); return;
                 }
             }
@@ -1186,7 +1204,10 @@ window.miniGames = {
             if (newPos === 100) {
                 this.gameOver = true;
                 this.draw();
-                if (pid === 0 && window.showToast) window.showToast("🏆 You reached 100!");
+                if (pid === 0) {
+                    if (window.showToast) window.showToast("🏆 You reached 100! +40 coins!");
+                    if (window.controller) window.controller.addCoins(40, 'Snake & Ladders Won');
+                }
                 return;
             }
 
@@ -1235,9 +1256,11 @@ window.miniGames = {
         const state = store.getState();
         const { user, wallet, tasks, transactions } = state;
 
-        // 1. Balance
+        // 1. Balance (in coins and rupees)
+        var totalCoins = wallet.totalCoins || 0;
+        var balanceRupees = parseFloat(wallet.currentBalance || 0);
         document.querySelectorAll('.user-balance').forEach(el =>
-            el.textContent = `₹${parseFloat(wallet.currentBalance || 0).toFixed(2)}`
+            el.textContent = `${totalCoins} 🪙`
         );
 
         // Lifetime Earnings
@@ -1245,16 +1268,16 @@ window.miniGames = {
             el.textContent = `₹${parseFloat(wallet.lifetimeEarnings || 0).toFixed(2)}`
         );
 
-        // Withdraw progress
+        // Withdraw progress (min ₹100)
         const progressBar = document.getElementById('withdraw-progress-bar');
         const progressText = document.getElementById('withdraw-progress-text');
         const withdrawBtn = document.getElementById('withdraw-btn');
         if (progressBar) {
             const balance = parseFloat(wallet.currentBalance || 0);
-            const pct = Math.min((balance / 500) * 100, 100);
+            const pct = Math.min((balance / 100) * 100, 100);
             progressBar.style.width = `${pct}%`;
-            if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹500`;
-            if (withdrawBtn) withdrawBtn.disabled = balance < 500;
+            if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹100`;
+            if (withdrawBtn) withdrawBtn.disabled = balance < 100;
         }
 
         // 2. Tasks (Home)
