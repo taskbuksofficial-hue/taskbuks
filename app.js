@@ -1334,36 +1334,38 @@ window.miniGames = {
         }
 
         // 3. CPX Research Sync
-        if (user && !window.cpxInitialized) {
-            console.log("Initializing CPX Research for user:", user.id);
+        // 3. Rapido Reach Integration
+        if (user && !window.rapidoInitialized) {
+            console.log("Initializing Rapido Reach for user:", user.id);
+            const container = document.getElementById('rapidoreach-container');
+            if (container) {
+                // Ensure unique load
+                window.rapidoInitialized = true;
 
-            // Configuration for CPX Research
-            window.cpx = {
-                app_id: "31412",
-                ext_user_id: user.id,
-                email: user.emailAddresses?.[0]?.emailAddress || "",
-                username: user.firstName || "User",
-                secure_hash: "deprecated_on_frontend_use_backend_for_security",
-                style: {
-                    text: {
-                        new_tab: "Surveys"
-                    }
-                }
-            };
+                // Load MD5 library for checksum
+                const md5Script = document.createElement('script');
+                md5Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js';
+                md5Script.onload = () => {
+                    const appId = '4pfOJz6QQrm';
+                    const appKey = '8afcb7f89adf0d55c2805a3a2277299f';
+                    const userId = user.id;
 
-            const script = document.createElement('script');
-            script.src = "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js";
-            script.async = true;
-            script.onload = () => {
-                console.log("CPX Script Loaded");
-                window.cpxInitialized = true;
-            };
-            document.body.appendChild(script);
+                    // Checksum: MD5(internalUserId + appId + appKey) -> first 10 chars
+                    const rawHash = md5(userId + appId + appKey);
+                    const checksum = rawHash.substring(0, 10);
+                    const finalUserId = `${userId}-${appId}-${checksum}`;
+                    const iframeUrl = `https://www.rapidoreach.com/ofw/?userId=${encodeURIComponent(finalUserId)}`;
+
+                    console.log("Loading Rapido Reach:", iframeUrl);
+                    container.innerHTML = `<iframe src="${iframeUrl}" style="width:100%; height:800px; border:none; border-radius:16px;" title="Rapido Reach"></iframe>`;
+                };
+                document.body.appendChild(md5Script);
+            }
         }
 
         // 3.5 Render API Surveys (if any)
         const surveyList = tasks.surveys || [];
-        const cpxContainer = document.getElementById('cpx-research-container');
+        const cpxContainer = document.getElementById('rapidoreach-container');
         if (cpxContainer && surveyList.length > 0) {
             let listContainer = document.getElementById('api-survey-list');
             if (!listContainer) {
@@ -1383,7 +1385,7 @@ window.miniGames = {
                             <span class="material-icons-round">poll</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm dark:text-white">Survey via CPX</h4>
+                            <h4 class="font-bold text-sm dark:text-white">Premium Survey</h4>
                             <p class="text-xs text-slate-400">Earn ₹${payout}</p>
                         </div>
                     </div>
