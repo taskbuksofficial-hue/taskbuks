@@ -470,15 +470,11 @@ window.miniGames = {
         }
     },
 
-    // ─── LUDO (kept from before) ───────────────────────────
-    // ─── LUDO (Vertical Dark Theme) ────────────────────────
+    // ─── LUDO (Premium Apple-Quality UI) ────────────────────
     ludo: {
         canvas: null, ctx: null, cellSize: 0, boardSize: 15,
-        players: [],
-        turn: 0, dice: 0, isRolling: false, gameOver: false,
+        players: [], turn: 0, dice: 0, isRolling: false, gameOver: false,
         safeSquares: [0, 8, 13, 21, 26, 34, 39, 47],
-
-        // Layout Config
         layout: { boardY: 0, boardSize: 0, topH: 0, botH: 0 },
 
         init() {
@@ -486,316 +482,232 @@ window.miniGames = {
             if (!this.canvas) return;
             this.ctx = this.canvas.getContext('2d');
             const container = this.canvas.parentElement;
-            const w = Math.min(container.clientWidth, 360);
-            const h = w * 1.5; // Vertical Aspect Ratio
+            const w = Math.min(container.clientWidth, 390);
+            const h = w * 1.65;
             this.canvas.width = w; this.canvas.height = h;
-
-            // Calculate Layout
-            // Top Section (20%): CPU Info
-            // Board (Square): Centered
-            // Bottom Section (20%): Player Info
-            const boardSize = w * 0.95; // 95% width
+            const boardSize = w * 0.92;
             const padX = (w - boardSize) / 2;
-            const topH = (h - boardSize) / 2;
-
-            this.layout = { boardX: padX, boardY: topH, boardSize: boardSize, topH: topH };
+            const topH = h * 0.18;
+            this.layout = { boardX: padX, boardY: topH, boardSize, topH };
             this.cellSize = boardSize / this.boardSize;
-
-            // Setup Players
             this.players = [
-                { id: 0, name: 'You', color: '#22C55E', tokens: [-1, -1, -1, -1], avatar: '👤' },
-                { id: 1, name: 'CPU', color: '#EF4444', tokens: [-1, -1, -1, -1], avatar: '🤖' }
+                { id: 0, name: 'You', color: '#16a34a', darkColor: '#15803d', lightColor: '#4ade80', tokens: [-1, -1, -1, -1] },
+                { id: 1, name: 'CPU', color: '#dc2626', darkColor: '#b91c1c', lightColor: '#f87171', tokens: [-1, -1, -1, -1] }
             ];
-
             this.turn = 0; this.dice = 0; this.isRolling = false; this.gameOver = false;
-
             this.canvas.onclick = (e) => this.handleClick(e);
-            this.updateStatus("Your turn!");
-            this.draw();
+            this.updateStatus("Your turn!"); this.draw();
         },
 
         getCoord(playerIndex, pos) {
-            const cs = this.cellSize;
-            const { boardX, boardY } = this.layout;
-
-            // Transform logic identical to before but mapped to new offset
-            // Local Coord (0-14)
+            const cs = this.cellSize; const { boardX, boardY } = this.layout;
             let lx = 0, ly = 0;
-
-            if (pos === -1) {
-                // Base - Drawn separately in draw()
-                return null;
-            }
-
-            const pathNodes = [
+            if (pos === -1) return null;
+            const P = [
                 { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 },
-                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 },
-                { x: 7, y: 14 },
+                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 }, { x: 7, y: 14 },
                 { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 },
-                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 },
-                { x: 14, y: 7 },
+                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }, { x: 14, y: 7 },
                 { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 },
-                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 },
-                { x: 7, y: 0 },
+                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 }, { x: 7, y: 0 },
                 { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 },
-                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 },
-                { x: 0, y: 7 },
-                { x: 0, y: 8 }
+                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 }, { x: 0, y: 7 }, { x: 0, y: 8 }
             ];
-
-            let offset = playerIndex === 0 ? 0 : 26;
-
-            if (pos > 50) {
-                const step = pos - 51;
-                if (playerIndex === 0) { lx = 1 + step; ly = 7; }
-                else { lx = 13 - step; ly = 7; }
-            } else {
-                let absIndex = (pos + offset) % 52;
-                lx = pathNodes[absIndex].x;
-                ly = pathNodes[absIndex].y;
-            }
-
+            const offset = playerIndex === 0 ? 0 : 26;
+            if (pos > 50) { const step = pos - 51; if (playerIndex === 0) { lx = 1 + step; ly = 7; } else { lx = 13 - step; ly = 7; } }
+            else { const absIndex = (pos + offset) % 52; lx = P[absIndex].x; ly = P[absIndex].y; }
             return { x: boardX + lx * cs + cs / 2, y: boardY + ly * cs + cs / 2 };
         },
 
         draw() {
-            const ctx = this.ctx;
-            const W = this.canvas.width;
-            const H = this.canvas.height;
-            const { boardX, boardY, boardSize } = this.layout;
-            const cs = this.cellSize;
+            const ctx = this.ctx, W = this.canvas.width, H = this.canvas.height;
+            const { boardX, boardY, boardSize } = this.layout, cs = this.cellSize;
+            const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); };
 
-            // 1. Background (Dark Indigo)
-            const bgGradient = ctx.createLinearGradient(0, 0, 0, H);
-            bgGradient.addColorStop(0, '#1e1b4b'); // Deep Blue
-            bgGradient.addColorStop(1, '#0f172a'); // Slate 900
-            ctx.fillStyle = bgGradient;
-            ctx.fillRect(0, 0, W, H);
+            // 1. BACKGROUND - Dark blue gradient with diagonal light rays
+            const bg = ctx.createLinearGradient(0, 0, W, H);
+            bg.addColorStop(0, '#0a1628'); bg.addColorStop(0.5, '#132044'); bg.addColorStop(1, '#0a1628');
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+            // Light rays
+            ctx.save(); ctx.globalAlpha = 0.06;
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath(); const rx = W * 0.3 + i * W * 0.15;
+                ctx.moveTo(rx, 0); ctx.lineTo(rx + W * 0.25, H); ctx.lineTo(rx + W * 0.05, H); ctx.lineTo(rx - W * 0.15, 0);
+                ctx.fillStyle = '#4488ff'; ctx.fill();
+            }
+            ctx.restore();
 
-            // Helper for rounded rectangle
-            const roundedRect = (ctx, x, y, width, height, radius) => {
-                ctx.beginPath();
-                ctx.moveTo(x + radius, y);
-                ctx.lineTo(x + width - radius, y);
-                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-                ctx.lineTo(x + width, y + height - radius);
-                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-                ctx.lineTo(x + radius, y + height);
-                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-                ctx.lineTo(x, y + radius);
-                ctx.quadraticCurveTo(x, y, x + radius, y);
-                ctx.closePath();
-            };
+            // 2. PLAYER INFO - Top (CPU) and Bottom (You) with avatars + dice
+            const drawPlayerPanel = (pid, isTop) => {
+                const p = this.players[pid];
+                const py = isTop ? boardY * 0.5 : boardY + boardSize + (H - boardY - boardSize) * 0.45;
+                const avatarX = isTop ? W - 70 : 50;
+                const diceX = isTop ? W - 130 : 110;
+                const active = this.turn === pid;
 
-            // 2. Player Info Areas
-            const drawAvatar = (pid, name, color, isTop) => {
-                const y = isTop ? boardY * 0.4 : H - boardY * 0.4;
-                const x = W / 2;
-
-                // Active Glow
-                if (this.turn === pid) {
-                    ctx.shadowBlur = 20; ctx.shadowColor = color;
-                } else {
-                    ctx.shadowBlur = 0;
-                }
-
-                // Avatar Circle
-                ctx.beginPath();
-                ctx.arc(x, y, 24, 0, Math.PI * 2);
-                ctx.fillStyle = this.turn === pid ? '#fff' : '#334155';
-                ctx.fill();
-                ctx.shadowBlur = 0; // Reset
-
-                // Inner
-                ctx.beginPath();
-                ctx.arc(x, y, 22, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-
-                // Text
-                ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#fff'; ctx.fillText(pid === 0 ? '👤' : '🤖', x, y);
-
+                // Avatar frame
+                ctx.save();
+                if (active) { ctx.shadowColor = p.color; ctx.shadowBlur = 15; }
+                rr(avatarX - 28, py - 28, 56, 56, 12);
+                ctx.fillStyle = '#fff'; ctx.fill();
+                ctx.restore();
+                // Inner colored circle
+                rr(avatarX - 24, py - 24, 48, 48, 10);
+                ctx.fillStyle = p.color; ctx.fill();
+                // Avatar emoji
+                ctx.font = '22px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff'; ctx.fillText(pid === 0 ? '👤' : '🤖', avatarX, py);
                 // Name
-                ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = this.turn === pid ? '#fff' : '#64748b';
-                ctx.fillText(name, x, y + 40);
+                ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.fillStyle = active ? '#fff' : '#64748b';
+                ctx.fillText(p.name, avatarX, py + 38);
 
-                // Dice (if active)
-                if (this.turn === pid) {
-                    const dx = x + 60; const dy = y;
-                    ctx.fillStyle = '#fff';
-                    roundedRect(ctx, dx - 18, dy - 18, 36, 36, 8);
-                    ctx.fill();
-                    // Pips (simple text)
-                    if (this.dice > 0) {
-                        ctx.fillStyle = '#000'; ctx.font = '24px sans-serif';
-                        const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-                        ctx.fillText(pips[this.dice - 1], dx, dy + 2);
-                    } else {
-                        // Rolling Hints
-                        if (pid === 0 && !this.isRolling) {
-                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif';
-                            ctx.fillText("TAP", dx, dy);
-                        }
-                    }
+                // Dice
+                ctx.save();
+                if (active) { ctx.shadowColor = '#fff'; ctx.shadowBlur = 8; }
+                rr(diceX - 20, py - 20, 40, 40, 8);
+                ctx.fillStyle = '#fff'; ctx.fill();
+                ctx.restore();
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+                rr(diceX - 20, py - 20, 40, 40, 8); ctx.stroke();
+                // Dice dots
+                ctx.fillStyle = '#1e293b'; ctx.font = 'bold 22px sans-serif';
+                const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                if (this.dice > 0 && active) ctx.fillText(pips[this.dice - 1], diceX, py + 2);
+                else if (pid === 0 && !this.isRolling && this.dice === 0 && this.turn === 0) {
+                    ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.fillText('TAP', diceX, py + 2);
                 }
             };
+            drawPlayerPanel(1, true); drawPlayerPanel(0, false);
 
-            drawAvatar(1, 'CPU Opponent', '#EF4444', true);  // Top
-            drawAvatar(0, 'You', '#22C55E', false); // Bottom
+            // Trophy badge (top center)
+            ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#fbbf24'; ctx.textAlign = 'center';
+            ctx.fillText('🏆 ₹40 Win', W / 2, 20);
 
-            // 3. Game Board Background (White base for colors)
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(boardX, boardY, boardSize, boardSize);
+            // 3. BOARD - White base with rounded corners
+            ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 20;
+            rr(boardX - 2, boardY - 2, boardSize + 4, boardSize + 4, 8);
+            ctx.fillStyle = '#f8fafc'; ctx.fill();
+            ctx.restore();
 
-            // 4. Colored Quadrants
-            // TL (Red), TR (Green - P2 Start?), BL (Blue), BR (Yellow)
-            // Wait, our P1 is Green (Bottom-Left), P2 is Red (Top-Right).
-            // Let's color bases to match standard scheme somewhat but adapted.
-            // P1 (Green) Base -> Bottom Left.
-            // P2 (Red) Base -> Top Right.
-            // Dummy Bases -> Top Left (Yellow?), Bottom Right (Blue?).
-
-            const drawQuad = (bx, by, color) => {
+            // 4. COLORED QUADRANTS with white inner base boxes
+            const quadColors = { Y: '#eab308', B: '#2563eb', G: '#16a34a', R: '#dc2626' };
+            const drawBase = (bx, by, color, pid) => {
+                // Outer colored quad
                 ctx.fillStyle = color;
                 ctx.fillRect(boardX + bx * cs, boardY + by * cs, 6 * cs, 6 * cs);
-                // White inner
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(boardX + (bx + 1) * cs, boardY + (by + 1) * cs, 4 * cs, 4 * cs);
+                // Inner white rounded box
+                ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.shadowBlur = 6;
+                const ix = boardX + (bx + 0.6) * cs, iy = boardY + (by + 0.6) * cs;
+                rr(ix, iy, 4.8 * cs, 4.8 * cs, 10);
+                ctx.fillStyle = '#fff'; ctx.fill();
+                ctx.restore();
+                // Draw base tokens if player matches
+                if (pid !== null) {
+                    const p = this.players[pid];
+                    const positions = [[1.5, 1.5], [3.5, 1.5], [1.5, 3.5], [3.5, 3.5]];
+                    p.tokens.forEach((pos, idx) => {
+                        if (pos === -1) {
+                            const tx = boardX + (bx + positions[idx][0]) * cs;
+                            const ty = boardY + (by + positions[idx][1]) * cs;
+                            this.drawPawn(ctx, tx, ty, cs, p.color, p.darkColor, p.lightColor, this.turn === pid && this.dice === 6);
+                        }
+                    });
+                }
             };
+            drawBase(0, 0, quadColors.Y, null);    // TL Yellow
+            drawBase(9, 0, quadColors.B, 1);        // TR Blue (CPU)
+            drawBase(0, 9, quadColors.G, 0);        // BL Green (You)
+            drawBase(9, 9, quadColors.R, null);     // BR Red
 
-            drawQuad(0, 0, '#eab308'); // TL Yellow
-            drawQuad(9, 0, '#ef4444'); // TR Red (CPU Base)
-            drawQuad(0, 9, '#22c55e'); // BL Green (You Base)
-            drawQuad(9, 9, '#3b82f6'); // BR Blue
-
-            // 5. Grid Cells
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
-            // Draw all cells (15x15) - overlaying board
-            // Actually efficient way: Draw paths
+            // 5. PATH CELLS - White cells with thin borders and colored safe zones
             const pathNodes = [
                 { x: 1, y: 8 }, { x: 2, y: 8 }, { x: 3, y: 8 }, { x: 4, y: 8 }, { x: 5, y: 8 },
-                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 },
-                { x: 7, y: 14 },
+                { x: 6, y: 9 }, { x: 6, y: 10 }, { x: 6, y: 11 }, { x: 6, y: 12 }, { x: 6, y: 13 }, { x: 6, y: 14 }, { x: 7, y: 14 },
                 { x: 8, y: 14 }, { x: 8, y: 13 }, { x: 8, y: 12 }, { x: 8, y: 11 }, { x: 8, y: 10 }, { x: 8, y: 9 },
-                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 },
-                { x: 14, y: 7 },
+                { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }, { x: 14, y: 7 },
                 { x: 14, y: 6 }, { x: 13, y: 6 }, { x: 12, y: 6 }, { x: 11, y: 6 }, { x: 10, y: 6 }, { x: 9, y: 6 },
-                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 },
-                { x: 7, y: 0 },
+                { x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }, { x: 8, y: 2 }, { x: 8, y: 1 }, { x: 8, y: 0 }, { x: 7, y: 0 },
                 { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 },
-                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 },
-                { x: 0, y: 7 },
-                { x: 0, y: 8 }
+                { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }, { x: 0, y: 6 }, { x: 0, y: 7 }, { x: 0, y: 8 }
             ];
-
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
             pathNodes.forEach((n, i) => {
                 const x = boardX + n.x * cs, y = boardY + n.y * cs;
                 ctx.fillStyle = '#fff';
-                // Safe Zones / Starts
-                if (i === 0) ctx.fillStyle = '#22C55E'; // Green Start
-                if (i === 8) ctx.fillStyle = '#e2e8f0'; // Star
-                if (i === 26) ctx.fillStyle = '#EF4444'; // Red Start
-                if ([13, 21, 34, 39, 47].includes(i)) ctx.fillStyle = '#e2e8f0';
-
-                ctx.fillRect(x, y, cs, cs);
-                ctx.strokeRect(x, y, cs, cs);
-
-                // Stars
+                if (i === 0) ctx.fillStyle = '#16a34a'; // Green start
+                if (i === 26) ctx.fillStyle = '#dc2626'; // Red start
+                ctx.fillRect(x, y, cs, cs); ctx.strokeRect(x, y, cs, cs);
+                // Stars on safe zones
                 if ([8, 13, 21, 34, 39, 47].includes(i)) {
-                    ctx.fillStyle = '#94a3b8'; ctx.font = `${cs * 0.5}px Arial`;
-                    ctx.fillText('★', x + cs * 0.2, y + cs * 0.75);
+                    ctx.fillStyle = '#cbd5e1'; ctx.font = `${cs * 0.45}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('☆', x + cs / 2, y + cs / 2);
                 }
-                // Arrows (Start Arrows)
-                if (i === 0) { ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.5}px Arial`; ctx.fillText('➜', x + cs * 0.1, y + cs * 0.7); }
-                if (i === 26) { ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.5}px Arial`; ctx.fillText('➜', x + cs * 0.1, y + cs * 0.7); }
+                if (i === 0 || i === 26) { ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.4}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('▶', x + cs / 2, y + cs / 2); }
             });
 
-            // Home Streaks
-            for (let k = 1; k <= 5; k++) { // Green
-                ctx.fillStyle = '#22C55E'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs);
-            }
-            for (let k = 13; k >= 9; k--) { // Red
-                ctx.fillStyle = '#EF4444'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs);
-            }
-            // Vertical Homes (Blue/Yellow - Visual only)
+            // 6. HOME STRETCHES - Colored cells leading to center
+            for (let k = 1; k <= 5; k++) { ctx.fillStyle = '#16a34a'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.35}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('☆', boardX + k * cs + cs / 2, boardY + 7 * cs + cs / 2); }
+            for (let k = 13; k >= 9; k--) { ctx.fillStyle = '#dc2626'; ctx.fillRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.strokeRect(boardX + k * cs, boardY + 7 * cs, cs, cs); ctx.fillStyle = '#fff'; ctx.font = `${cs * 0.35}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('☆', boardX + k * cs + cs / 2, boardY + 7 * cs + cs / 2); }
             for (let k = 1; k <= 5; k++) { ctx.fillStyle = '#eab308'; ctx.fillRect(boardX + 7 * cs, boardY + k * cs, cs, cs); ctx.strokeRect(boardX + 7 * cs, boardY + k * cs, cs, cs); }
-            for (let k = 13; k >= 9; k--) { ctx.fillStyle = '#3b82f6'; ctx.fillRect(boardX + 7 * cs, boardY + k * cs, cs, cs); ctx.strokeRect(boardX + 7 * cs, boardY + k * cs, cs, cs); }
+            for (let k = 13; k >= 9; k--) { ctx.fillStyle = '#2563eb'; ctx.fillRect(boardX + 7 * cs, boardY + k * cs, cs, cs); ctx.strokeRect(boardX + 7 * cs, boardY + k * cs, cs, cs); }
 
-            // Center Home
-            ctx.beginPath();
-            ctx.moveTo(boardX + 6 * cs, boardY + 6 * cs);
-            ctx.lineTo(boardX + 9 * cs, boardY + 6 * cs);
-            ctx.lineTo(boardX + 9 * cs, boardY + 9 * cs);
-            ctx.lineTo(boardX + 6 * cs, boardY + 9 * cs);
-            ctx.fillStyle = '#f8fafc'; ctx.fill();
-            // Triangles
+            // 7. CENTER HOME - 4 colored triangles
             const cx = boardX + 7.5 * cs, cy = boardY + 7.5 * cs;
-            const tri = (c, x1, y1, x2, y2) => {
-                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.fillStyle = c; ctx.fill();
-            }
-            tri('#eab308', boardX + 6 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 6 * cs); // Top
-            tri('#ef4444', boardX + 9 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 9 * cs); // Right
-            tri('#3b82f6', boardX + 9 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 9 * cs); // Bottom
-            tri('#22c55e', boardX + 6 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 6 * cs); // Left
+            const tri = (c, x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); };
+            tri('#eab308', boardX + 6 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 6 * cs);
+            tri('#dc2626', boardX + 9 * cs, boardY + 6 * cs, boardX + 9 * cs, boardY + 9 * cs);
+            tri('#2563eb', boardX + 9 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 9 * cs);
+            tri('#16a34a', boardX + 6 * cs, boardY + 9 * cs, boardX + 6 * cs, boardY + 6 * cs);
+            // Center dot
+            ctx.beginPath(); ctx.arc(cx, cy, cs * 0.4, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill();
 
-            // 6. Draw Tokens (3D Style)
+            // 8. TOKENS ON BOARD (3D Pawns)
             this.players.forEach(p => {
-                const posCounts = {};
+                const posCounts = {}, posDrawn = {};
                 p.tokens.forEach(pos => posCounts[pos] = (posCounts[pos] || 0) + 1);
-                const posDrawn = {};
-
                 p.tokens.forEach((pos, idx) => {
+                    if (pos === -1) return; // Drawn in base
                     let tx, ty;
-                    if (pos === -1) {
-                        // Base
-                        const bx = p.id === 0 ? 0 : 9;
-                        const by = p.id === 0 ? 9 : 0;
-                        const offX = (idx % 2) * 2 + 1.5;
-                        const offY = Math.floor(idx / 2) * 2 + 1.5;
-                        tx = boardX + (bx + offX) * cs;
-                        ty = boardY + (by + offY) * cs;
-                    } else if (pos === 999) {
-                        tx = boardX + 7.5 * cs + (Math.random() - 0.5) * cs * 0.5;
-                        ty = boardY + 7.5 * cs + (Math.random() - 0.5) * cs * 0.5;
-                    } else {
-                        const c = this.getCoord(p.id, pos);
-                        tx = c.x; ty = c.y;
-                        if (posCounts[pos] > 1) {
-                            const i = posDrawn[pos] || 0;
-                            tx += (i - (posCounts[pos] - 1) / 2) * (cs / 3);
-                            posDrawn[pos] = i + 1;
-                        }
+                    if (pos === 999) { tx = cx + (idx % 2 ? 1 : -1) * cs * 0.3; ty = cy + (idx < 2 ? -1 : 1) * cs * 0.3; }
+                    else {
+                        const c = this.getCoord(p.id, pos); tx = c.x; ty = c.y;
+                        if (posCounts[pos] > 1) { const i = posDrawn[pos] || 0; tx += (i - (posCounts[pos] - 1) / 2) * (cs / 3); posDrawn[pos] = i + 1; }
                     }
-
-                    // Shadow
-                    ctx.beginPath();
-                    ctx.ellipse(tx, ty + cs * 0.2, cs * 0.3, cs * 0.1, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
-
-                    // Body (Gradient)
-                    const grad = ctx.createRadialGradient(tx - cs * 0.1, ty - cs * 0.1, cs * 0.05, tx, ty, cs * 0.35);
-                    grad.addColorStop(0, '#fff');
-                    grad.addColorStop(0.3, p.color);
-                    grad.addColorStop(1, '#000'); // Darken edges
-
-                    ctx.beginPath();
-                    ctx.arc(tx, ty, cs * 0.35, 0, Math.PI * 2);
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-                    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
-
-                    // Highlight if movable
-                    if (this.turn === p.id && this.dice > 0 && this.canMove(p.id, idx)) {
-                        // Selection Ring
-                        ctx.beginPath();
-                        ctx.arc(tx, ty, cs * 0.45, 0, Math.PI * 2);
-                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-                    }
+                    const movable = this.turn === p.id && this.dice > 0 && this.canMove(p.id, idx);
+                    this.drawPawn(ctx, tx, ty, cs, p.color, p.darkColor, p.lightColor, movable);
                 });
             });
-
             if (this.isRolling && !this.gameOver) requestAnimationFrame(() => this.draw());
+        },
+
+        // 3D Pawn drawing - realistic chess-piece style
+        drawPawn(ctx, x, y, cs, color, dark, light, highlight) {
+            const s = cs * 0.38;
+            // Shadow
+            ctx.beginPath(); ctx.ellipse(x, y + s * 0.8, s * 0.7, s * 0.25, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+            // Base (wide ellipse)
+            ctx.beginPath(); ctx.ellipse(x, y + s * 0.4, s * 0.65, s * 0.3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = dark; ctx.fill();
+            // Body (trapezoid)
+            ctx.beginPath(); ctx.moveTo(x - s * 0.55, y + s * 0.4); ctx.lineTo(x - s * 0.25, y - s * 0.3);
+            ctx.lineTo(x + s * 0.25, y - s * 0.3); ctx.lineTo(x + s * 0.55, y + s * 0.4); ctx.closePath();
+            const bodyGrad = ctx.createLinearGradient(x - s * 0.5, y, x + s * 0.5, y);
+            bodyGrad.addColorStop(0, dark); bodyGrad.addColorStop(0.3, light); bodyGrad.addColorStop(0.7, color); bodyGrad.addColorStop(1, dark);
+            ctx.fillStyle = bodyGrad; ctx.fill();
+            // Neck ring
+            ctx.beginPath(); ctx.ellipse(x, y - s * 0.3, s * 0.28, s * 0.12, 0, 0, Math.PI * 2);
+            ctx.fillStyle = dark; ctx.fill();
+            // Head (sphere with gradient)
+            ctx.beginPath(); ctx.arc(x, y - s * 0.6, s * 0.35, 0, Math.PI * 2);
+            const headGrad = ctx.createRadialGradient(x - s * 0.1, y - s * 0.75, s * 0.05, x, y - s * 0.6, s * 0.35);
+            headGrad.addColorStop(0, '#fff'); headGrad.addColorStop(0.3, light); headGrad.addColorStop(1, dark);
+            ctx.fillStyle = headGrad; ctx.fill();
+            // Highlight ring if movable
+            if (highlight) {
+                ctx.beginPath(); ctx.arc(x, y - s * 0.1, s * 0.9, 0, Math.PI * 2);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+            }
         },
 
         canMove(pid, tid) {
@@ -805,58 +717,40 @@ window.miniGames = {
             return pos + this.dice <= 56;
         },
 
-        // Handle Click (Needs to map click to board space or Dice area)
         handleClick(e) {
             if (this.gameOver) return;
             const rect = this.canvas.getBoundingClientRect();
-            // Scale click coordinates based on canvas display vs actual size
             const scaleX = this.canvas.width / rect.width;
             const scaleY = this.canvas.height / rect.height;
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
-
-            // Check Dice Click Area (Bottom for Player)
-            const { boardY } = this.layout;
+            const { boardX, boardY, boardSize } = this.layout;
+            const cs = this.cellSize;
             const H = this.canvas.height;
-            const W = this.canvas.width;
 
-            // Player Dice Area (Bottom Center-ish)
-            // Defined in draw as: x=W/2+60, y=H-boardY*0.4
+            // Dice click (bottom-left area, diceX=110)
             if (this.turn === 0 && !this.isRolling && this.dice === 0) {
-                const dx = W / 2 + 60; const dy = H - boardY * 0.4;
-                const dist = Math.sqrt((x - dx) ** 2 + (y - dy) ** 2);
-                if (dist < 40) {
-                    this.rollDice();
-                    return;
+                const diceX = 110;
+                const diceY = boardY + boardSize + (H - boardY - boardSize) * 0.45;
+                if (Math.abs(x - diceX) < 30 && Math.abs(y - diceY) < 30) {
+                    this.rollDice(); return;
                 }
             }
 
-            // Check Token Click
+            // Token click
             if (this.turn === 0 && this.dice > 0) {
-                const cs = this.cellSize;
-                const { boardX, boardY } = this.layout;
-
                 let clickedToken = -1;
                 this.players[0].tokens.forEach((pos, idx) => {
                     let tx, ty;
                     if (pos === -1) {
-                        // Base
-                        const bx = 0; const by = 9;
-                        const offX = (idx % 2) * 2 + 1.5;
-                        const offY = Math.floor(idx / 2) * 2 + 1.5;
-                        tx = boardX + (bx + offX) * cs;
-                        ty = boardY + (by + offY) * cs;
+                        const positions = [[1.5, 1.5], [3.5, 1.5], [1.5, 3.5], [3.5, 3.5]];
+                        tx = boardX + (0 + positions[idx][0]) * cs;
+                        ty = boardY + (9 + positions[idx][1]) * cs;
                     } else if (pos === 999) return;
-                    else {
-                        const c = this.getCoord(0, pos);
-                        tx = c.x; ty = c.y;
-                    }
+                    else { const c = this.getCoord(0, pos); tx = c.x; ty = c.y; }
                     if (Math.sqrt((x - tx) ** 2 + (y - ty) ** 2) < cs * 0.6) clickedToken = idx;
                 });
-
-                if (clickedToken !== -1 && this.canMove(0, clickedToken)) {
-                    this.moveToken(0, clickedToken);
-                }
+                if (clickedToken !== -1 && this.canMove(0, clickedToken)) this.moveToken(0, clickedToken);
             }
         },
 
