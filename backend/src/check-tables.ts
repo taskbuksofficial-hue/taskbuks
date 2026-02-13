@@ -1,4 +1,5 @@
 
+import { features } from 'process';
 import { query } from './config/db';
 
 async function checkTables() {
