@@ -531,24 +531,23 @@
                     <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily
                         Bonus</span>
                 </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer">
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewardedSmart()">
                     <div
-                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
                         <span class="material-icons-round text-3xl text-secondary">stars</span>
                     </div>
                     <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x
                         Bonus</span>
                 </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer"
-                    onclick="window.controller.openAdGemOfferWall()">
+                <div class="flex flex-col items-center gap-2 cursor-pointer nav-item" data-target="surveys">
                     <div
                         class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
-                        <span class="material-icons-round text-3xl text-primary">sports_esports</span>
+                        <span class="material-icons-round text-3xl" style="color:#a855f7;">poll</span>
                     </div>
-                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Play
-                        Games</span>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Take
+                        Survey</span>
                 </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewarded()">
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewardedSmart()">
                     <div
                         class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
                         <svg viewBox="0 0 24 24" class="w-10 h-10 fill-red-600">
@@ -1513,7 +1512,7 @@
     <script src="store.js"></script>
     <script src="controller.js"></script>
     <script src="md5.js"></script>
-    <script src="app.js?v=1.21"></script>
+    <script src="app.js?v=1.22"></script>
 </body>
 
 </html>
