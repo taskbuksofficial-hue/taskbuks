@@ -1353,10 +1353,12 @@ window.miniGames = {
                 md5Script.onload = () => {
                     const appId = '4pfOJz6QQrm';
                     const appKey = '8afcb7f89adf0d55c2805a3a2277299f';
+                    const appSecret = 'dfdcf63db032c1f5971db5925895ced5';
                     const userId = user.id;
 
-                    // Checksum: MD5(internalUserId + appId + appKey) -> first 10 chars
-                    const rawHash = md5(userId + appId + appKey);
+                    // Checksum: MD5(internalUserId + appId + appSecret) -> first 10 chars
+                    // NOTE: Using Secret for checksum signing
+                    const rawHash = md5(userId + appId + appSecret);
                     const checksum = rawHash.substring(0, 10);
                     const finalUserId = `${userId}-${appId}-${checksum}`;
                     const iframeUrl = `https://www.rapidoreach.com/ofw/?userId=${encodeURIComponent(finalUserId)}`;
