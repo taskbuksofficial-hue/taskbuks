@@ -1341,32 +1341,34 @@ window.miniGames = {
         // 3. CPX Research Sync
         // 3. Rapido Reach Integration
         if (user && !window.rapidoInitialized) {
-            console.log("Initializing Rapido Reach for user:", user.id);
+            console.log("Attempting Rapido Reach Init for user:", user.id);
             const container = document.getElementById('rapidoreach-container');
             if (container) {
-                // Ensure unique load
+                console.log("Rapido container found. Injecting iframe...");
                 window.rapidoInitialized = true;
 
-                // Load MD5 library for checksum
-                const md5Script = document.createElement('script');
-                md5Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js';
-                md5Script.onload = () => {
-                    const appId = '4pfOJz6QQrm';
-                    const appKey = '8afcb7f89adf0d55c2805a3a2277299f';
-                    const appSecret = 'dfdcf63db032c1f5971db5925895ced5';
-                    const userId = user.id;
+                // Inline MD5 (Blueimp-compatible)
+                const md5 = function (k) {
+                    var l = function (k, m) { var n = (65535 & k) + (65535 & m); return (k >> 16) + (m >> 16) + (n >> 16) << 16 | 65535 & n }, m = function (k, m) { return k << m | k >>> 32 - m }, n = function (n, o, p, q, r, s) { return l(m(l(l(o, n), l(q, s)), r), p) }, o = function (k, m, l, o, p, q, r) { return n(m & l | ~m & o, k, m, p, q, r) }, p = function (k, m, l, o, p, q, r) { return n(m & o | l & ~o, k, m, p, q, r) }, q = function (k, m, l, o, p, q, r) { return n(m ^ l ^ o, k, m, p, q, r) }, r = function (k, m, l, o, p, q, r) { return n(l ^ (m | ~o), k, m, p, q, r) }, s = function (k) { var m, n, o, p = 0, q = []; for (m = 0; m < 64; m += 4)q[m >> 2] = k.charCodeAt(m) | k.charCodeAt(m + 1) << 8 | k.charCodeAt(m + 2) << 16 | k.charCodeAt(m + 3) << 24; for (m = k.length, n = 0; n < m; n++)p += (o = k.charCodeAt(n)) << 8 * (n % 4); for (q[n >> 2] |= 128 << 8 * (n % 4), q[14 + (n + 64 >>> 9 << 4)] = 8 * m, m = 1732584193, n = -271733879, o = -1732584194, p = 271733878, u = 0; u < q.length; u += 16) { var v = m, w = n, x = o, y = p; m = q(m, n, o, p, q[u + 2], 7, 1436905469), p = q(p, m, n, o, q[u + 10], 12, -1051523), o = q(o, p, m, n, q[u + 6], 17, -2734768), n = q(n, o, p, m, q[u + 14], 22, -660478335), m = q(m, n, o, p, q[u + 1], 7, -405537848), p = q(p, m, n, o, q[u + 9], 12, 568446438), o = q(o, p, m, n, q[u + 5], 17, -1019803690), n = q(n, o, p, m, q[u + 13], 22, -45705983), m = q(m, n, o, p, q[u + 3], 10, -1120210379), p = q(p, m, n, o, q[u + 11], 15, 1400794644), o = q(o, p, m, n, q[u + 7], 21, -760291886), n = q(n, o, p, m, q[u + 15], 6, 977293109), m = q(m, n, o, p, q[u], 10, -102847734), p = q(p, m, n, o, q[u + 8], 15, -1455630015), o = q(o, p, m, n, q[u + 4], 21, -162719479), n = q(n, o, p, m, q[u + 12], 6, 1272893353), m = r(m, n, o, p, q[u + 2], 15, -441931349), p = r(p, m, n, o, q[u + 9], 21, -156508938), o = r(o, p, m, n, q[u + 15], 5, -1019124022), n = r(n, o, p, m, q[u + 6], 10, -137953259), m = r(m, n, o, p, q[u + 13], 15, -997972828), p = r(p, m, n, o, q[u + 4], 21, -1217354328), o = r(o, p, m, n, q[u + 11], 5, 2038782927), n = r(n, o, p, m, q[u + 2], 10, -827552599), m = r(m, n, o, p, q[u + 9], 15, -1073867083), p = r(p, m, n, o, q[u], 21, 62796249), o = r(o, p, m, n, q[u + 7], 5, -145749729), n = r(n, o, p, m, q[u + 14], 10, -567382216), m = r(m, n, o, p, q[u + 5], 15, -1202882899), p = r(p, m, n, o, q[u + 12], 21, -2110293521), o = r(o, p, m, n, q[u + 3], 5, 1726058694), n = r(n, o, p, m, q[u + 10], 10, -1894986606), m = m + v | 0, n = n + w | 0, o = o + x | 0, p = p + y | 0 } var z = []; for (m = 0; m < 4; m++)z[m] = [255 & q[m], 255 & q[m] >> 8, 255 & q[m] >> 16, 255 & q[m] >> 24]; for (m = 0; m < 4; m++)for (n = 0; n < 4; n++)m * 4 + n < 4 * z.length && (p = "0" + z[m][n].toString(16), k += p.substr(p.length - 2)); return k };
 
-                    // Checksum: MD5(internalUserId + appId + appSecret) -> first 10 chars
-                    // NOTE: Using Secret for checksum signing
-                    const rawHash = md5(userId + appId + appSecret);
-                    const checksum = rawHash.substring(0, 10);
-                    const finalUserId = `${userId}-${appId}-${checksum}`;
-                    const iframeUrl = `https://www.rapidoreach.com/ofw/?userId=${encodeURIComponent(finalUserId)}`;
+                    try {
+                        const appId = '4pfOJz6QQrm';
+                        const appSecret = 'dfdcf63db032c1f5971db5925895ced5';
+                        const userId = user.id;
 
-                    console.log("Loading Rapido Reach:", iframeUrl);
-                    container.innerHTML = `<iframe src="${iframeUrl}" style="width:100%; height:800px; border:none; border-radius:16px;" title="Rapido Reach"></iframe>`;
-                };
-                document.body.appendChild(md5Script);
+                        const rawHash = md5(userId + appId + appSecret);
+                        const checksum = rawHash.substring(0, 10);
+                        const finalUserId = `${userId}-${appId}-${checksum}`;
+                        const iframeUrl = `https://www.rapidoreach.com/ofw/?userId=${encodeURIComponent(finalUserId)}`;
+
+                        console.log("Loading Rapido Reach:", iframeUrl);
+                        container.innerHTML = `<iframe src="${iframeUrl}" style="width:100%; height:800px; border:none; border-radius:16px;" title="Rapido Reach"></iframe>`;
+                    } catch (e) {
+                        console.error("Rapido Init Error:", e);
+                        container.innerHTML = `<div class="text-red-500 text-center py-4">Error loading surveys: ${e.message}</div>`;
+                    }
+                } else {
+                    console.log("Rapido container NOT found.");
             }
         }
 
