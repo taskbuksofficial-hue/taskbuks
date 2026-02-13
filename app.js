@@ -1339,8 +1339,15 @@ window.miniGames = {
         }
 
         // 3. Rapido Reach Integration
-        if (user && !window.rapidoInitialized) {
-            console.log("Attempting Rapido Reach Init for user:", user.id);
+        var rapidoUserId = null;
+        if (user && user.id) {
+            rapidoUserId = user.id;
+        } else if (window.Clerk && window.Clerk.user && window.Clerk.user.id) {
+            rapidoUserId = window.Clerk.user.id;
+        }
+
+        if (rapidoUserId && !window.rapidoInitialized) {
+            console.log("Attempting Rapido Reach Init for user:", rapidoUserId);
             var container = document.getElementById('rapidoreach-container');
             if (container) {
                 console.log("Rapido container found.");
@@ -1348,20 +1355,19 @@ window.miniGames = {
                 try {
                     var appId = '4pfOJz6QQrm';
                     var appKey = '8afcb7f89adf0d55c2805a3a2277299f';
-                    var rUserId = user.id;
                     // Rapido Reach docs: checksum = MD5(internalUserId-appId-appKey), first 10 chars
-                    var rawHash = window.md5(rUserId + '-' + appId + '-' + appKey);
+                    var rawHash = window.md5(rapidoUserId + '-' + appId + '-' + appKey);
                     var checksum = rawHash.substring(0, 10);
-                    var finalUserId = rUserId + '-' + appId + '-' + checksum;
+                    var finalUserId = rapidoUserId + '-' + appId + '-' + checksum;
                     var iframeUrl = 'https://www.rapidoreach.com/ofw/?userId=' + encodeURIComponent(finalUserId);
-                    console.log("Loading Rapido Reach:", iframeUrl);
-                    container.innerHTML = '<iframe src="' + iframeUrl + '" style="width:100%;height:800px;border:none;border-radius:16px;" title="Rapido Reach"></iframe>';
+                    console.log("Rapido Reach URL:", iframeUrl);
+                    container.innerHTML = '<iframe src="' + iframeUrl + '" style="width:100%;height:800px;border:none;border-radius:16px;" allow="clipboard-write" title="Rapido Reach Surveys"></iframe>';
                 } catch (err) {
                     console.error("Rapido Init Error:", err);
-                    container.innerHTML = '<div style="color:red;text-align:center;padding:16px;">Error loading surveys: ' + err.message + '</div>';
+                    container.innerHTML = '<div style="color:red;text-align:center;padding:16px;font-size:14px;">Survey Error: ' + err.message + '</div>';
                 }
             } else {
-                console.log("Rapido container NOT found.");
+                console.log("Rapido container NOT found in DOM.");
             }
         }
 
