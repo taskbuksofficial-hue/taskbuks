@@ -212,14 +212,30 @@ window.ads = {
         // Retry loading logic
         if (unityAdsInitialized && !unityAdsReady) {
             loadUnityRewardedAd(); // Force retry
-            if (window.showToast) window.showToast('⏳ Ad Loading... Please wait 5s and try again.');
+            if (window.showToast) window.showToast('⏳ Ad Loading... Wait 5s.');
         } else {
-            if (window.showToast) window.showToast('⚠️ No Ad Filled. Checking connection...');
+            // Specific message for Web users
+            if (!window.Android) {
+                if (showToast) showToast('⚠️ No Live Ads on Web/PC. Use APK or Enable Test Mode.');
+            } else {
+                if (showToast) showToast('⚠️ No Ad Filled. Checking connection...');
+            }
+
             // Force init if completely failed
             if (!unityAdsInitialized) initUnityAds();
         }
 
-        if (callback) callback(0); // Proceed without reward (or should we block?)
+        if (callback) callback(0); // Proceed without reward
+    },
+
+    toggleTestMode: function () {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('testAds') === 'true') {
+            url.searchParams.delete('testAds');
+        } else {
+            url.searchParams.set('testAds', 'true');
+        }
+        window.location.href = url.toString();
     },
 
     checkEnvironment: function () {
@@ -227,9 +243,10 @@ window.ads = {
             if (window.showToast) window.showToast('📱 Native App Mode Detected');
         } else {
             console.log("Running in Web Mode");
-            // Only toast if we are debugging
             if (window.location.search.includes('testAds=true')) {
-                if (window.showToast) window.showToast('🌐 Web Browser Mode');
+                if (window.showToast) window.showToast('🛠️ Test Ads Enabled');
+            } else {
+                // if (window.showToast) window.showToast('🌐 Web Mode (Live Ads might not fill)');
             }
         }
     },
