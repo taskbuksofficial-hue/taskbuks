@@ -400,6 +400,25 @@
         carousel.ontouchstart = () => clearInterval(slideInterval);
     }
 
+    function setupGameCards() {
+        console.log("Setting up Game Cards...");
+        const buttons = document.querySelectorAll('.game-play-btn');
+        buttons.forEach(btn => {
+            btn.onclick = (e) => {
+                const gameName = btn.dataset.game;
+                const reward = btn.dataset.reward;
+                console.log(`Playing ${gameName} for ${reward} coins`);
+
+                // Route all games through miniGames
+                if (window.miniGames) {
+                    window.miniGames.openGame(gameName);
+                } else {
+                    showToast(`Starting ${gameName}...`);
+                }
+            };
+        });
+    }
+
     // Initialize
     const initApp = async () => {
         console.log("Initializing App...");
@@ -408,6 +427,7 @@
         setupNavigation();
         setupGlobalListeners();
         setupCarousel();
+        setupGameCards();
         store.subscribe(() => { render(); renderStreak(); });
 
         // Show Loading Overlay
