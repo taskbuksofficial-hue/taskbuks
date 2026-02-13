@@ -7,39 +7,73 @@ window.miniGames = {
 
     // ─── HELPERS ───────────────────────────────────────────
     openGame(gameName) {
-        document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
-        const reward = { 'Ludo': 40, 'Snake and Ladders': 40, 'Trivia Quiz': 5, 'Memory Game': 20, 'Number Guess': 15, 'Color Match': 12, 'Coin Flip': 10, 'Dice Roll': 15, 'Dino Runner': 20 };
+        // 1. Show Loading / Pre-roll Overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'game-loading-overlay';
+        overlay.className = 'fixed inset-0 bg-black/95 z-[3000] flex flex-col items-center justify-center text-white';
+        overlay.innerHTML = `
+            <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="font-bold text-lg">Loading Ad...</p>
+            <p class="text-xs text-slate-400 mt-2">Game starting soon</p>
+        `;
+        document.body.appendChild(overlay);
 
-        // Global Ad Logic for ALL Games
-        if (window.ads) {
-            if (window.ads.showInterstitial) window.ads.showInterstitial();
-            if (window.ads.setBannerVisible) window.ads.setBannerVisible(true);
-        }
+        // 2. Function to actually start the game
+        const launch = () => {
+            const overlayEl = document.getElementById('game-loading-overlay');
+            if (overlayEl) overlayEl.remove();
 
-        if (gameName === 'Ludo') {
-            document.getElementById('game-ludo')?.classList.remove('hidden');
-            setTimeout(() => this.ludo.init(), 100);
-        } else if (gameName === 'Snake and Ladders') {
-            document.getElementById('game-snl')?.classList.remove('hidden');
-            setTimeout(() => this.snl.init(), 100);
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            const reward = { 'Ludo': 40, 'Snake and Ladders': 40, 'Trivia Quiz': 5, 'Memory Game': 20, 'Number Guess': 15, 'Color Match': 12, 'Coin Flip': 10, 'Dice Roll': 15, 'Dino Runner': 20 };
+
+            let bannerContainerId = 'generic-banner-ad'; // Default
+
+            if (gameName === 'Ludo') {
+                document.getElementById('game-ludo')?.classList.remove('hidden');
+                bannerContainerId = 'ludo-banner-ad';
+                setTimeout(() => this.ludo.init(), 100);
+            } else if (gameName === 'Snake and Ladders') {
+                document.getElementById('game-snl')?.classList.remove('hidden');
+                bannerContainerId = 'snl-banner-ad';
+                setTimeout(() => this.snl.init(), 100);
+            } else {
+                // Generic container games
+                document.getElementById('game-generic')?.classList.remove('hidden');
+                bannerContainerId = 'generic-banner-ad';
+                const titleEl = document.getElementById('generic-game-title');
+                const badgeEl = document.getElementById('generic-game-badge');
+                if (titleEl) titleEl.textContent = gameName;
+                if (badgeEl) badgeEl.textContent = `💰 ${reward[gameName] || 0}`;
+                const body = document.getElementById('generic-game-body');
+                if (body) {
+                    body.innerHTML = '';
+                    if (gameName === 'Trivia Quiz') this.trivia.init(body);
+                    else if (gameName === 'Memory Game') this.memory.init(body);
+                    else if (gameName === 'Number Guess') this.numberGuess.init(body);
+                    else if (gameName === 'Color Match') this.colorMatch.init(body);
+                    else if (gameName === 'Coin Flip') this.coinFlip.init(body);
+                    else if (gameName === 'Dice Roll') this.diceRoll.init(body);
+                    else if (gameName === 'Dino Runner') this.dino.init(body);
+                }
+            }
+
+            // 3. Show Banner (Smart)
+            if (window.ads && window.ads.setBannerVisible) {
+                window.ads.setBannerVisible(true, bannerContainerId);
+            }
+        };
+
+        // 3. Play Pre-roll Ad
+        if (window.ads && window.ads.showRewardedSmart) {
+            // Use setTimeout to ensure overlay renders
+            setTimeout(() => {
+                window.ads.showRewardedSmart((amount) => {
+                    console.log("Pre-roll finished:", amount);
+                    launch();
+                });
+            }, 500);
         } else {
-            // Generic container games
-            document.getElementById('game-generic')?.classList.remove('hidden');
-            const titleEl = document.getElementById('generic-game-title');
-            const badgeEl = document.getElementById('generic-game-badge');
-            if (titleEl) titleEl.textContent = gameName;
-            if (badgeEl) badgeEl.textContent = `💰 ${reward[gameName] || 0}`;
-            const body = document.getElementById('generic-game-body');
-            if (!body) return;
-            body.innerHTML = '';
-
-            if (gameName === 'Trivia Quiz') this.trivia.init(body);
-            else if (gameName === 'Memory Game') this.memory.init(body);
-            else if (gameName === 'Number Guess') this.numberGuess.init(body);
-            else if (gameName === 'Color Match') this.colorMatch.init(body);
-            else if (gameName === 'Coin Flip') this.coinFlip.init(body);
-            else if (gameName === 'Dice Roll') this.diceRoll.init(body);
-            else if (gameName === 'Dino Runner') this.dino.init(body);
+            launch();
         }
     },
 
