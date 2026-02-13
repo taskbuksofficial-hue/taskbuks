@@ -1427,9 +1427,28 @@ window.miniGames = {
             }).join('');
         }
 
-        // 4. Refer Code
+        // 4. Refer Code (generate client-side if backend doesn't provide)
         const codeEl = document.getElementById('referral-code');
-        if (codeEl && user) codeEl.textContent = user.referralCode;
+        if (codeEl) {
+            var refCode = (user && user.referralCode) ? user.referralCode : null;
+            if (!refCode) {
+                // Generate from Clerk user ID or fallback
+                var uid = '';
+                if (user && user.id) uid = user.id;
+                else if (user && user.clerkId) uid = user.clerkId;
+                else if (window.Clerk && window.Clerk.user) uid = window.Clerk.user.id;
+
+                if (uid) {
+                    // Use last 8 chars of user ID, uppercased
+                    refCode = 'TB' + uid.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase();
+                } else {
+                    refCode = 'TB' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                }
+                // Store it back on user object so share buttons can use it
+                if (user) user.referralCode = refCode;
+            }
+            codeEl.textContent = refCode;
+        }
 
         // 5. Transactions
         const txList = document.getElementById('transaction-list');
