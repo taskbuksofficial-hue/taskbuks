@@ -36,12 +36,14 @@ function initUnityAds() {
             testMode: false,
             onComplete: function () {
                 console.log('[UnityAds] Initialized successfully');
+                if (window.showToast) window.showToast('✅ Unity Init Success');
                 unityAdsInitialized = true;
                 loadUnityRewardedAd();
                 loadUnityBanner();
             },
             onFailed: function (error) {
                 console.error('[UnityAds] Init failed:', error);
+                if (window.showToast) window.showToast('❌ Unity Init Failed: ' + error);
             }
         });
     } catch (e) {
@@ -60,6 +62,7 @@ function loadUnityRewardedAd() {
             },
             onFailed: function (placementId, error) {
                 console.warn('[UnityAds] Rewarded load failed:', placementId, error);
+                // if (window.showToast) window.showToast('⚠️ Ad Load Failed: ' + error);
                 unityAdsReady = false;
             }
         });
@@ -148,9 +151,7 @@ function showUnityBanner(containerId) {
 }
 
 function hideUnityBanner() {
-    // Unity Web SDK banners usually handle themselves or overlay
-    // If we need to explicitly hide, we might need to look at specific SDK methods
-    // For now, this is a placeholder or for when we implement specific div removal
+    // Placeholder
 }
 
 // --- Main Ads Object ---
@@ -178,26 +179,33 @@ window.ads = {
     },
 
     /**
-     * Smart rewarded: Unity Ads first, AdMob native fallback
+     * Smart rewarded: Priority = Native (APK) -> Unity Web (Fallback)
      */
     showRewardedSmart: function (callback) {
         console.log("Requesting Smart Rewarded Ad...");
-        // Try Unity Ads first
+
+        // 1. Try Native Android Ad (Best for APK)
+        if (window.Android && window.Android.showRewarded) {
+            console.log("[SmartAd] Showing Native Android Ad");
+            window.onAdRewardReceived = function (amount) {
+                console.log("Reward received:", amount);
+                if (callback) callback(amount);
+            };
+            window.Android.showRewarded();
+            return;
+        }
+
+        // 2. Try Unity Ads (Web SDK)
         if (unityAdsReady) {
             console.log("[SmartAd] Showing Unity Ads rewarded");
             var shown = showUnityRewardedAd(callback);
             if (shown) return;
         }
-        // Fallback to native AdMob
-        if (window.Android && window.Android.showRewarded) {
-            console.log("[SmartAd] Falling back to AdMob");
-            this.showRewarded(callback);
-        } else {
-            console.warn("[SmartAd] No ad provider available");
-            // For testing/development, we might want to simulate success if no ads are available
-            // so the game can still start? No, let's just fail gracefully.
-            if (callback) callback(0); // Callback with 0 to indicate finished/failed
-        }
+
+        // 3. No Ad Available
+        console.warn("[SmartAd] No ad provider available");
+        if (window.showToast) window.showToast('⚠️ No Ad Available (Check Connection/Fill)');
+        if (callback) callback(0); // Proceed without reward
     },
 
     setBannerVisible: function (visible, containerId) {
