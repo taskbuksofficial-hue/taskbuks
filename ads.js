@@ -47,7 +47,7 @@ function initUnityAds() {
             },
             onFailed: function (error) {
                 console.error('[UnityAds] Init failed:', error);
-                if (window.showToast) window.showToast('❌ Unity Init Failed: ' + error);
+                // if (window.showToast) window.showToast('❌ Unity Init Failed: ' + error);
             }
         });
     } catch (e) {
@@ -66,7 +66,7 @@ function loadUnityRewardedAd() {
             },
             onFailed: function (placementId, error) {
                 console.warn('[UnityAds] Rewarded load failed:', placementId, error);
-                if (window.showToast) window.showToast('⚠️ Ad Load Failed: ' + error);
+                // if (window.showToast) window.showToast('⚠️ Ad Load Failed: ' + error);
                 unityAdsReady = false;
             }
         });
@@ -216,9 +216,9 @@ window.ads = {
         } else {
             // Specific message for Web users
             if (!window.Android) {
-                if (showToast) showToast('⚠️ No Live Ads on Web/PC. Use APK or Enable Test Mode.');
+                // if (window.showToast) window.showToast('⚠️ No Live Ads on Web/PC. Use APK.');
             } else {
-                if (showToast) showToast('⚠️ No Ad Filled. Checking connection...');
+                if (window.showToast) window.showToast('⚠️ No Ad Filled. Checking connection...');
             }
 
             // Force init if completely failed
@@ -240,13 +240,11 @@ window.ads = {
 
     checkEnvironment: function () {
         if (window.Android && window.Android.showRewarded) {
-            if (window.showToast) window.showToast('📱 Native App Mode Detected');
+            // if (window.showToast) window.showToast('📱 Native App Mode Detected');
         } else {
             console.log("Running in Web Mode");
             if (window.location.search.includes('testAds=true')) {
                 if (window.showToast) window.showToast('🛠️ Test Ads Enabled');
-            } else {
-                // if (window.showToast) window.showToast('🌐 Web Mode (Live Ads might not fill)');
             }
         }
     },
