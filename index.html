@@ -109,6 +109,23 @@
                 opacity: 1;
             }
         }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Games Grid Styles */
+        .games-header-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
+
+        .game-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .game-card:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 
@@ -351,37 +368,236 @@
                 </div>
             </div>
 
-            <!-- Top Offer Section -->
-            <section id="top-offer-section" class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold dark:text-white uppercase tracking-wider opacity-60">Top Offer for you
-                    </h3>
-                </div>
-                <div id="top-offer-container"
-                    class="bg-white dark:bg-gray-800 p-5 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow relative overflow-hidden cursor-pointer active:scale-95 transition-transform"
-                    onclick="window.controller.openAdGemOfferWall()">
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div
-                                class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-                                <span class="material-icons-round text-orange-500">sports_esports</span>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-base dark:text-white leading-none">Play Games &amp; Earn</h4>
-                                <p class="text-[10px] text-slate-400 mt-1">High-paying tasks inside</p>
-                            </div>
+            <!-- Games Grid Section -->
+            <section id="games-section" class="space-y-4">
+                <div
+                    class="rounded-[24px] overflow-hidden bg-white dark:bg-gray-800 ios-shadow border border-gray-100 dark:border-gray-700">
+                    <!-- Header -->
+                    <div class="games-header-gradient p-6 text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h2 class="text-2xl font-extrabold mb-1">Play & Earn</h2>
+                            <p class="text-xs font-medium opacity-90">Complete games to earn coins</p>
                         </div>
-                        <p class="text-xs text-slate-500 dark:text-gray-400 mb-4 leading-relaxed w-2/3">Complete big
-                            offers from AdGem and get rewarded instantly up to ₹500.</p>
-                        <div class="flex items-center gap-2">
-                            <div
-                                class="bg-orange-500 text-white text-[11px] font-bold px-4 py-2 rounded-full shadow-lg shadow-orange-500/30">
-                                Start Earning</div>
-                            <span class="text-[10px] font-bold text-orange-500">Hot 🔥</span>
+                        <div class="absolute right-[-20px] top-[-20px] opacity-20 rotate-12">
+                            <span class="material-icons-round text-9xl">sports_esports</span>
                         </div>
                     </div>
-                    <div class="absolute right-[-10px] top-1/2 -translate-y-1/2 opacity-20 dark:opacity-10">
-                        <span class="material-icons-round text-[120px] text-orange-500">videogame_asset</span>
+
+                    <!-- Grid -->
+                    <div class="p-5">
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm mb-4">Available Games</h3>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Trivia Quiz -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-2xl">
+                                    🧠</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Trivia Quiz</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 5
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Test your knowledge</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Trivia Quiz" data-reward="5">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Memory Game -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center text-2xl">
+                                    🃏</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Memory Game</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 20
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Match the cards</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Memory Game" data-reward="20">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Number Guess -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center text-2xl">
+                                    🔢</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Number Guess</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 15
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Guess the number</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Number Guess" data-reward="15">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Color Match -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-2xl">
+                                    🎨</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Color Match</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 12
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Match the colors</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Color Match" data-reward="12">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Coin Flip -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center text-2xl">
+                                    🪙</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Coin Flip</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 10
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Heads or tails</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Coin Flip" data-reward="10">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Dice Roll -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-2xl">
+                                    🎲</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Dice Roll</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 15
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Roll and win</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Dice Roll" data-reward="15">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Ludo -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-2xl">
+                                    🎯</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Ludo</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 40
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Classic board game</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Ludo" data-reward="40">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Snake and Ladders -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-2xl">
+                                    🐍</div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h4 class="font-bold text-xs dark:text-white truncate">Snake & Ladders</h4>
+                                        <span
+                                            class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            💰 40
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-3 truncate">Climb up, slide down</p>
+                                    <button
+                                        class="w-full border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] py-1.5 rounded-full transition-colors game-play-btn"
+                                        data-game="Snake and Ladders" data-reward="40">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Dino Runner -->
+                            <div
+                                class="game-card bg-white dark:bg-gray-750 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-2 col-span-2">
+                                <div class="flex items-center gap-4 w-full">
+                                    <div
+                                        class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-2xl shrink-0">
+                                        🦖</div>
+                                    <div class="text-left flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h4 class="font-bold text-xs dark:text-white truncate">Dino Runner</h4>
+                                            <span
+                                                class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                                💰 20
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 truncate">Jump over obstacles</p>
+                                    </div>
+                                    <button
+                                        class="border border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-[10px] px-4 py-1.5 rounded-full transition-colors game-play-btn shrink-0"
+                                        data-game="Dino Runner" data-reward="20">
+                                        Play Now
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </section>
@@ -435,6 +651,129 @@
                     <!-- Tasks injected by app.js -->
                 </div>
             </section>
+        </div>
+
+        <!-- LUDO GAME SECTION -->
+        <div id="game-ludo" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('Ludo')">arrow_back</button>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ludo</h2>
+                <span
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    40 coins</span>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-4 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-center mb-4">
+                    <canvas id="ludo-canvas" style="max-width:100%; border-radius:16px;"></canvas>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span id="ludo-dice" class="text-5xl cursor-default">⚀</span>
+                        <button onclick="window.miniGames.ludo.rollDice()"
+                            class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform">
+                            🎲 Roll Dice
+                        </button>
+                    </div>
+                    <button onclick="window.miniGames.ludo.restart()"
+                        class="bg-gray-100 dark:bg-gray-700 text-slate-500 dark:text-gray-300 font-bold px-4 py-3 rounded-xl text-xs">
+                        Restart
+                    </button>
+                </div>
+
+                <p id="ludo-status"
+                    class="text-xs text-slate-500 dark:text-gray-400 mt-3 text-center font-medium bg-gray-50 dark:bg-gray-900 rounded-xl py-2 px-3">
+                    Roll the dice to start!
+                </p>
+
+                <div class="flex items-center justify-center gap-6 mt-3">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-green-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">You</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">CPU</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner Ad Placeholder -->
+            <div id="ludo-banner-ad"
+                class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-3 text-center border border-gray-200 dark:border-gray-700">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
+                <div class="h-12 flex items-center justify-center">
+                    <span class="text-xs text-slate-300">Banner Ad Space</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SNAKE AND LADDERS GAME SECTION -->
+        <div id="game-snl" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('Snake and Ladders')">arrow_back</button>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Snake & Ladders</h2>
+                <span
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    40 coins</span>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-4 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-center mb-4">
+                    <canvas id="snl-canvas" style="max-width:100%; border-radius:16px;"></canvas>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span id="snl-dice" class="text-5xl cursor-default">⚀</span>
+                        <button onclick="window.miniGames.snl.rollDice()"
+                            class="bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform">
+                            🎲 Roll Dice
+                        </button>
+                    </div>
+                    <button onclick="window.miniGames.snl.restart()"
+                        class="bg-gray-100 dark:bg-gray-700 text-slate-500 dark:text-gray-300 font-bold px-4 py-3 rounded-xl text-xs">
+                        Restart
+                    </button>
+                </div>
+
+                <p id="snl-status"
+                    class="text-xs text-slate-500 dark:text-gray-400 mt-3 text-center font-medium bg-gray-50 dark:bg-gray-900 rounded-xl py-2 px-3">
+                    Roll the dice to start!
+                </p>
+
+                <div class="flex items-center justify-center gap-6 mt-3">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-green-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">You</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">CPU</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GENERIC GAME CONTAINER -->
+        <div id="game-generic" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('generic')">arrow_back</button>
+                <h2 id="generic-game-title" class="text-xl font-bold text-slate-900 dark:text-white">Game</h2>
+                <span id="generic-game-badge"
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    0</span>
+            </div>
+            <div id="generic-game-body"
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700 min-h-[400px]">
+                <!-- Dynamically populated by games.js -->
+            </div>
         </div>
 
         <!-- SURVEYS SECTION -->
@@ -944,6 +1283,7 @@
     <script src="api.js"></script>
     <script src="store.js"></script>
     <script src="controller.js"></script>
+    <script src="games.js"></script>
     <script src="app.js"></script>
 </body>
 
