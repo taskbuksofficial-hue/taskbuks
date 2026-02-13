@@ -76,18 +76,20 @@ window.miniGames = {
         render(container) {
             if (!container) container = document.getElementById('generic-game-body');
             if (this.current >= this.selected.length) {
+                var triviaRewards = [5, 10, 20, 30, 40, 50];
+                var earnedCoins = triviaRewards[Math.min(this.score, 5)];
+                var emoji = this.score >= 3 ? '🎉' : '😅';
+                var msg = this.score >= 3 ? `Awesome! +${earnedCoins} coins!` : `+${earnedCoins} coins! Try again for more!`;
                 container.innerHTML = `
                     <div class="text-center py-8">
-                        <div class="text-6xl mb-4">${this.score >= 3 ? '🎉' : '😅'}</div>
+                        <div class="text-6xl mb-4">${emoji}</div>
                         <h3 class="text-2xl font-black mb-2 dark:text-white">${this.score}/${this.selected.length}</h3>
-                        <p class="text-sm text-slate-400 mb-6">${this.score >= 3 ? 'Great job! +5 coins!' : 'Better luck next time!'}</p>
+                        <p class="text-sm text-slate-400 mb-6">${msg}</p>
                         <button onclick="window.miniGames.trivia.init(document.getElementById('generic-game-body'))"
                             class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm">Play Again</button>
                     </div>`;
-                if (this.score >= 3) {
-                    if (window.showToast) window.showToast('🎉 Trivia passed! +5 coins!');
-                    if (window.controller) window.controller.addCoins(5, 'Trivia Quiz Won');
-                }
+                if (window.showToast) window.showToast(`🎉 Trivia: +${earnedCoins} coins!`);
+                if (window.controller) window.controller.addCoins(earnedCoins, `Trivia Quiz (${this.score}/5 correct)`);
                 return;
             }
             const q = this.selected[this.current];
