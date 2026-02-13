@@ -32,6 +32,10 @@
         {
             "src": "ads.js",
             "use": "@vercel/static"
+        },
+        {
+            "src": "md5.js",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
