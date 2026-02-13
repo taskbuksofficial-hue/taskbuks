@@ -494,7 +494,7 @@ window.miniGames = {
                 { id: 0, name: 'You', color: '#16a34a', darkColor: '#15803d', lightColor: '#4ade80', tokens: [-1, -1, -1, -1] },
                 { id: 1, name: 'CPU', color: '#dc2626', darkColor: '#b91c1c', lightColor: '#f87171', tokens: [-1, -1, -1, -1] }
             ];
-            this.turn = 0; this.dice = 0; this.isRolling = false; this.gameOver = false;
+            this.turn = 0; this.dice = 0; this.isRolling = false; this.gameOver = false; this.dicePos = null;
             this.canvas.onclick = (e) => this.handleClick(e);
             this.updateStatus("Your turn!"); this.draw();
         },
@@ -560,28 +560,12 @@ window.miniGames = {
                 // Name
                 ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.fillStyle = active ? '#fff' : '#64748b';
                 ctx.fillText(p.name, avatarX, py + 38);
-
-                // Dice
-                ctx.save();
-                if (active) { ctx.shadowColor = '#fff'; ctx.shadowBlur = 8; }
-                rr(diceX - 20, py - 20, 40, 40, 8);
-                ctx.fillStyle = '#fff'; ctx.fill();
-                ctx.restore();
-                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
-                rr(diceX - 20, py - 20, 40, 40, 8); ctx.stroke();
-                // Dice dots
-                ctx.fillStyle = '#1e293b'; ctx.font = 'bold 22px sans-serif';
-                const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-                if (this.dice > 0 && active) ctx.fillText(pips[this.dice - 1], diceX, py + 2);
-                else if (pid === 0 && !this.isRolling && this.dice === 0 && this.turn === 0) {
-                    ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.fillText('TAP', diceX, py + 2);
-                }
             };
             drawPlayerPanel(1, true); drawPlayerPanel(0, false);
 
             // Trophy badge (top center)
             ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#fbbf24'; ctx.textAlign = 'center';
-            ctx.fillText('🏆 ₹40 Win', W / 2, 20);
+            ctx.fillText('🏆 50 Coins', W / 2, 20);
 
             // 3. BOARD - White base with rounded corners
             ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 20;
@@ -677,6 +661,26 @@ window.miniGames = {
                     this.drawPawn(ctx, tx, ty, cs, p.color, p.darkColor, p.lightColor, movable);
                 });
             });
+
+            // 9. DYNAMIC DICE & HINTS
+            if ((this.dice > 0 || this.isRolling) && this.dicePos) {
+                const { x, y } = this.dicePos;
+                ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 15;
+                rr(x - 22, y - 22, 44, 44, 10); ctx.fillStyle = '#fff'; ctx.fill();
+                ctx.restore();
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; rr(x - 22, y - 22, 44, 44, 10); ctx.stroke();
+                ctx.fillStyle = '#1e293b'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const pips = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                const val = this.dice > 0 ? this.dice : (this.isRolling ? Math.floor(Math.random() * 6) + 1 : 1);
+                ctx.fillText(pips[val - 1], x, y + 2);
+            }
+            if (this.turn === 0 && this.dice === 0 && !this.isRolling) {
+                ctx.save(); ctx.shadowColor = '#16a34a'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#16a34a'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText("TAP SCREEN TO ROLL", W / 2, H - boardY * 0.4 + 40);
+                ctx.restore();
+            }
+
             if (this.isRolling && !this.gameOver) requestAnimationFrame(() => this.draw());
         },
 
@@ -728,13 +732,10 @@ window.miniGames = {
             const cs = this.cellSize;
             const H = this.canvas.height;
 
-            // Dice click (bottom-left area, diceX=110)
+            // Dice click (TAP ANYWHERE)
             if (this.turn === 0 && !this.isRolling && this.dice === 0) {
-                const diceX = 110;
-                const diceY = boardY + boardSize + (H - boardY - boardSize) * 0.45;
-                if (Math.abs(x - diceX) < 30 && Math.abs(y - diceY) < 30) {
-                    this.rollDice(); return;
-                }
+                this.dicePos = { x, y };
+                this.rollDice(); return;
             }
 
             // Token click
@@ -839,6 +840,9 @@ window.miniGames = {
         cpuTurn() {
             if (this.gameOver) return;
             this.updateStatus('CPU rolling...');
+            // Set Dynamic Dice Pos for CPU (Top center-ish or near avatar)
+            const { boardY } = this.layout;
+            this.dicePos = { x: this.canvas.width / 2, y: boardY * 0.6 };
             const diceEl = document.getElementById('ludo-dice');
             const de = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
             let c = 0;
