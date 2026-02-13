@@ -235,5 +235,37 @@ window.controller = {
         } catch (error) {
             console.error("Failed to load surveys:", error);
         }
+    },
+
+    /**
+     * Central coin crediting function
+     * 1000 coins = ₹1
+     * All games and tasks call this to credit coins
+     */
+    addCoins(coins, description) {
+        if (!coins || coins <= 0) return;
+        var rupees = coins / 1000;
+        var state = store.getState();
+        store.setState(function (s) {
+            return {
+                wallet: {
+                    ...s.wallet,
+                    currentBalance: (s.wallet.currentBalance || 0) + rupees,
+                    lifetimeEarnings: (s.wallet.lifetimeEarnings || 0) + rupees,
+                    totalCoins: (s.wallet.totalCoins || 0) + coins
+                },
+                transactions: [{
+                    id: Date.now(),
+                    amount: rupees,
+                    coins: coins,
+                    description: description || ('Earned ' + coins + ' coins'),
+                    date: new Date().toISOString(),
+                    type: 'credit'
+                }, ...(s.transactions || [])]
+            };
+        });
+        console.log('[Wallet] +' + coins + ' coins (₹' + rupees.toFixed(4) + ') | ' + description);
+        // Trigger re-render
+        if (window.render) window.render();
     }
 };
