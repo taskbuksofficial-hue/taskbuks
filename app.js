@@ -1347,9 +1347,10 @@ window.miniGames = {
                 window.rapidoInitialized = true;
                 try {
                     var appId = '4pfOJz6QQrm';
-                    var appSecret = 'dfdcf63db032c1f5971db5925895ced5';
+                    var appKey = '8afcb7f89adf0d55c2805a3a2277299f';
                     var rUserId = user.id;
-                    var rawHash = window.md5(rUserId + appId + appSecret);
+                    // Rapido Reach docs: checksum = MD5(internalUserId-appId-appKey), first 10 chars
+                    var rawHash = window.md5(rUserId + '-' + appId + '-' + appKey);
                     var checksum = rawHash.substring(0, 10);
                     var finalUserId = rUserId + '-' + appId + '-' + checksum;
                     var iframeUrl = 'https://www.rapidoreach.com/ofw/?userId=' + encodeURIComponent(finalUserId);
