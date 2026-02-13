@@ -99,44 +99,44 @@ window.controller = {
         }
     },
 
-    // Claim Daily Bonus Logic
+    // 6. Claim Daily Bonus (Progressive: 100, 110, 120...)
     async claimDailyBonus() {
         const state = store.getState();
         if (state.dailyStreak.isClaimedToday) {
-            return { success: false, message: "Already claimed today!" };
+            alert("Already claimed for today!");
+            return;
         }
 
-        // 1. Optimistic Update
-        const previousBalance = state.wallet.currentBalance;
-        const bonusAmount = 1;
+        const streak = state.dailyStreak.currentStreak || 0;
+        const bonusCoins = 100 + (streak * 10); // 100, 110, 120, 130...
 
+        // Optimistic Update
         store.setState(s => ({
-            wallet: { ...s.wallet, currentBalance: s.wallet.currentBalance + bonusAmount },
-            dailyStreak: { ...s.dailyStreak, isClaimedToday: true, currentStreak: s.dailyStreak.currentStreak + 1 },
-            transactions: [{
-                id: Date.now(),
-                amount: bonusAmount,
-                description: "Daily Login Bonus",
-                date: new Date().toISOString(),
-                type: 'credit'
-            }, ...s.transactions || []]
+            dailyStreak: {
+                ...s.dailyStreak,
+                isClaimedToday: true,
+                currentStreak: (s.dailyStreak.currentStreak || 0) + 1,
+                lastClaimDate: new Date().toDateString()
+            }
         }));
 
-        // 2. Server Sync
+        // Credit Coins via Central Method
+        this.addCoins(bonusCoins, `Daily Bonus (Day ${streak + 1})`);
+
+        // Show Ad (Verification)
+        if (window.ads) {
+            setTimeout(() => {
+                window.ads.showInterstitial();
+            }, 500);
+        }
+
+        // Server Sync (Fire & Forget/Background)
         try {
             await api.claimDailyBonus();
-            // Show Ad
-            if (window.ads) {
-                window.ads.showInterstitial();
-            }
         } catch (error) {
-            // Rollback
-            store.setState(s => ({
-                wallet: { ...s.wallet, currentBalance: previousBalance },
-                dailyStreak: { ...s.dailyStreak, isClaimedToday: false, currentStreak: s.dailyStreak.currentStreak - 1 },
-                transactions: s.transactions.slice(1) // Remove the added transaction
-            }));
-            alert("Failed to claim bonus. Network error.");
+            console.warn("Background sync failed for bonus, but client state updated.", error);
+            // We do NOT rollback here to prevent "Network Error" frustration.
+            // Trust the client state for now.
         }
     },
 
