@@ -1338,33 +1338,26 @@ window.miniGames = {
             }
         }
 
-        // 3. CPX Research Sync
         // 3. Rapido Reach Integration
         if (user && !window.rapidoInitialized) {
             console.log("Attempting Rapido Reach Init for user:", user.id);
-            const container = document.getElementById('rapidoreach-container');
+            var container = document.getElementById('rapidoreach-container');
             if (container) {
-                console.log("Rapido container found. Injecting iframe...");
+                console.log("Rapido container found.");
                 window.rapidoInitialized = true;
-
-                // Temp Placeholder to fix syntax
-                const md5 = (s) => "0000000000";
-
                 try {
-                    const appId = '4pfOJz6QQrm';
-                    const appSecret = 'dfdcf63db032c1f5971db5925895ced5';
-                    const userId = user.id;
-
-                    const rawHash = md5(userId + appId + appSecret);
-                    const checksum = rawHash.substring(0, 10);
-                    const finalUserId = `${userId}-${appId}-${checksum}`;
-                    const iframeUrl = `https://www.rapidoreach.com/ofw/?userId=${encodeURIComponent(finalUserId)}`;
-
+                    var appId = '4pfOJz6QQrm';
+                    var appSecret = 'dfdcf63db032c1f5971db5925895ced5';
+                    var rUserId = user.id;
+                    var rawHash = window.md5(rUserId + appId + appSecret);
+                    var checksum = rawHash.substring(0, 10);
+                    var finalUserId = rUserId + '-' + appId + '-' + checksum;
+                    var iframeUrl = 'https://www.rapidoreach.com/ofw/?userId=' + encodeURIComponent(finalUserId);
                     console.log("Loading Rapido Reach:", iframeUrl);
-                    container.innerHTML = `<iframe src="${iframeUrl}" style="width:100%; height:800px; border:none; border-radius:16px;" title="Rapido Reach"></iframe>`;
-                } catch (e) {
-                    console.error("Rapido Init Error:", e);
-                    container.innerHTML = `<div class="text-red-500 text-center py-4">Error loading surveys: ${e.message}</div>`;
+                    container.innerHTML = '<iframe src="' + iframeUrl + '" style="width:100%;height:800px;border:none;border-radius:16px;" title="Rapido Reach"></iframe>';
+                } catch (err) {
+                    console.error("Rapido Init Error:", err);
+                    container.innerHTML = '<div style="color:red;text-align:center;padding:16px;">Error loading surveys: ' + err.message + '</div>';
                 }
             } else {
                 console.log("Rapido container NOT found.");
