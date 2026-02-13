@@ -33,10 +33,10 @@ function initUnityAds() {
     try {
         unity.services.init({
             gameId: UNITY_GAME_ID,
-            testMode: false,
+            testMode: window.location.search.includes('testAds=true'),
             onComplete: function () {
                 console.log('[UnityAds] Initialized successfully');
-                if (window.showToast) window.showToast('✅ Unity Init Success');
+                // if (window.showToast) window.showToast('✅ Unity Init Success');
                 unityAdsInitialized = true;
                 loadUnityRewardedAd();
                 loadUnityBanner();
@@ -62,7 +62,7 @@ function loadUnityRewardedAd() {
             },
             onFailed: function (placementId, error) {
                 console.warn('[UnityAds] Rewarded load failed:', placementId, error);
-                // if (window.showToast) window.showToast('⚠️ Ad Load Failed: ' + error);
+                if (window.showToast) window.showToast('⚠️ Ad Load Failed: ' + error);
                 unityAdsReady = false;
             }
         });
