@@ -10,10 +10,14 @@ window.miniGames = {
         document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
         const reward = { 'Ludo': 40, 'Snake and Ladders': 40, 'Trivia Quiz': 5, 'Memory Game': 20, 'Number Guess': 15, 'Color Match': 12, 'Coin Flip': 10, 'Dice Roll': 15, 'Dino Runner': 20 };
 
+        // Global Ad Logic for ALL Games
+        if (window.ads) {
+            if (window.ads.showInterstitial) window.ads.showInterstitial();
+            if (window.ads.setBannerVisible) window.ads.setBannerVisible(true);
+        }
+
         if (gameName === 'Ludo') {
-            if (window.ads && window.ads.showInterstitial) window.ads.showInterstitial();
             document.getElementById('game-ludo')?.classList.remove('hidden');
-            if (window.ads && window.ads.setBannerVisible) window.ads.setBannerVisible(true);
             setTimeout(() => this.ludo.init(), 100);
         } else if (gameName === 'Snake and Ladders') {
             document.getElementById('game-snl')?.classList.remove('hidden');
@@ -40,7 +44,8 @@ window.miniGames = {
     },
 
     closeGame(gameName) {
-        if (gameName === 'Ludo' && window.ads && window.ads.setBannerVisible) window.ads.setBannerVisible(false);
+        // Hide Banner for ALL games on close
+        if (window.ads && window.ads.setBannerVisible) window.ads.setBannerVisible(false);
         if (this.dino._raf) { cancelAnimationFrame(this.dino._raf); this.dino._raf = null; }
         document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
         document.getElementById('home')?.classList.remove('hidden');
