@@ -4,7 +4,7 @@
  */
 
 // --- Unity Ads Configuration ---
-var UNITY_GAME_ID = '5795837';
+var UNITY_GAME_ID = '6044176';
 var UNITY_REWARDED_PLACEMENT = 'Rewarded_Android';
 var unityAdsReady = false;
 var unityAdsInitialized = false;
