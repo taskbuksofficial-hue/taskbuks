@@ -5,7 +5,7 @@
 
 // REPLACE WITH YOUR COMPUTER'S LOCAL IP (Simulate "Cloud")
 // const BASE_URL = "http://10.0.2.2:3000"; // For Emulator
-const LOCAL_IP_URL = "https://task-buks-backend.vercel.app"; // For Physical Device
+const LOCAL_IP_URL = "https://taskbuks.vercel.app"; // For Physical Device
 
 const getBaseUrl = () => {
     // If running on Vercel or any other web host
