@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskBuks Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-section" class="flex flex-col items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-slate-100">
+            <span class="material-icons-round text-6xl text-blue-500 mb-4">admin_panel_settings</span>
+            <h1 class="text-2xl font-bold mb-2">Admin Access</h1>
+            <p class="text-slate-500 text-sm mb-6">Enter your secure key to continue</p>
+
+            <input type="password" id="admin-key" placeholder="Enter Admin Key"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 transition-all">
+
+            <button onclick="adminLogin()"
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
+                Unlock Dashboard
+            </button>
+            <p id="login-error" class="text-red-500 text-xs mt-3 hidden">Invalid Access Key</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-section" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header
+            class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
+                    TB</div>
+                <h1 class="text-xl font-bold text-slate-800">TaskBuks <span class="text-blue-500">Admin</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="connection-status" class="text-xs font-medium text-emerald-500 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connected
+                </span>
+                <button onclick="logout()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                    <span class="material-icons-round">logout</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-8">
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Stat Card 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <span class="material-icons-round">group</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Total Users</p>
+                        <h3 id="stat-users" class="text-2xl font-black text-slate-800">...</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <span class="material-icons-round">task_alt</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Active Tasks</p>
+                        <h3 id="stat-tasks" class="text-2xl font-black text-slate-800">...</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 3 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                        <span class="material-icons-round">payments</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Total Payouts</p>
+                        <h3 id="stat-payouts" class="text-2xl font-black text-slate-800">...</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 4 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                        <span class="material-icons-round">local_fire_department</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Active Today</p>
+                        <h3 id="stat-active" class="text-2xl font-black text-slate-800">...</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-4 border-b border-slate-200">
+                <button onclick="switchTab('users')" id="tab-users"
+                    class="pb-2 px-4 text-sm font-bold border-b-2 border-blue-500 text-blue-600 transition-colors">
+                    Manage Users
+                </button>
+                <button onclick="switchTab('tasks')" id="tab-tasks"
+                    class="pb-2 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors">
+                    Manage Tasks
+                </button>
+            </div>
+
+            <!-- Tab Content: Users -->
+            <div id="view-users" class="tab-content block animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 class="font-bold text-slate-700">Recent Users</h3>
+                        <button onclick="refreshData()"
+                            class="text-xs font-bold text-blue-600 hover:underline">Refresh</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-xs">
+                                <tr>
+                                    <th class="px-6 py-4">User</th>
+                                    <th class="px-6 py-4">Balance</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-slate-100">
+                                <!-- Filled by JS -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-slate-400">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="view-tasks" class="tab-content hidden animate-fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-700 text-lg">Active Campaigns</h3>
+                    <button onclick="openAddTaskModal()"
+                        class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-transform active:scale-95">
+                        <span class="material-icons-round text-sm">add</span> New Task
+                    </button>
+                </div>
+
+                <div id="tasks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="task-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <span class="material-icons-round">close</span>
+            </button>
+            <h2 class="text-xl font-bold mb-6">Create New Task</h2>
+
+            <form id="create-task-form" onsubmit="handleCreateTask(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
+                    <input type="text" name="title" required
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                    <textarea name="description" rows="2"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Reward (Coins)</label>
+                        <input type="number" name="reward" required
+                            class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+                        <select name="category"
+                            class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="App">App Install</option>
+                            <option value="Survey">Survey</option>
+                            <option value="Video">Video</option>
+                            <option value="Games">Game</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Action URL</label>
+                    <input type="url" name="url" required
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="https://...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon URL</label>
+                    <input type="url" name="icon"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="https://...">
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20">
+                        Publish Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

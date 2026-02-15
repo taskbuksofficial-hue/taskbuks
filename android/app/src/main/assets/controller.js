@@ -14,20 +14,31 @@ window.controller = {
             window.api.setToken(token);
             const res = await api.loginWithClerk(token);
             if (res.user) {
-                store.setState({ user: res.user, wallet: { ...store.getState().wallet, ...res.wallet } });
+                const newState = { user: res.user, wallet: { ...store.getState().wallet, ...res.wallet } };
+                store.setState(newState);
+                localStorage.setItem('tb_user_cache', JSON.stringify(newState)); // Cache User
             }
         } catch (error) {
             console.error("Login sync failed:", error);
-            // Optional: Logout clerk if sync fails?
         }
     },
 
     // Initial Data Load
     async loadDashboard() {
-        store.setState({ ui: { ...store.getState().ui, isLoading: true, error: null } });
+        // 1. Try Cache First for Instant Load
+        const cached = localStorage.getItem('tb_dashboard_cache');
+        if (cached) {
+            console.log("Loading using Cache...");
+            try {
+                const data = JSON.parse(cached);
+                store.setState({ ...data, ui: { ...store.getState().ui, isLoading: false } });
+            } catch (e) { console.error("Cache parse error", e); }
+        } else {
+            store.setState({ ui: { ...store.getState().ui, isLoading: true } });
+        }
 
         try {
-            // Parallel Fetch
+            // 2. Network Fetch (Background/Update)
             const [profile, offers, streakStatus, transactions] = await Promise.all([
                 api.getProfile(),
                 api.getOffers(),
@@ -35,7 +46,7 @@ window.controller = {
                 api.getTransactions().catch(() => [])
             ]);
 
-            store.setState({
+            const newData = {
                 user: profile,
                 wallet: {
                     currentBalance: parseFloat(profile.balance) || 0,
@@ -52,10 +63,17 @@ window.controller = {
                 },
                 transactions: transactions || [],
                 ui: { ...store.getState().ui, isLoading: false }
-            });
+            };
+
+            store.setState(newData);
+            localStorage.setItem('tb_dashboard_cache', JSON.stringify(newData)); // Update Cache
+
         } catch (error) {
             console.error(error);
-            store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard." } });
+            // Only set error if no cache was loaded
+            if (!cached) {
+                store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard." } });
+            }
         }
     },
 
@@ -99,44 +117,44 @@ window.controller = {
         }
     },
 
-    // Claim Daily Bonus Logic
+    // 6. Claim Daily Bonus (Progressive: 100, 110, 120...)
     async claimDailyBonus() {
         const state = store.getState();
         if (state.dailyStreak.isClaimedToday) {
-            return { success: false, message: "Already claimed today!" };
+            alert("Already claimed for today!");
+            return;
         }
 
-        // 1. Optimistic Update
-        const previousBalance = state.wallet.currentBalance;
-        const bonusAmount = 1;
+        const streak = state.dailyStreak.currentStreak || 0;
+        const bonusCoins = 100 + (streak * 10); // 100, 110, 120, 130...
 
+        // Optimistic Update
         store.setState(s => ({
-            wallet: { ...s.wallet, currentBalance: s.wallet.currentBalance + bonusAmount },
-            dailyStreak: { ...s.dailyStreak, isClaimedToday: true, currentStreak: s.dailyStreak.currentStreak + 1 },
-            transactions: [{
-                id: Date.now(),
-                amount: bonusAmount,
-                description: "Daily Login Bonus",
-                date: new Date().toISOString(),
-                type: 'credit'
-            }, ...s.transactions || []]
+            dailyStreak: {
+                ...s.dailyStreak,
+                isClaimedToday: true,
+                currentStreak: (s.dailyStreak.currentStreak || 0) + 1,
+                lastClaimDate: new Date().toDateString()
+            }
         }));
 
-        // 2. Server Sync
+        // Credit Coins via Central Method
+        this.addCoins(bonusCoins, `Daily Bonus (Day ${streak + 1})`);
+
+        // Show Ad (Verification)
+        if (window.ads) {
+            setTimeout(() => {
+                window.ads.showInterstitial();
+            }, 500);
+        }
+
+        // Server Sync (Fire & Forget/Background)
         try {
             await api.claimDailyBonus();
-            // Show Ad
-            if (window.ads) {
-                window.ads.showInterstitial();
-            }
         } catch (error) {
-            // Rollback
-            store.setState(s => ({
-                wallet: { ...s.wallet, currentBalance: previousBalance },
-                dailyStreak: { ...s.dailyStreak, isClaimedToday: false, currentStreak: s.dailyStreak.currentStreak - 1 },
-                transactions: s.transactions.slice(1) // Remove the added transaction
-            }));
-            alert("Failed to claim bonus. Network error.");
+            console.warn("Background sync failed for bonus, but client state updated.", error);
+            // We do NOT rollback here to prevent "Network Error" frustration.
+            // Trust the client state for now.
         }
     },
 
@@ -235,5 +253,45 @@ window.controller = {
         } catch (error) {
             console.error("Failed to load surveys:", error);
         }
+    },
+
+    /**
+     * Central coin crediting function
+     * 1000 coins = ₹1
+     * All games and tasks call this to credit coins
+     */
+    addCoins(coins, description) {
+        if (!coins || coins <= 0) return;
+        var rupees = coins / 1000;
+        var state = store.getState();
+        store.setState(function (s) {
+            return {
+                wallet: {
+                    ...s.wallet,
+                    currentBalance: (s.wallet.currentBalance || 0) + rupees,
+                    lifetimeEarnings: (s.wallet.lifetimeEarnings || 0) + rupees,
+                    totalCoins: (s.wallet.totalCoins || 0) + coins
+                },
+                transactions: [{
+                    id: Date.now(),
+                    amount: rupees,
+                    coins: coins,
+                    description: description || ('Earned ' + coins + ' coins'),
+                    date: new Date().toISOString(),
+                    type: 'credit'
+                }, ...(s.transactions || [])]
+            };
+        });
+        console.log('[Wallet] +' + coins + ' coins (₹' + rupees.toFixed(4) + ') | ' + description);
+
+        // Trigger re-render
+        if (window.render) window.render();
+
+        // Server Sync
+        api.addCoins(coins, description).then(() => {
+            console.log("Coins synced to server.");
+        }).catch(err => {
+            console.warn("Coin sync failed:", err);
+        });
     }
 };

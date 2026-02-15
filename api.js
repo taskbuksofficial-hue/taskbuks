@@ -5,7 +5,7 @@
 
 // REPLACE WITH YOUR COMPUTER'S LOCAL IP (Simulate "Cloud")
 // const BASE_URL = "http://10.0.2.2:3000"; // For Emulator
-const LOCAL_IP_URL = "http://172.20.54.180:3000"; // For Physical Device
+const LOCAL_IP_URL = "https://task-buks-backend.vercel.app"; // For Physical Device
 
 const getBaseUrl = () => {
     // If running on Vercel or any other web host
@@ -81,11 +81,18 @@ window.api = {
         return { status: "success", reward: 5 };
     },
 
-    // 7. Clerk Login
-    async loginWithClerk(token) {
-        return await fetchJson('/auth/clerk', {
+    // 7. Custom Auth
+    async login(identifier, password) {
+        return await fetchJson('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ token })
+            body: JSON.stringify({ identifier, password })
+        });
+    },
+
+    async register(data) {
+        return await fetchJson('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(data)
         });
     },
 
@@ -103,5 +110,13 @@ window.api = {
     // 9. Get Transactions
     async getTransactions() {
         return await fetchJson('/api/transactions');
+    },
+
+    // 10. Add Coins (Generic)
+    async addCoins(coins, description) {
+        return await fetchJson('/api/coins/add', {
+            method: 'POST',
+            body: JSON.stringify({ coins, description })
+        });
     }
 };

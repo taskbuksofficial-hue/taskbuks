@@ -30,10 +30,7 @@
             },
         };
     </script>
-    <script async crossorigin="anonymous"
-        data-clerk-publishable-key="pk_test_Y2FwaXRhbC13aGFsZS0yMi5jbGVyay5hY2NvdW50cy5kZXYk"
-        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript">
-        </script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -41,197 +38,261 @@
             padding-top: env(safe-area-inset-top);
         }
 
-        header {
-            padding-top: env(safe-area-inset-top);
-            height: calc(4rem + env(safe-area-inset-top));
-        }
-
-        header+.h-12 {
-            display: none;
-            /* remove the spacer div if we use header padding */
-        }
-
-        .ios-shadow {
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .glass-header {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .gradient-banner {
-            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-        }
-
-        .gold-glow {
-            box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Smooth transitions for section switching */
-        .page-section {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes modalBounce {
-            0% {
-                transform: scale(0.7);
-                opacity: 0;
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        /* Games Grid Styles — Apple-quality */
-        .games-header-gradient {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-            position: relative;
-        }
-
-        .games-header-gradient::before {
-            content: '';
-            position: absolute;
+        #app-loading-overlay {
+            position: fixed;
             inset: 0;
-            background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        .game-card-apple {
-            position: relative;
-            border-radius: 20px;
-            padding: 16px 14px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.04);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-            transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.28s ease;
-            overflow: hidden;
-        }
-
-        .dark .game-card-apple {
-            background: rgba(30, 30, 40, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .game-card-apple:active {
-            transform: scale(0.96);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-
-        .game-card-apple .gc-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
+            background: #ffffff;
+            /* pure white for clean look */
+            z-index: 9999;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
         }
 
-        .game-card-apple .gc-coin {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 20px;
-            letter-spacing: 0.02em;
+        .dark #app-loading-overlay {
+            background: #000000;
+            /* true black for OLED */
         }
 
-        .game-card-apple .gc-play {
-            width: 100%;
-            padding: 8px 0;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            border: none;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            position: relative;
-            overflow: hidden;
+        .animate-loading {
+            animation: loading 2s ease-in-out infinite;
         }
 
-        .game-card-apple .gc-play::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
-            pointer-events: none;
-        }
+        @keyframes loading {
+            0% {
+                transform: translateX(-100%);
+            }
 
-        .game-card-apple .gc-play:active {
-            transform: scale(0.97);
-        }
-
-        @keyframes floatIcon {
-
-            0%,
             100% {
-                transform: translateY(0) rotate(12deg);
-            }
-
-            50% {
-                transform: translateY(-6px) rotate(15deg);
+                transform: translateX(300%);
             }
         }
+
+        header {
+            padding-top: env(safe-area-inset-top);
+            min-height: calc(4.5rem + env(safe-area-inset-top));
+            /* Taller header */
+            display: flex;
+            align-items: flex-end;
+            /* Align content to bottom */
+            padding-bottom: 12px;
+            /* Space from bottom */
+        }
+    </style>
+
+    header+.h-12 {
+    display: none;
+    /* remove the spacer div if we use header padding */
+    }
+
+    .ios-shadow {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-header {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    }
+
+    .gradient-banner {
+    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+    }
+
+    .gold-glow {
+    box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    }
+
+    .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    }
+
+    /* Smooth transitions for section switching */
+    .page-section {
+    animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+    @keyframes pulse-breathing {
+    0% { transform: scale(1); opacity: 1; filter: blur(0px); }
+    50% { transform: scale(1.05); opacity: 0.85; filter: blur(0.5px); }
+    100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+    }
+
+    .animate-pulse-breathing {
+    animation: pulse-breathing 3s ease-in-out infinite;
+    }
+
+    #app-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #ffffff; /* pure white for clean look */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+    }
+
+    .dark #app-loading-overlay {
+    background: #000000; /* true black for OLED */
+    }
+
+    @keyframes modalBounce {
+    0% {
+    transform: scale(0.7);
+    opacity: 0;
+    }
+
+    50% {
+    transform: scale(1.05);
+    }
+
+    100% {
+    transform: scale(1);
+    opacity: 1;
+    }
+    }
+
+    button:active {
+    transform: scale(0.95);
+    }
+
+    /* Games Grid Styles — Apple-quality */
+    .games-header-gradient {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    position: relative;
+    }
+
+    .games-header-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+    }
+
+    .game-card-apple {
+    position: relative;
+    border-radius: 20px;
+    padding: 16px 14px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.28s ease;
+    overflow: hidden;
+    }
+
+    .dark .game-card-apple {
+    background: rgba(30, 30, 40, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .game-card-apple:active {
+    transform: scale(0.96);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .game-card-apple .gc-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .game-card-apple .gc-coin {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    }
+
+    .game-card-apple .gc-play {
+    width: 100%;
+    padding: 8px 0;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    position: relative;
+    overflow: hidden;
+    }
+
+    .game-card-apple .gc-play::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+    pointer-events: none;
+    }
+
+    .game-card-apple .gc-play:active {
+    transform: scale(0.97);
+    }
+
+    @keyframes floatIcon {
+
+    0%,
+    100% {
+    transform: translateY(0) rotate(12deg);
+    }
+
+    50% {
+    transform: translateY(-6px) rotate(15deg);
+    }
+    }
     </style>
 </head>
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300 min-h-screen pb-24">
 
+    <!-- Apple-style Loading Overlay -->
+    <div id="app-loading-overlay">
+        <div class="relative flex flex-col items-center">
+            <img src="logo.png" class="w-24 h-24 object-contain animate-pulse-breathing mb-4" alt="TaskBuks">
+            <div class="h-1 w-32 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary animate-loading" style="width: 30%"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
-    <div class="h-12 w-full"></div>
+    <div class="h-24 w-full"></div> <!-- Increased spacer -->
     <header
-        class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 h-16 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
-        <div class="flex items-center gap-2">
-            <img src="logo.png" alt="TaskBuks" class="h-8 w-auto hidden" id="app-logo"
+        class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-2 mb-1"> <!-- Added bottom margin for alignment -->
+            <img src="logo.png" alt="TaskBuks" class="h-9 w-auto hidden" id="app-logo"
                 onerror="this.classList.add('hidden'); document.getElementById('brand-text').classList.remove('hidden')">
             <div id="brand-text" class="flex items-center gap-1">
                 <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Task<span
                         class="text-primary">Buks</span></span>
             </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 mb-1"> <!-- Added margin -->
             <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full cursor-pointer nav-item hover:scale-105 transition-transform"
                 data-target="wallet"
                 style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(34,197,94,0.08)); border: 1px solid rgba(16,185,129,0.15);">
@@ -304,21 +365,110 @@
 
     <main class="px-5 pt-6 pb-24">
 
+        <!-- Skeleton Loader (Shown when loading & no cache) -->
+        <div id="dashboard-skeleton" class="hidden space-y-6 animate-pulse">
+            <!-- Balance Card Skeleton -->
+            <div class="h-48 rounded-[32px] bg-gray-200 dark:bg-gray-800 w-full mb-6"></div>
+
+            <!-- Quick Actions Skeleton -->
+            <div class="flex justify-between gap-4">
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+            </div>
+
+            <!-- Task List Skeleton -->
+            <div class="space-y-4 pt-4">
+                <div class="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded mx-auto mb-4"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+            </div>
+        </div>
+
         <!-- LOGIN SECTION -->
-        <div id="login" class="page-section hidden flex flex-col items-center justify-center min-h-[80vh] space-y-8">
-            <div class="text-center space-y-2">
+        <div id="login" class="page-section hidden flex flex-col items-center justify-center min-h-[80vh] space-y-6">
+            <div class="text-center space-y-2 mb-4">
                 <h1 class="text-4xl font-black text-slate-900 dark:text-white">Task<span
                         class="text-primary">Buks</span></h1>
                 <p class="text-slate-500 font-medium">Earn money by completing simple tasks</p>
             </div>
 
-            <div class="w-full max-w-xs space-y-4">
-                <button id="sign-in-btn"
+            <!-- Main Menu (Sign In / Sign Up Selection) -->
+            <div id="auth-menu" class="w-full max-w-xs space-y-4">
+                <button onclick="showAuthForm('signin')"
                     class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 hover:scale-105 transition-transform">
                     <span class="material-icons-round">login</span>
                     Sign In to Start
                 </button>
+                <button onclick="showAuthForm('signup')"
+                    class="w-full bg-white dark:bg-gray-800 text-slate-900 dark:text-white border border-gray-200 dark:border-gray-700 font-bold py-4 rounded-2xl shadow-sm flex items-center justify-center gap-3 hover:scale-105 transition-transform">
+                    <span class="material-icons-round">person_add</span>
+                    New User? Register
+                </button>
             </div>
+
+            <!-- Sign In Form -->
+            <div id="signin-form" class="hidden w-full max-w-xs space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Welcome Back</h3>
+                    <form onsubmit="handleLogin(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="login-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="login-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-primary text-white font-bold py-3 rounded-xl mt-2 shadow-lg shadow-primary/20">
+                            Sign In
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signup-form" class="hidden w-full max-w-xs space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Create Account</h3>
+                    <form onsubmit="handleRegister(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Full Name</label>
+                            <input type="text" id="reg-name" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="reg-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Phone Number</label>
+                            <input type="tel" id="reg-phone" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="reg-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-secondary text-slate-900 font-bold py-3 rounded-xl mt-2 shadow-lg shadow-secondary/20">
+                            Create Account
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
+                </div>
+            </div>
+
         </div>
 
         <!-- HOME SECTION -->
@@ -407,6 +557,74 @@
                     <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="1"></div>
                     <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="2"></div>
                     <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="3"></div>
+                </div>
+            </section>
+
+            <!-- Second Carousel (Offers & Partners) -->
+            <section class="relative">
+                <div class="flex items-center gap-2 mb-3 px-1">
+                    <span class="material-icons-round text-amber-500 text-sm">stars</span>
+                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Partner Offers</h3>
+                </div>
+                <div id="home-carousel-2"
+                    class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar rounded-[24px] ios-shadow">
+
+                    <!-- Slide 1: AdGem -->
+                    <div
+                        class="min-w-full snap-center relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white h-40 flex items-center">
+                        <div class="relative z-10 w-3/4">
+                            <h2 class="text-xl font-extrabold leading-tight mb-1">Top <span
+                                    class="text-yellow-200">Paying</span> Tasks</h2>
+                            <p class="text-[11px] opacity-90 mb-3 font-medium">Complete offers to earn 5000+ coins.</p>
+                            <button
+                                class="bg-white text-orange-600 font-bold px-4 py-1.5 rounded-full text-[11px] hover:scale-105 transition-transform"
+                                onclick="window.location.hash='tasks'">
+                                View Offers
+                            </button>
+                        </div>
+                        <div class="absolute right-[-20px] bottom-[-20px] opacity-20">
+                            <span class="material-icons-round" style="font-size: 120px;">local_offer</span>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: CPALeab -->
+                    <div class="min-w-full snap-center relative overflow-hidden bg-blue-600 h-40 flex items-center cursor-pointer"
+                        onclick="window.open('https://cpalead.com', '_blank')">
+                        <div class="relative z-10 p-6 text-white">
+                            <h2 class="text-xl font-extrabold leading-tight mb-1">Special <span
+                                    class="text-blue-200">Surveys</span></h2>
+                            <p class="text-[11px] opacity-90 mb-3 font-medium">Quick surveys, instant rewards.</p>
+                            <div
+                                class="bg-blue-800 text-white font-bold px-4 py-1.5 rounded-full inline-block text-[11px]">
+                                Start Now</div>
+                        </div>
+                        <div class="absolute right-4 bottom-4 opacity-30">
+                            <span class="material-icons-round" style="font-size: 60px;">assignment</span>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: More Games -->
+                    <div class="min-w-full snap-center relative overflow-hidden bg-emerald-600 h-40 flex items-center cursor-pointer"
+                        onclick="document.getElementById('games-section').scrollIntoView({behavior: 'smooth'})">
+                        <div
+                            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
+                        </div>
+                        <div class="relative z-10 p-6 text-white">
+                            <div
+                                class="bg-white text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded mb-2 inline-block">
+                                NEW</div>
+                            <h2 class="text-xl font-extrabold leading-tight mb-1">Play <span
+                                    class="text-emerald-200">More Games</span></h2>
+                            <p class="text-[11px] opacity-90 mb-3 font-medium">Discover 10+ new mini-games.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dots Indicators 2 -->
+                <div class="flex justify-center gap-2 mt-3">
+                    <div class="w-1.5 h-1.5 rounded-full bg-primary carousel-dot-2" data-index="0"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300 carousel-dot-2" data-index="1"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300 carousel-dot-2" data-index="2"></div>
                 </div>
             </section>
 
@@ -1497,6 +1715,18 @@
 
     <!-- Bottom Nav -->
     <!-- Bottom Nav -->
+    <!-- Static Loading Overlay (Default Visible) -->
+    <div id="app-loading-overlay">
+        <div class="text-2xl font-black mb-4">Task<span class="text-primary">Buks</span></div>
+        <div id="loading-spinner"
+            class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div id="loading-status" class="mt-4 text-xs text-slate-400 text-center px-6">Connecting...</div>
+        <div class="flex gap-4 mt-8">
+            <button id="retry-init" onclick="window.location.reload()"
+                class="hidden bg-primary text-white px-6 py-2 rounded-full text-xs font-bold shadow-lg">Retry</button>
+        </div>
+    </div>
+
     <nav
         class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
         <button class="flex flex-col items-center gap-1 text-primary active nav-item" data-target="home">
@@ -1524,13 +1754,13 @@
         </button>
     </nav>
 
-    <!-- Load scripts sequentially (No Modules for file:// support) -->
+    <!-- Load scripts sequentially -->
     <script src="ads.js"></script>
     <script src="api.js"></script>
     <script src="store.js"></script>
-    <script src="controller.js"></script>
     <script src="md5.js"></script>
-    <script src="app.js?v=2.0"></script>
+    <script src="games.js" defer></script>
+    <script src="app.js?v=1.1"></script>
 </body>
 
 </html>

@@ -140,6 +140,37 @@ export const claimVideoReward = async (req: FastifyRequest, reply: FastifyReply)
     }
 };
 
+export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
+    const userId = (req as any).userId;
+    const { coins, description } = req.body as { coins: number, description: string };
+
+    if (!coins || coins <= 0) {
+        return reply.status(400).send({ error: 'Invalid coin amount' });
+    }
+
+    const rupees = coins / 1000;
+
+    try {
+        await db.query(
+            'UPDATE wallets SET balance = balance + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3',
+            [rupees, coins, userId]
+        );
+
+        // Record transaction
+        await db.query(
+            'INSERT INTO transactions (user_id, amount, coins, description, type) VALUES ($1, $2, $3, $4, $5)',
+            [userId, rupees, coins, description || 'Game Reward', 'credit']
+        );
+
+        const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+
+        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+    } catch (error) {
+        console.error("addCoins error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+
 export const handleAdGemPostback = async (req: FastifyRequest, reply: FastifyReply) => {
     const { player_id, amount, transaction_id } = req.query as { player_id: string, amount: string, transaction_id: string };
     const query = req.query as any;
@@ -265,14 +296,21 @@ export const getCPXSurveys = async (req: FastifyRequest, reply: FastifyReply) =>
         const response = await fetch(url);
         const data = await response.json() as any;
 
+        // DEBUG: Log CPX Response
+        console.log("CPX API Status:", response.status);
+        console.log("CPX API Response:", JSON.stringify(data).substring(0, 500)); // Log first 500 chars
+
         if (Array.isArray(data)) {
             return reply.send(data);
-        } else if (data.status === 'error') {
-            console.error("CPX API Error:", data.error);
+        } else if (data.surveys) {
+            return reply.send(data.surveys); // CPX sometimes returns { surveys: [...] }
+        } else if (data.error || data.status === 'error') {
+            console.error("CPX API Error:", data.error || data.message || "Unknown Error");
             return reply.send([]);
         }
 
-        return reply.send(data);
+        console.warn("CPX returned unexpected format:", JSON.stringify(data).substring(0, 100));
+        return reply.send([]); // Fallback empty array
 
     } catch (error) {
         console.error("getCPXSurveys error:", error);

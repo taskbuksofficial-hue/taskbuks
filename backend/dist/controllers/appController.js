@@ -1,0 +1,349 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
+const db = __importStar(require("../config/db"));
+const crypto_1 = __importDefault(require("crypto"));
+const getProfile = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+        const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const walletResult = await db.query('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+        const earningsResult = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'credit'", [userId]);
+        if (userResult.rows.length === 0) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+        const user = userResult.rows[0];
+        const wallet = walletResult.rows[0] || { balance: 0 };
+        const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
+        return reply.send({
+            ...user,
+            balance: parseFloat(wallet.balance) || 0,
+            lifetimeEarnings,
+            isEmailVerified: true
+        });
+    }
+    catch (error) {
+        console.error("getProfile error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getProfile = getProfile;
+const getOffers = async (req, reply) => {
+    try {
+        const userId = req.userId || "guest";
+        const appId = process.env.ADGEM_APP_ID || "31963";
+        const dbRes = await db.query('SELECT * FROM tasks WHERE is_active = true ORDER BY created_at DESC');
+        const dbTasks = dbRes.rows.map((t) => ({
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            reward: parseFloat(t.reward) || 0,
+            icon_url: t.icon_url,
+            type: 'internal'
+        }));
+        // Try to fetch from AdGem (with timeout/error handling)
+        let adgemOffers = [];
+        const adgemUrl = `https://api.adgem.com/v1/wall/json?playerid=${userId}&appid=${appId}`;
+        try {
+            console.log("Fetching AdGem offers:", adgemUrl);
+            const adgemRes = await fetch(adgemUrl, { signal: AbortSignal.timeout(5000) });
+            const adgemData = await adgemRes.json();
+            // Correct Parsing: data[0].data contains the offers in the Wall JSON API
+            if (adgemData && adgemData.data && adgemData.data[0] && adgemData.data[0].data) {
+                adgemOffers = adgemData.data[0].data.map((offer) => ({
+                    id: `adgem_${offer.campaign_id}`,
+                    title: offer.name,
+                    description: offer.instructions || offer.description,
+                    reward: parseFloat(offer.amount) || 0,
+                    icon_url: offer.icon,
+                    type: 'adgem',
+                    link: offer.url
+                }));
+            }
+        }
+        catch (e) {
+            console.warn("AdGem fetch failed, continuing with DB tasks only:", e);
+        }
+        return reply.send([...adgemOffers, ...dbTasks]);
+    }
+    catch (error) {
+        console.error("getOffers major failure:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getOffers = getOffers;
+const getStreak = async (req, reply) => {
+    // Basic streak mock
+    return reply.send({
+        streak: 3,
+        claimedToday: false
+    });
+};
+exports.getStreak = getStreak;
+const startTask = async (req, reply) => {
+    const userId = req.userId;
+    const { taskId } = req.body;
+    try {
+        await db.query('INSERT INTO user_tasks (user_id, task_id, status) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [userId, taskId, 'STARTED']);
+        return reply.send({ success: true, status: 'started' });
+    }
+    catch (error) {
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.startTask = startTask;
+const claimBonus = async (req, reply) => {
+    const userId = req.userId;
+    const bonusAmount = 1.00;
+    try {
+        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [bonusAmount, userId]);
+        const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+    }
+    catch (error) {
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.claimBonus = claimBonus;
+const claimVideoReward = async (req, reply) => {
+    const userId = req.userId;
+    const rewardAmount = 10.0; // Consistent with JS reward amount
+    try {
+        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [rewardAmount, userId]);
+        const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+    }
+    catch (error) {
+        console.error("claimVideoReward error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.claimVideoReward = claimVideoReward;
+const addCoins = async (req, reply) => {
+    const userId = req.userId;
+    const { coins, description } = req.body;
+    if (!coins || coins <= 0) {
+        return reply.status(400).send({ error: 'Invalid coin amount' });
+    }
+    const rupees = coins / 1000;
+    try {
+        await db.query('UPDATE wallets SET balance = balance + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3', [rupees, coins, userId]);
+        // Record transaction
+        await db.query('INSERT INTO transactions (user_id, amount, coins, description, type) VALUES ($1, $2, $3, $4, $5)', [userId, rupees, coins, description || 'Game Reward', 'credit']);
+        const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+    }
+    catch (error) {
+        console.error("addCoins error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.addCoins = addCoins;
+const handleAdGemPostback = async (req, reply) => {
+    const { player_id, amount, transaction_id } = req.query;
+    const query = req.query;
+    // Security Verification (Postback Hashing v2)
+    if (process.env.ADGEM_POSTBACK_KEY && query.verifier) {
+        try {
+            const protocol = req.headers['x-forwarded-proto'] || 'https';
+            const host = req.headers['host'];
+            const originalUrl = `${protocol}://${host}${req.url}`;
+            // AdGem says: remove verifier from the end of the URL
+            const urlToHash = originalUrl.split('&verifier=')[0];
+            const expectedSignature = crypto_1.default
+                .createHmac('sha256', process.env.ADGEM_POSTBACK_KEY)
+                .update(urlToHash)
+                .digest('hex');
+            if (expectedSignature !== query.verifier) {
+                console.warn("AdGem Postback: Signature mismatch");
+                return reply.status(401).send({ error: 'Invalid verifier' });
+            }
+        }
+        catch (e) {
+            console.error("Verification failed", e);
+        }
+    }
+    if (!player_id || !amount) {
+        return reply.status(400).send({ error: 'Missing parameters' });
+    }
+    try {
+        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount, player_id]);
+        return reply.send({ success: true });
+    }
+    catch (error) {
+        console.error("handleAdGemPostback error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.handleAdGemPostback = handleAdGemPostback;
+const handleCPXPostback = async (req, reply) => {
+    const { user_id, amount_local, trans_id, status, hash } = req.query;
+    console.log("CPX Postback received:", req.query);
+    // Basic status check
+    if (status !== 'qualified') {
+        return reply.send({ success: true, message: 'Status not qualified' });
+    }
+    if (!user_id || !amount_local) {
+        return reply.status(400).send({ error: 'Missing parameters' });
+    }
+    // Security check (if CPX_SECRET_KEY is provided)
+    if (process.env.CPX_SECRET_KEY && hash) {
+        const expectedHash = crypto_1.default
+            .createHash('md5')
+            .update(`${trans_id}-${process.env.CPX_SECRET_KEY}`)
+            .digest('hex');
+        if (expectedHash !== hash) {
+            console.warn("CPX Hash mismatch");
+            // return reply.status(401).send({ error: 'Invalid hash' });
+        }
+    }
+    try {
+        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount_local, user_id]);
+        // Log transaction
+        await db.query('INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, $4)', [user_id, amount_local, 'Survey Reward (CPX)', 'SURVEY']);
+        return reply.send({ success: true });
+    }
+    catch (error) {
+        console.error("handleCPXPostback error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.handleCPXPostback = handleCPXPostback;
+const getCPXSurveys = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    const appId = process.env.CPX_APP_ID || "31412"; // User provided App ID
+    const secretKey = process.env.CPX_SECRET_KEY;
+    if (!secretKey) {
+        console.warn("CPX_SECRET_KEY not set, cannot fetch surveys securely.");
+        return reply.send([]);
+    }
+    try {
+        // Generate Secure Hash: md5(ext_user_id + secret_key)
+        const secureHash = crypto_1.default
+            .createHash('md5')
+            .update(`${userId}-${secretKey}`)
+            .digest('hex');
+        const ipUser = req.ip; // Might need x-forwarded-for if behind proxy
+        const userAgent = req.headers['user-agent'] || '';
+        const url = `https://live-api.cpx-research.com/api/get-surveys.php?app_id=${appId}&ext_user_id=${userId}&output_method=api&ip_user=${ipUser}&user_agent=${encodeURIComponent(userAgent)}&limit=20&secure_hash=${secureHash}`;
+        console.log("Fetching CPX Surveys:", url);
+        const response = await fetch(url);
+        const data = await response.json();
+        // DEBUG: Log CPX Response
+        console.log("CPX API Status:", response.status);
+        console.log("CPX API Response:", JSON.stringify(data).substring(0, 500)); // Log first 500 chars
+        if (Array.isArray(data)) {
+            return reply.send(data);
+        }
+        else if (data.surveys) {
+            return reply.send(data.surveys); // CPX sometimes returns { surveys: [...] }
+        }
+        else if (data.error || data.status === 'error') {
+            console.error("CPX API Error:", data.error || data.message || "Unknown Error");
+            return reply.send([]);
+        }
+        console.warn("CPX returned unexpected format:", JSON.stringify(data).substring(0, 100));
+        return reply.send([]); // Fallback empty array
+    }
+    catch (error) {
+        console.error("getCPXSurveys error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getCPXSurveys = getCPXSurveys;
+const getTransactions = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+        const result = await db.query('SELECT id, amount, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50', [userId]);
+        return reply.send(result.rows);
+    }
+    catch (error) {
+        console.error("getTransactions error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getTransactions = getTransactions;
+const handleRapidReachPostback = async (req, reply) => {
+    try {
+        const query = req.query;
+        const userId = query.user_id || query.u;
+        const amount = parseFloat(query.amount || query.a || '0');
+        const transId = query.trans_id || query.t || query.transaction_id || `rr_${Date.now()}`;
+        const status = query.status || query.s || 'completed';
+        console.log(`RapidReach Postback received:`, JSON.stringify(query));
+        console.log(`Parsed: user=${userId}, amount=${amount}, trans=${transId}, status=${status}`);
+        if (!userId || !amount) {
+            console.error('RapidReach: Missing user_id or amount');
+            return reply.status(200).send('1'); // Always return 1 to avoid retries
+        }
+        // Check for duplicate
+        const existing = await db.query("SELECT id FROM transactions WHERE description LIKE $1", [`%RR:${transId}%`]);
+        if (existing.rows.length > 0) {
+            console.log('RapidReach: Duplicate transaction', transId);
+            return reply.status(200).send('1');
+        }
+        // Ensure user exists (create minimal record if not)
+        const userCheck = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+        if (userCheck.rows.length === 0) {
+            // Store the postback data even without a user — log it
+            console.warn(`RapidReach: User ${userId} not found in DB. Storing anyway.`);
+            // Create a minimal user entry so FK constraint is satisfied
+            await db.query("INSERT INTO users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING", [userId, `${userId}@postback.taskbuks.app`]);
+        }
+        // Ensure wallet exists (upsert)
+        await db.query("INSERT INTO wallets (user_id, balance) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING", [userId]);
+        // Credit wallet
+        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount, userId]);
+        // Record transaction
+        await db.query("INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, 'credit')", [userId, amount, `Survey Completed (RR:${transId})`]);
+        console.log(`RapidReach: Successfully credited ${amount} to ${userId}`);
+        return reply.status(200).send('1');
+    }
+    catch (error) {
+        console.error("RapidReach postback error:", error);
+        return reply.status(200).send('1'); // Return 1 even on error to prevent retries
+    }
+};
+exports.handleRapidReachPostback = handleRapidReachPostback;

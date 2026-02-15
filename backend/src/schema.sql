@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
+  password_hash TEXT, -- Nullable for now to support old users or social login later
   full_name TEXT,
   phone_number TEXT,
   avatar_url TEXT,
