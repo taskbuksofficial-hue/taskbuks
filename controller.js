@@ -9,25 +9,102 @@ const store = window.store;
 const api = window.api;
 
 window.controller = {
-    async loginWithClerk(token) {
+    // Login with Email/Pass
+    async login(email, password) {
         try {
-            window.api.setToken(token);
-            const res = await api.loginWithClerk(token);
-            if (res.user) {
-                store.setState({ user: res.user, wallet: { ...store.getState().wallet, ...res.wallet } });
+            const res = await api.login(email, password);
+            if (res.user && res.token) {
+                this.handleAuthSuccess(res.user, res.token);
+                return true;
             }
         } catch (error) {
-            console.error("Login sync failed:", error);
-            // Optional: Logout clerk if sync fails?
+            console.error("Login failed:", error);
+            throw error; // Propagate to UI
         }
+        return false;
+    },
+
+    // Register
+    async register(data) {
+        try {
+            const res = await api.register(data);
+            if (res.user && res.token) {
+                this.handleAuthSuccess(res.user, res.token);
+                return true;
+            }
+        } catch (error) {
+            console.error("Registration failed:", error);
+            throw error;
+        }
+        return false;
+    },
+
+    // Validating Local Token
+    async loginWithToken(token) {
+        try {
+            window.api.setToken(token);
+            // We just fetch profile to validate. 
+            // If token is invalid, getProfile will throw 401
+            const profile = await api.getProfile();
+            if (profile) {
+                // Determine wallet from profile
+                const wallet = {
+                    currentBalance: parseFloat(profile.balance) || 0,
+                    lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0,
+                    totalCoins: 0 // Profile might need to return this? Or we calc
+                };
+
+                const newState = {
+                    user: profile,
+                    wallet: { ...store.getState().wallet, ...wallet }
+                };
+                store.setState(newState);
+
+                // Re-save user cache?
+                localStorage.setItem('tb_user_cache', JSON.stringify(newState));
+                return true;
+            }
+        } catch (error) {
+            console.error("Token validation failed:", error);
+            return false;
+        }
+    },
+
+    // Central Auth Success Handler
+    handleAuthSuccess(user, token) {
+        window.api.setToken(token);
+        localStorage.setItem('auth_token', token);
+
+        const newState = {
+            user: user,
+            wallet: {
+                currentBalance: parseFloat(user.balance || 0),
+                lifetimeEarnings: parseFloat(user.lifetimeEarnings || 0)
+            }
+        };
+        store.setState(newState);
+        localStorage.setItem('tb_user_cache', JSON.stringify(newState));
+
+        // Trigger dashboard load
+        this.loadDashboard();
     },
 
     // Initial Data Load
     async loadDashboard() {
-        store.setState({ ui: { ...store.getState().ui, isLoading: true, error: null } });
+        // 1. Try Cache First for Instant Load
+        const cached = localStorage.getItem('tb_dashboard_cache');
+        if (cached) {
+            console.log("Loading using Cache...");
+            try {
+                const data = JSON.parse(cached);
+                store.setState({ ...data, ui: { ...store.getState().ui, isLoading: false } });
+            } catch (e) { console.error("Cache parse error", e); }
+        } else {
+            store.setState({ ui: { ...store.getState().ui, isLoading: true } });
+        }
 
         try {
-            // Parallel Fetch
+            // 2. Network Fetch (Background/Update)
             const [profile, offers, streakStatus, transactions] = await Promise.all([
                 api.getProfile(),
                 api.getOffers(),
@@ -35,7 +112,7 @@ window.controller = {
                 api.getTransactions().catch(() => [])
             ]);
 
-            store.setState({
+            const newData = {
                 user: profile,
                 wallet: {
                     currentBalance: parseFloat(profile.balance) || 0,
@@ -52,10 +129,17 @@ window.controller = {
                 },
                 transactions: transactions || [],
                 ui: { ...store.getState().ui, isLoading: false }
-            });
+            };
+
+            store.setState(newData);
+            localStorage.setItem('tb_dashboard_cache', JSON.stringify(newData)); // Update Cache
+
         } catch (error) {
             console.error(error);
-            store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard." } });
+            // Only set error if no cache was loaded
+            if (!cached) {
+                store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard." } });
+            }
         }
     },
 
@@ -265,7 +349,15 @@ window.controller = {
             };
         });
         console.log('[Wallet] +' + coins + ' coins (₹' + rupees.toFixed(4) + ') | ' + description);
+
         // Trigger re-render
         if (window.render) window.render();
+
+        // Server Sync
+        api.addCoins(coins, description).then(() => {
+            console.log("Coins synced to server.");
+        }).catch(err => {
+            console.warn("Coin sync failed:", err);
+        });
     }
 };

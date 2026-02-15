@@ -14,9 +14,27 @@
         const state = store.getState();
         const { user, wallet, tasks, transactions } = state;
 
-        // 1. Balance
+        // 0. Skeleton vs Content
+        const skeleton = document.getElementById('dashboard-skeleton');
+        const content = document.getElementById('home-content'); // We need to wrap home content
+        const taskContainer = document.getElementById('task-container');
+
+        // Check if we have data to show (Cache or Network)
+        const hasData = tasks.available && tasks.available.length > 0;
+
+        if (state.ui.isLoading && !hasData) {
+            if (skeleton) skeleton.classList.remove('hidden');
+            if (taskContainer) taskContainer.classList.add('hidden');
+        } else {
+            if (skeleton) skeleton.classList.add('hidden');
+            if (taskContainer) taskContainer.classList.remove('hidden');
+        }
+
+        // 1. Balance (in coins and rupees)
+        var totalCoins = wallet.totalCoins || 0;
+        var balanceRupees = parseFloat(wallet.currentBalance || 0);
         document.querySelectorAll('.user-balance').forEach(el =>
-            el.textContent = `₹${parseFloat(wallet.currentBalance || 0).toFixed(2)}`
+            el.textContent = `${totalCoins} 🪙`
         );
 
         // Lifetime Earnings
@@ -24,20 +42,19 @@
             el.textContent = `₹${parseFloat(wallet.lifetimeEarnings || 0).toFixed(2)}`
         );
 
-        // Withdraw progress
+        // Withdraw progress (min ₹100)
         const progressBar = document.getElementById('withdraw-progress-bar');
         const progressText = document.getElementById('withdraw-progress-text');
         const withdrawBtn = document.getElementById('withdraw-btn');
         if (progressBar) {
             const balance = parseFloat(wallet.currentBalance || 0);
-            const pct = Math.min((balance / 500) * 100, 100);
+            const pct = Math.min((balance / 100) * 100, 100);
             progressBar.style.width = `${pct}%`;
-            if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹500`;
-            if (withdrawBtn) withdrawBtn.disabled = balance < 500;
+            if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹100`;
+            if (withdrawBtn) withdrawBtn.disabled = balance < 100;
         }
 
         // 2. Tasks (Home)
-        const taskContainer = document.getElementById('task-container');
         const topOfferContainer = document.getElementById('top-offer-container');
 
         if (taskContainer) {
@@ -117,37 +134,41 @@
             }
         }
 
-        // 3. CPX Research Sync
-        if (user && !window.cpxInitialized) {
-            console.log("Initializing CPX Research for user:", user.id);
+        // 3. Rapido Reach Integration
+        var rapidoUserId = null;
+        if (user && user.id) {
+            rapidoUserId = user.id;
+        } else if (window.Clerk && window.Clerk.user && window.Clerk.user.id) {
+            rapidoUserId = window.Clerk.user.id;
+        }
 
-            // Configuration for CPX Research
-            window.cpx = {
-                app_id: "31412",
-                ext_user_id: user.id,
-                email: user.emailAddresses?.[0]?.emailAddress || "",
-                username: user.firstName || "User",
-                secure_hash: "deprecated_on_frontend_use_backend_for_security",
-                style: {
-                    text: {
-                        new_tab: "Surveys"
-                    }
+        if (rapidoUserId && !window.rapidoInitialized) {
+            console.log("Attempting Rapido Reach Init for user:", rapidoUserId);
+            var container = document.getElementById('rapidoreach-container');
+            if (container) {
+                console.log("Rapido container found.");
+                window.rapidoInitialized = true;
+                try {
+                    var appId = '4pfOJz6QQrm';
+                    var appKey = '8afcb7f89adf0d55c2805a3a2277299f';
+                    // Rapido Reach docs: checksum = full MD5(internalUserId-appId-appKey)
+                    var checksum = window.md5(rapidoUserId + '-' + appId + '-' + appKey);
+                    var finalUserId = rapidoUserId + '-' + appId + '-' + checksum;
+                    var iframeUrl = 'https://www.rapidoreach.com/ofw/?userId=' + encodeURIComponent(finalUserId);
+                    console.log("Rapido Reach URL:", iframeUrl);
+                    container.innerHTML = '<iframe src="' + iframeUrl + '" style="width:100%;height:800px;border:none;border-radius:16px;" allow="clipboard-write" title="Rapido Reach Surveys"></iframe>';
+                } catch (err) {
+                    console.error("Rapido Init Error:", err);
+                    container.innerHTML = '<div style="color:red;text-align:center;padding:16px;font-size:14px;">Survey Error: ' + err.message + '</div>';
                 }
-            };
-
-            const script = document.createElement('script');
-            script.src = "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js";
-            script.async = true;
-            script.onload = () => {
-                console.log("CPX Script Loaded");
-                window.cpxInitialized = true;
-            };
-            document.body.appendChild(script);
+            } else {
+                console.log("Rapido container NOT found in DOM.");
+            }
         }
 
         // 3.5 Render API Surveys (if any)
         const surveyList = tasks.surveys || [];
-        const cpxContainer = document.getElementById('cpx-research-container');
+        const cpxContainer = document.getElementById('rapidoreach-container');
         if (cpxContainer && surveyList.length > 0) {
             let listContainer = document.getElementById('api-survey-list');
             if (!listContainer) {
@@ -167,7 +188,7 @@
                             <span class="material-icons-round">poll</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm dark:text-white">Survey via CPX</h4>
+                            <h4 class="font-bold text-sm dark:text-white">Premium Survey</h4>
                             <p class="text-xs text-slate-400">Earn ₹${payout}</p>
                         </div>
                     </div>
@@ -179,9 +200,28 @@
             }).join('');
         }
 
-        // 4. Refer Code
+        // 4. Refer Code (generate client-side if backend doesn't provide)
         const codeEl = document.getElementById('referral-code');
-        if (codeEl && user) codeEl.textContent = user.referralCode;
+        if (codeEl) {
+            var refCode = (user && user.referralCode) ? user.referralCode : null;
+            if (!refCode) {
+                // Generate from Clerk user ID or fallback
+                var uid = '';
+                if (user && user.id) uid = user.id;
+                else if (user && user.clerkId) uid = user.clerkId;
+                else if (window.Clerk && window.Clerk.user) uid = window.Clerk.user.id;
+
+                if (uid) {
+                    // Use last 8 chars of user ID, uppercased
+                    refCode = 'TB' + uid.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase();
+                } else {
+                    refCode = 'TB' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                }
+                // Store it back on user object so share buttons can use it
+                if (user) user.referralCode = refCode;
+            }
+            codeEl.textContent = refCode;
+        }
 
         // 5. Transactions
         const txList = document.getElementById('transaction-list');
@@ -369,35 +409,61 @@
     }
 
     function setupCarousel() {
-        console.log("Setting up Home carousel...");
-        const carousel = document.getElementById('home-carousel');
-        const dots = document.querySelectorAll('.carousel-dot');
-        if (!carousel || dots.length === 0) return;
+        console.log("Setting up Home carousels...");
 
-        let currentIndex = 0;
-        const slideCount = dots.length;
+        const initCarousel = (id, dotClass) => {
+            const carousel = document.getElementById(id);
+            const dots = document.querySelectorAll(dotClass);
+            if (!carousel || dots.length === 0) return;
 
-        // Auto slide
-        const slideInterval = setInterval(() => {
-            currentIndex = (currentIndex + 1) % slideCount;
-            carousel.scrollTo({
-                left: carousel.offsetWidth * currentIndex,
-                behavior: 'smooth'
-            });
-        }, 4000);
+            let currentIndex = 0;
+            const slideCount = dots.length;
 
-        // Update dots on scroll
-        carousel.onscroll = () => {
-            const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
-            dots.forEach((dot, i) => {
-                dot.classList.toggle('bg-primary', i === index);
-                dot.classList.toggle('bg-gray-300', i !== index);
-            });
-            currentIndex = index;
+            // Auto slide
+            const slideInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % slideCount;
+                carousel.scrollTo({
+                    left: carousel.offsetWidth * currentIndex,
+                    behavior: 'smooth'
+                });
+            }, 4000 + Math.random() * 1000); // Offset timings
+
+            // Update dots on scroll
+            carousel.onscroll = () => {
+                const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('bg-primary', i === index);
+                    dot.classList.toggle('bg-gray-300', i !== index);
+                });
+                currentIndex = index;
+            };
+
+            // Pause auto-slide on touch
+            carousel.ontouchstart = () => clearInterval(slideInterval);
         };
 
-        // Pause auto-slide on touch
-        carousel.ontouchstart = () => clearInterval(slideInterval);
+        // Init both
+        initCarousel('home-carousel', '.carousel-dot');
+        initCarousel('home-carousel-2', '.carousel-dot-2');
+    }
+
+    function setupGameCards() {
+        console.log("Setting up Game Cards...");
+        const buttons = document.querySelectorAll('.game-play-btn');
+        buttons.forEach(btn => {
+            btn.onclick = (e) => {
+                const gameName = btn.dataset.game;
+                const reward = btn.dataset.reward;
+                console.log(`Playing ${gameName} for ${reward} coins`);
+
+                // Route all games through miniGames
+                if (window.miniGames) {
+                    window.miniGames.openGame(gameName);
+                } else {
+                    showToast(`Starting ${gameName}...`);
+                }
+            };
+        });
     }
 
     // Initialize
@@ -407,23 +473,12 @@
         // Initial setup
         setupNavigation();
         setupGlobalListeners();
-        setupCarousel();
+        setupGameCards();
         store.subscribe(() => { render(); renderStreak(); });
 
-        // Show Loading Overlay
-        const loadingOverlay = document.createElement('div');
-        loadingOverlay.id = 'app-loading-overlay';
-        loadingOverlay.style.cssText = "position:fixed; inset:0; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10000; transition: opacity 0.3s;";
-        loadingOverlay.innerHTML = `
-            <div class="text-2xl font-black mb-4">Task<span class="text-primary">Buks</span></div>
-            <div id="loading-spinner" class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <div id="loading-status" class="mt-4 text-xs text-slate-400 text-center px-6">Connecting...</div>
-            <div class="flex gap-4 mt-8">
-                <button id="retry-init" class="hidden bg-primary text-white px-6 py-2 rounded-full text-xs font-bold shadow-lg">Retry</button>
-                <button id="skip-init" class="hidden bg-slate-100 text-slate-500 px-6 py-2 rounded-full text-xs font-bold">Ignore</button>
-            </div>
-        `;
-        document.body.appendChild(loadingOverlay);
+        // Show Loading Overlay (Use Static)
+        const loadingOverlay = document.getElementById('app-loading-overlay');
+        if (loadingOverlay) loadingOverlay.style.opacity = '1';
 
         const updateStatus = (msg, isError = false) => {
             const el = document.getElementById('loading-status');
@@ -440,10 +495,14 @@
 
         const cleanup = () => {
             console.log("Removing loading overlay");
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                if (loadingOverlay.parentNode) loadingOverlay.remove();
-            }, 300);
+            const loadingOverlay = document.getElementById('app-loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.visibility = 'hidden';
+                setTimeout(() => {
+                    if (loadingOverlay.parentNode) loadingOverlay.remove();
+                }, 600);
+            }
             render();
         };
 
@@ -453,15 +512,22 @@
         }, 15000);
 
         try {
-            // Wait for Clerk
+            // Wait for Clerk (Increased to 30s for very slow networks)
             let r = 0;
-            while (!window.Clerk && r < 100) {
+            while (!window.Clerk && r < 300) {
                 await new Promise(res => setTimeout(res, 100));
                 r++;
             }
 
             if (!window.Clerk) {
-                updateStatus("Security module failed to load. Check connection.", true);
+                updateStatus(`
+                    <div class="flex flex-col items-center gap-4">
+                        <p>Security module failed to load.</p>
+                        <button onclick="location.reload()" class="bg-white text-red-500 px-4 py-2 rounded-full font-bold">
+                            Retry Connection
+                        </button>
+                    </div>
+                `, true);
                 return;
             }
 
@@ -484,6 +550,9 @@
                 document.getElementById('home').classList.remove('hidden');
                 document.querySelector('nav').classList.remove('hidden');
                 document.getElementById('login').classList.add('hidden');
+
+                // Initialize Carousels AFTER showing home (so calculations work)
+                setupCarousel();
             } else {
                 console.log("User not logged in");
                 // Show Login, Hide Home and Nav
@@ -498,6 +567,12 @@
                         window.Clerk.openSignIn();
                     }
                 }
+
+                // Auto-trigger Sign In for new users (as requested)
+                setTimeout(() => {
+                    console.log("Auto-opening Sign In...");
+                    window.Clerk.openSignIn();
+                }, 1000);
             }
 
             clearTimeout(timeout);
