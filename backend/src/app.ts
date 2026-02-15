@@ -45,6 +45,14 @@ import { getProfile, getOffers, getStreak, startTask, claimBonus, claimVideoRewa
 server.post('/auth/register', register);
 server.post('/auth/login', login);
 
+// Helpful error for GET requests (User confusion)
+server.get('/auth/register', async (req, reply) => {
+    return reply.status(405).send({ error: 'Method Not Allowed. Please use POST to register.' });
+});
+server.get('/auth/login', async (req, reply) => {
+    return reply.status(405).send({ error: 'Method Not Allowed. Please use POST to login.' });
+});
+
 // App Routes (Phase 3) - Secured with preHandler
 server.get('/api/profile', { preHandler: [authenticate] }, getProfile);
 server.get('/api/offers', getOffers); // Offers can be public?
