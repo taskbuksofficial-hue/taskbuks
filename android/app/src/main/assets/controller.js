@@ -9,18 +9,84 @@ const store = window.store;
 const api = window.api;
 
 window.controller = {
-    async loginWithClerk(token) {
+    // Login with Email/Pass
+    async login(email, password) {
         try {
-            window.api.setToken(token);
-            const res = await api.loginWithClerk(token);
-            if (res.user) {
-                const newState = { user: res.user, wallet: { ...store.getState().wallet, ...res.wallet } };
-                store.setState(newState);
-                localStorage.setItem('tb_user_cache', JSON.stringify(newState)); // Cache User
+            const res = await api.login(email, password);
+            if (res.user && res.token) {
+                this.handleAuthSuccess(res.user, res.token);
+                return true;
             }
         } catch (error) {
-            console.error("Login sync failed:", error);
+            console.error("Login failed:", error);
+            throw error; // Propagate to UI
         }
+        return false;
+    },
+
+    // Register
+    async register(data) {
+        try {
+            const res = await api.register(data);
+            if (res.user && res.token) {
+                this.handleAuthSuccess(res.user, res.token);
+                return true;
+            }
+        } catch (error) {
+            console.error("Registration failed:", error);
+            throw error;
+        }
+        return false;
+    },
+
+    // Validating Local Token
+    async loginWithToken(token) {
+        try {
+            window.api.setToken(token);
+            // We just fetch profile to validate. 
+            // If token is invalid, getProfile will throw 401
+            const profile = await api.getProfile();
+            if (profile) {
+                // Determine wallet from profile
+                const wallet = {
+                    currentBalance: parseFloat(profile.balance) || 0,
+                    lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0,
+                    totalCoins: parseInt(profile.total_coins) || 0
+                };
+
+                const newState = {
+                    user: profile,
+                    wallet: { ...store.getState().wallet, ...wallet }
+                };
+                store.setState(newState);
+
+                // Re-save user cache?
+                localStorage.setItem('tb_user_cache', JSON.stringify(newState));
+                return true;
+            }
+        } catch (error) {
+            console.error("Token validation failed:", error);
+            return false;
+        }
+    },
+
+    // Central Auth Success Handler
+    handleAuthSuccess(user, token) {
+        window.api.setToken(token);
+        localStorage.setItem('auth_token', token);
+
+        const newState = {
+            user: user,
+            wallet: {
+                currentBalance: parseFloat(user.balance || 0),
+                lifetimeEarnings: parseFloat(user.lifetimeEarnings || 0)
+            }
+        };
+        store.setState(newState);
+        localStorage.setItem('tb_user_cache', JSON.stringify(newState));
+
+        // Trigger dashboard load
+        this.loadDashboard();
     },
 
     // Initial Data Load
@@ -39,27 +105,31 @@ window.controller = {
 
         try {
             // 2. Network Fetch (Background/Update)
+            // We use allSettled or catch individually to prevent one failure from blocking the others
             const [profile, offers, streakStatus, transactions] = await Promise.all([
-                api.getProfile(),
-                api.getOffers(),
-                api.getStreakStatus(),
-                api.getTransactions().catch(() => [])
+                api.getProfile(), // Profile is critical, let it fail if needed? No, we need it.
+                api.getOffers().catch(err => { console.warn("Offers failed", err); return []; }),
+                api.getStreakStatus().catch(err => { console.warn("Streak failed", err); return { streak: 0, claimedToday: false }; }),
+                api.getTransactions().catch(err => { console.warn("Tx failed", err); return []; })
             ]);
+
+            if (!profile) throw new Error("Failed to load profile");
 
             const newData = {
                 user: profile,
                 wallet: {
                     currentBalance: parseFloat(profile.balance) || 0,
-                    lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0
+                    lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0,
+                    totalCoins: parseInt(profile.total_coins || 0)
                 },
                 tasks: {
                     ...store.getState().tasks,
-                    available: offers
+                    available: offers || []
                 },
                 dailyStreak: {
                     ...store.getState().dailyStreak,
-                    currentStreak: streakStatus.streak,
-                    isClaimedToday: streakStatus.claimedToday
+                    currentStreak: streakStatus.streak || 0,
+                    isClaimedToday: streakStatus.claimedToday || false
                 },
                 transactions: transactions || [],
                 ui: { ...store.getState().ui, isLoading: false }
@@ -72,9 +142,32 @@ window.controller = {
             console.error(error);
             // Only set error if no cache was loaded
             if (!cached) {
-                store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard." } });
+                store.setState({ ui: { ...store.getState().ui, isLoading: false, error: "Failed to load dashboard: " + error.message } });
+                throw error;
             }
         }
+    },
+
+    async updateProfile(fullName, phoneNumber) {
+        try {
+            const res = await api.updateProfile({ full_name: fullName, phone_number: phoneNumber });
+            if (res.success && res.user) {
+                const state = store.getState();
+                const newState = {
+                    ...state,
+                    user: { ...state.user, ...res.user }
+                };
+                store.setState(newState);
+                localStorage.setItem('tb_user_cache', JSON.stringify(newState)); // Update cache
+                // Update dashboard cache too if needed, but 'user' is inside 'newState' which is what we might verify
+                this.loadDashboard(); // Refresh full state just in case
+                return true;
+            }
+        } catch (error) {
+            console.error("Update Profile Failed:", error);
+            throw error;
+        }
+        return false;
     },
 
     // Start Task Logic
@@ -117,45 +210,78 @@ window.controller = {
         }
     },
 
-    // 6. Claim Daily Bonus (Progressive: 100, 110, 120...)
-    async claimDailyBonus() {
+    // 6. Claim Daily Bonus (Normal or Video)
+    async claimDailyBonus(multiplier = 1, fixed_reward = null) {
         const state = store.getState();
         if (state.dailyStreak.isClaimedToday) {
-            alert("Already claimed for today!");
-            return;
+            window.showToast("Already claimed for today!");
+            return null;
         }
 
-        const streak = state.dailyStreak.currentStreak || 0;
-        const bonusCoins = 100 + (streak * 10); // 100, 110, 120, 130...
-
-        // Optimistic Update
-        store.setState(s => ({
-            dailyStreak: {
-                ...s.dailyStreak,
-                isClaimedToday: true,
-                currentStreak: (s.dailyStreak.currentStreak || 0) + 1,
-                lastClaimDate: new Date().toDateString()
-            }
-        }));
-
-        // Credit Coins via Central Method
-        this.addCoins(bonusCoins, `Daily Bonus (Day ${streak + 1})`);
-
-        // Show Ad (Verification)
-        if (window.ads) {
-            setTimeout(() => {
-                window.ads.showInterstitial();
-            }, 500);
-        }
-
-        // Server Sync (Fire & Forget/Background)
         try {
-            await api.claimDailyBonus();
+            const res = await api.claimDailyBonus(multiplier, fixed_reward);
+            if (res.success) {
+                // Update local state with real DB values
+                store.setState(s => ({
+                    dailyStreak: {
+                        ...s.dailyStreak,
+                        isClaimedToday: true,
+                        currentStreak: res.streak,
+                        lastClaimDate: new Date().toDateString()
+                    },
+                    wallet: {
+                        ...s.wallet,
+                        currentBalance: res.newBalance,
+                        totalCoins: (res.newBalance * 1000)
+                    },
+                    transactions: [{
+                        id: Date.now(),
+                        amount: res.reward / 1000,
+                        coins: res.reward,
+                        description: fixed_reward ? "Watch & Earn (20 Coins)" : (multiplier > 1 ? `Daily Bonus 10X` : `Daily Bonus`),
+                        date: new Date().toISOString(),
+                        type: 'credit'
+                    }, ...s.transactions]
+                }));
+
+                window.showToast(`Success! +${res.reward} coins credited.`);
+                this.loadDashboard(); // Refresh full state
+                return res; // Return response for UI
+            }
+            return res;
         } catch (error) {
-            console.warn("Background sync failed for bonus, but client state updated.", error);
-            // We do NOT rollback here to prevent "Network Error" frustration.
-            // Trust the client state for now.
+            console.error("Daily Bonus failed:", error);
+            window.showToast(error.message || "Failed to claim bonus. Try again.");
+            return null;
         }
+    },
+
+    async claimDailyBonus10X() {
+        const state = store.getState();
+        if (state.dailyStreak.isClaimedToday) {
+            window.showToast("Already claimed for today!");
+            return null;
+        }
+
+        return new Promise((resolve) => {
+            // 1. Trigger Rewarded Video
+            if (window.ads && window.ads.showRewarded) {
+                window.showToast("Loading Video Ad for 10 Coins...");
+                window.ads.showRewarded(async (amount) => {
+                    if (amount > 0) {
+                        // Ad completed - claim 10 coins
+                        const res = await this.claimDailyBonus(null, 10); // fixed_reward = 10
+                        resolve(res);
+                    } else {
+                        window.showToast("Ad not completed. Bonus cancelled.");
+                        resolve(null);
+                    }
+                });
+            } else {
+                window.showToast("Ads not available. Try normal claim.");
+                resolve(null);
+            }
+        });
     },
 
     // Complete Task Logic (Simulation)
@@ -187,9 +313,6 @@ window.controller = {
 
     async signOut() {
         try {
-            if (window.Clerk) {
-                await window.Clerk.signOut();
-            }
             // Reset state
             store.setState({
                 user: null,
@@ -197,6 +320,9 @@ window.controller = {
                 tasks: { available: [], ongoing: [], completed: [] },
                 transactions: []
             });
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('tb_dashboard_cache');
+            localStorage.removeItem('tb_user_cache');
             window.location.reload(); // Hard reload to clear all states and re-init
         } catch (error) {
             console.error("Sign-out failed:", error);
@@ -224,7 +350,8 @@ window.controller = {
     },
 
     openAdGemOfferWall() {
-        const userId = window.Clerk && window.Clerk.user ? window.Clerk.user.id : "guest";
+        const state = store.getState();
+        const userId = state.user && state.user.id ? state.user.id : "guest";
         const adGemAppId = "2054"; // Placeholder App ID
         const url = `https://api.adgem.com/v1/wall?appid=${adGemAppId}&playerid=${userId}`;
 

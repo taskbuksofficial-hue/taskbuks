@@ -10,14 +10,15 @@ android {
         applicationId "com.taskbuks"
         minSdk 24
         targetSdk 34
-        versionCode 9
-        versionName "1.5-NoAdmin"
+        versionCode 10
+        versionName "1.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -25,6 +26,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "taskbuks-${variant.buildType.name}.apk"
+        }
     }
 }
 

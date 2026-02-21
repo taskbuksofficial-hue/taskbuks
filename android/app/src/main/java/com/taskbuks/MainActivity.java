@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "TaskBuksUnityAds";
     private static final String UNITY_GAME_ID = "6044176";
-    private static final boolean TEST_MODE = true; // ENABLE TEST MODE FOR DEBUGGING
+    private static final boolean TEST_MODE = false; // PRODUCTION MODE
 
     private static final String INTERSTITIAL_ID = "Interstitial_Android";
     private static final String REWARDED_ID = "Rewarded_Android";
@@ -44,34 +44,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // ... (Edge-to-edge setup) ...
+
+        // Edge-to-edge setup
         getWindow().getDecorView().setSystemUiVisibility(
-            android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-            android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR // DEFAULT TO DARK ICONS
         );
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
 
         // 1. Create Main Layout
         layout = new RelativeLayout(this);
         layout.setLayoutParams(new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, 
-            ViewGroup.LayoutParams.MATCH_PARENT
-        ));
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
         // 2. Create WebView
         myWebView = new WebView(this);
-        RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        );
-        // Add bottom margin so banner doesn't overlap content when visible? 
-        // No, we want overlay for translucent effect or just standard docked banner.
-        // Let's keep it full screen for now.
-        myWebView.setLayoutParams(webViewParams);
+        myWebView.setLayoutParams(new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
         layout.addView(myWebView);
 
-        // 3. Pre-initialize Banner View (Add to layout GONE)
+        // 3. Pre-initialize Banner View
         setupBannerView();
 
         setContentView(layout);
@@ -82,8 +77,10 @@ public class MainActivity extends AppCompatActivity {
             public void onInitializationComplete() {
                 Log.d(TAG, "Unity Ads Initialization Complete");
                 runOnUiThread(() -> {
-                    // Load banner content now that SDK is ready
-                    if (mBannerView != null) mBannerView.load();
+                    // Load and pre-cache ads
+                    loadBanner();
+                    loadInterstitial();
+                    loadRewarded();
                 });
             }
 
@@ -93,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ... (WebView Settings) ...
+        // WebView Settings
         WebSettings webSettings = myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
@@ -104,9 +101,9 @@ public class MainActivity extends AppCompatActivity {
 
         // WebViewAssetLoader setup
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
-            .addPathHandler("/", new WebViewAssetLoader.AssetsPathHandler(this))
-            .setDomain("app.assets.local")
-            .build();
+                .addPathHandler("/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .setDomain("app.assets.local")
+                .build();
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -117,82 +114,203 @@ public class MainActivity extends AppCompatActivity {
 
         myWebView.addJavascriptInterface(new WebAppInterface(), "Android");
         myWebView.setWebChromeClient(new android.webkit.WebChromeClient());
-        
-        // Load from virtual domain instead of file://
+
         myWebView.loadUrl("https://app.assets.local/index.html");
     }
 
     private void setupBannerView() {
         mBannerView = new BannerView(this, BANNER_ID, new UnityBannerSize(320, 50));
-        
-        // Listener
         mBannerView.setListener(new BannerView.IListener() {
             @Override
             public void onBannerLoaded(BannerView bannerView) {
-                Log.d(TAG, "Banner loaded successfully");
-                // If visibility was requested, show it now
+                Log.d(TAG, "Banner loaded");
                 if (isBannerVisible) {
                     mBannerView.setVisibility(View.VISIBLE);
                     mBannerView.bringToFront();
                 }
             }
+
             @Override
-            public void onBannerShown(BannerView bannerView) { }
+            public void onBannerShown(BannerView bannerView) {
+            }
+
             @Override
-            public void onBannerClick(BannerView bannerView) { }
+            public void onBannerClick(BannerView bannerView) {
+            }
+
             @Override
             public void onBannerFailedToLoad(BannerView bannerView, BannerErrorInfo errorInfo) {
                 Log.e(TAG, "Banner Load Failed: " + errorInfo.errorMessage);
-                // runOnUiThread(() -> Toast.makeText(MainActivity.this, "Banner Error: " + errorInfo.errorMessage, Toast.LENGTH_LONG).show());
             }
+
             @Override
-            public void onBannerLeftApplication(BannerView bannerView) { }
+            public void onBannerLeftApplication(BannerView bannerView) {
+            }
         });
 
-        // Layout Params - Align Parent Bottom
+        // Add background for debug visibility (Safe Area Box)
+        mBannerView.setBackgroundColor(android.graphics.Color.argb(50, 0, 0, 0)); // Subtle translucent black
+
         RelativeLayout.LayoutParams adParams = new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        );
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
         adParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        adParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
         mBannerView.setLayoutParams(adParams);
-        
-        // Add to layout but Hidden
         mBannerView.setVisibility(View.GONE);
         layout.addView(mBannerView);
+
+        // SAFE AREA FIX: Adjust for bottom navigation bar
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
+            layout.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public android.view.WindowInsets onApplyWindowInsets(View v, android.view.WindowInsets insets) {
+                    int bottomInset = 0;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                        bottomInset = insets.getInsets(android.view.WindowInsets.Type.systemBars()).bottom;
+                    } else {
+                        bottomInset = insets.getSystemWindowInsetBottom();
+                    }
+
+                    // Apply margin to banner to push it above the Bottom Navigation Bar (Safe Area)
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mBannerView.getLayoutParams();
+                    params.bottomMargin = bottomInset;
+                    mBannerView.setLayoutParams(params);
+
+                    return insets;
+                }
+            });
+        }
     }
 
-    // Removed old loadBanner since checking is moved to setup+init
-    private void loadBanner() { 
-        if (mBannerView != null) mBannerView.load(); 
+    private void loadBanner() {
+        if (mBannerView != null)
+            mBannerView.load();
     }
 
-    // ... (WebAppInterface class) ...
+    private void loadInterstitial() {
+        UnityAds.load(INTERSTITIAL_ID, new IUnityAdsLoadListener() {
+            @Override
+            public void onUnityAdsAdLoaded(String placementId) {
+                Log.d(TAG, "Interstitial Loaded: " + placementId);
+            }
+
+            @Override
+            public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
+                Log.e(TAG, "Interstitial Load Failed: " + message);
+            }
+        });
+    }
+
+    private void loadRewarded() {
+        UnityAds.load(REWARDED_ID, new IUnityAdsLoadListener() {
+            @Override
+            public void onUnityAdsAdLoaded(String placementId) {
+                Log.d(TAG, "Rewarded Loaded: " + placementId);
+            }
+
+            @Override
+            public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
+                Log.e(TAG, "Rewarded Load Failed: " + message);
+            }
+        });
+    }
 
     public class WebAppInterface {
-        // ... (other methods) ...
+        @JavascriptInterface
+        public void showInterstitial() {
+            runOnUiThread(() -> {
+                UnityAds.show(MainActivity.this, INTERSTITIAL_ID, new UnityAdsShowOptions(),
+                        new IUnityAdsShowListener() {
+                            @Override
+                            public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error,
+                                    String message) {
+                                Log.e(TAG, "Interstitial Show Fail: " + message);
+                                loadInterstitial();
+                            }
+
+                            @Override
+                            public void onUnityAdsShowStart(String placementId) {
+                            }
+
+                            @Override
+                            public void onUnityAdsShowClick(String placementId) {
+                            }
+
+                            @Override
+                            public void onUnityAdsShowComplete(String placementId,
+                                    UnityAds.UnityAdsShowCompletionState state) {
+                                loadInterstitial();
+                            }
+                        });
+            });
+        }
+
+        @JavascriptInterface
+        public void showRewarded() {
+            runOnUiThread(() -> {
+                UnityAds.show(MainActivity.this, REWARDED_ID, new UnityAdsShowOptions(), new IUnityAdsShowListener() {
+                    @Override
+                    public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error,
+                            String message) {
+                        Log.e(TAG, "Rewarded Show Fail: " + message);
+                        loadRewarded();
+                    }
+
+                    @Override
+                    public void onUnityAdsShowStart(String placementId) {
+                    }
+
+                    @Override
+                    public void onUnityAdsShowClick(String placementId) {
+                    }
+
+                    @Override
+                    public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
+                        if (state == UnityAds.UnityAdsShowCompletionState.COMPLETED) {
+                            myWebView.post(() -> myWebView.evaluateJavascript(
+                                    "if(window.onAdRewardReceived) window.onAdRewardReceived(10);", null));
+                        }
+                        loadRewarded();
+                    }
+                });
+            });
+        }
 
         @JavascriptInterface
         public void setBannerVisible(boolean visible) {
-            isBannerVisible = visible; // Update state tracking
+            isBannerVisible = visible;
             runOnUiThread(() -> {
                 if (mBannerView != null) {
                     if (visible) {
                         mBannerView.setVisibility(View.VISIBLE);
                         mBannerView.bringToFront();
+                        loadBanner(); // Ensure it reloads/shows every time it's toggled ON
                     } else {
                         mBannerView.setVisibility(View.GONE);
                     }
-                } else {
-                     Log.w(TAG, "setBannerVisible called but mBannerView is null. Request queued.");
-                     if (visible && UnityAds.isInitialized()) {
-                         // Attempt to load if initialized but null (recovery)
-                         loadBanner();
-                     }
+                } else if (visible) {
+                    loadBanner();
                 }
             });
         }
-        
+
+        @JavascriptInterface
+        public void setStatusBarMode(String mode) {
+            runOnUiThread(() -> {
+                int flags = getWindow().getDecorView().getSystemUiVisibility();
+                if ("dark".equals(mode)) {
+                    // Dark Icons (Light Mode)
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                } else {
+                    // White Icons (Dark Mode)
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                }
+                getWindow().getDecorView().setSystemUiVisibility(flags);
+            });
+        }
+
         @JavascriptInterface
         public void showToast(String toast) {
             Toast.makeText(MainActivity.this, toast, Toast.LENGTH_SHORT).show();

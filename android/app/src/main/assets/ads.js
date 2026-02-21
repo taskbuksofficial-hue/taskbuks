@@ -250,15 +250,30 @@ window.ads = {
     },
 
     setBannerVisible: function (visible, containerId) {
-        console.log("Setting Smart Banner:", visible);
+        console.log("Setting Smart Banner:", visible, "in", containerId);
 
-        // 1. Native Bridge (Preferred for Stability)
+        // 1. Handle HTML Containers (Unified across Web and APK)
+        const containers = ['ad-banner-carousel', 'ludo-banner-ad', 'snl-banner-ad', 'generic-banner-ad'];
+        containers.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (visible && id === containerId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            }
+        });
+
+        // 2. Native Bridge (Preferred for APK stability - docked at bottom)
         if (window.Android && window.Android.setBannerVisible) {
+            // For carousel, we might want to skip native docked banner if it covers content
+            // but the user wants it visible "at every bannerad in games all".
             window.Android.setBannerVisible(visible);
             return;
         }
 
-        // 2. Unity Banner (Fallback)
+        // 3. Unity Banner (Fallback for Web)
         if (visible) {
             showUnityBanner(containerId);
         } else {

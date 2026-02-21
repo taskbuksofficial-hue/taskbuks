@@ -53,27 +53,77 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // 5. Create User
         const newUserResult = await db.query(
-            `INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            `INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, current_streak, last_claim_date, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, 0, NULL, NOW())
              RETURNING *`,
             [email, hashedPassword, full_name, phone_number, newReferralCode, referredBy]
         );
         const user = newUserResult.rows[0];
 
-        // 6. Create Wallet
+        // 6. Handle Rewards Logic
+        const referralReward = 0.50; // ₹0.50
+        const referralCoins = 500;   // 500 coins
+        let initialBalance = 0.00;
+        let initialCoins = 0;
+
+        if (referredBy) {
+            // Find referrer ID
+            const referrerResult = await db.query('SELECT id FROM users WHERE referral_code = $1', [referredBy]);
+            if (referrerResult.rows.length > 0) {
+                const referrerId = referrerResult.rows[0].id;
+
+                // 6a. Credit Referrer
+                await db.query(
+                    `UPDATE wallets SET 
+                        balance = balance + $1, 
+                        total_earned = total_earned + $1,
+                        total_coins = COALESCE(total_coins, 0) + $2,
+                        updated_at = NOW() 
+                     WHERE user_id = $3`,
+                    [referralReward, referralCoins, referrerId]
+                );
+                await db.query(
+                    `INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
+                     VALUES ($1, $2, $3, $4, 'REFERRAL', 'COMPLETED', NOW())`,
+                    [referrerId, referralReward, referralCoins, `Referral Reward: ${full_name} joined`]
+                );
+
+                // 6b. Set Initial Balance for New User
+                initialBalance = referralReward;
+                initialCoins = referralCoins;
+            }
+        }
+
+        // 7. Create Wallet
         await db.query(
-            `INSERT INTO wallets (user_id, balance, updated_at)
-             VALUES ($1, 0.00, NOW())`,
-            [user.id]
+            `INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, $2, $3, $4, NOW())`,
+            [user.id, initialBalance, initialBalance, initialCoins]
         );
 
-        // 7. Generate Token
+        // 8. Log Transaction for New User if rewarded
+        if (initialBalance > 0) {
+            await db.query(
+                `INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
+                 VALUES ($1, $2, $3, $4, 'REFERRAL', 'COMPLETED', NOW())`,
+                [user.id, initialBalance, initialCoins, 'Welcome Reward (Referral Used)']
+            );
+        }
+
+        // 9. Generate Token
         const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
 
         // Remove sensitive data
         delete user.password_hash;
 
-        return reply.send({ user, token });
+        // Attach Initial Wallet Data
+        const userData = {
+            ...user,
+            balance: initialBalance,
+            lifetimeEarnings: initialBalance
+        };
+
+        return reply.send({ user: userData, token });
 
     } catch (error) {
         console.error('Register Error:', error);
@@ -89,7 +139,7 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
     }
 
     try {
-        // 1. Find User by Email (or we could add username support)
+        // 1. Find User by Email
         const result = await db.query('SELECT * FROM users WHERE email = $1', [identifier]);
 
         if (result.rows.length === 0) {
@@ -100,7 +150,6 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // 2. Check Password
         if (!user.password_hash) {
-            // User might have signed up via social login previously
             return reply.status(401).send({ error: 'Please login with your previous method or reset password' });
         }
 
@@ -115,7 +164,20 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
         // Remove sensitive data
         delete user.password_hash;
 
-        return reply.send({ user, token });
+        // 4. Fetch Wallet & Earnings
+        const walletResult = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [user.id]);
+        const earningsResult = await db.query(
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'credit'",
+            [user.id]
+        );
+
+        const userData = {
+            ...user,
+            balance: parseFloat(walletResult.rows[0]?.balance || 0),
+            lifetimeEarnings: parseFloat(earningsResult.rows[0]?.total || 0)
+        };
+
+        return reply.send({ user: userData, token });
 
     } catch (error) {
         console.error('Login Error:', error);

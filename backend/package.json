@@ -5,14 +5,13 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "ts-node src/app.ts",
-    "build": "tsc",
+    "build": "mkdir -p public && cp ../index.html ../app.js ../controller.js ../api.js ../store.js ../ads.js ../games.js ../md5.js ../logo.png ../carousel_video_promo.png public/ && cp ../logo.png public/favicon.ico && tsc",
     "start": "node dist/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@clerk/clerk-sdk-node": "^4.13.23",
     "@fastify/cors": "^10.0.2",
     "@fastify/static": "^9.0.0",
     "bcryptjs": "^3.0.3",

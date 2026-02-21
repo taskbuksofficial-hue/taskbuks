@@ -7,8 +7,7 @@ const defaultState = {
     user: null, // Will fetch from API
     wallet: {
         currentBalance: 0,
-        lifetimeEarnings: 0,
-        totalCoins: 0
+        lifetimeEarnings: 0
     },
     dailyStreak: {
         currentStreak: 0,

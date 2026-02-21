@@ -95,10 +95,10 @@ window.api = {
     },
 
     // 5. Claim Daily Bonus
-    async claimDailyBonus(multiplier = 1, fixed_reward = null) {
+    async claimDailyBonus(multiplier = 1) {
         return await fetchJson('/api/bonus/claim', {
             method: 'POST',
-            body: JSON.stringify({ multiplier, fixed_reward })
+            body: JSON.stringify({ multiplier })
         });
     },
 
@@ -145,19 +145,5 @@ window.api = {
             method: 'POST',
             body: JSON.stringify({ coins, description })
         });
-    },
-
-    // 11. Request Withdrawal
-    async requestWithdrawal(upiId, amount) {
-        return await fetchJson('/api/withdraw/request', {
-            method: 'POST',
-            body: JSON.stringify({ upiId, amount })
-        });
-    },
-
-    // 12. Get Withdrawal Status
-    async getWithdrawalStatus() {
-        return await fetchJson('/api/withdraw/status');
     }
 };
-

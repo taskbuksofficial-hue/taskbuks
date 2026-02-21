@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
+exports.updateProfile = exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
 const db = __importStar(require("../config/db"));
 const crypto_1 = __importDefault(require("crypto"));
 const getProfile = async (req, reply) => {
@@ -56,6 +56,7 @@ const getProfile = async (req, reply) => {
         return reply.send({
             ...user,
             balance: parseFloat(wallet.balance) || 0,
+            total_coins: parseInt(wallet.total_coins || '0'),
             lifetimeEarnings,
             isEmailVerified: true
         });
@@ -111,11 +112,41 @@ const getOffers = async (req, reply) => {
 };
 exports.getOffers = getOffers;
 const getStreak = async (req, reply) => {
-    // Basic streak mock
-    return reply.send({
-        streak: 3,
-        claimedToday: false
-    });
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+        const result = await db.query('SELECT last_claim_date, current_streak FROM users WHERE id = $1', [userId]);
+        const user = result.rows[0];
+        const now = new Date();
+        const lastClaim = user.last_claim_date ? new Date(user.last_claim_date) : null;
+        let claimedToday = false;
+        let streak = user.current_streak || 0;
+        if (lastClaim) {
+            const isToday = now.toDateString() === lastClaim.toDateString();
+            if (isToday) {
+                claimedToday = true;
+            }
+            else {
+                // Check if streak is broken (more than 1 day gap)
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const isYesterday = yesterday.toDateString() === lastClaim.toDateString();
+                if (!isYesterday) {
+                    streak = 0; // Reset streak if they missed a day
+                }
+            }
+        }
+        return reply.send({
+            streak: streak,
+            claimedToday: claimedToday,
+            nextReward: 100 + (streak * 10)
+        });
+    }
+    catch (error) {
+        console.error("getStreak error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
 };
 exports.getStreak = getStreak;
 const startTask = async (req, reply) => {
@@ -132,13 +163,54 @@ const startTask = async (req, reply) => {
 exports.startTask = startTask;
 const claimBonus = async (req, reply) => {
     const userId = req.userId;
-    const bonusAmount = 1.00;
+    const { multiplier } = req.body;
+    const rewardMultiplier = multiplier === 10 ? 10 : 1;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
     try {
-        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [bonusAmount, userId]);
+        const result = await db.query('SELECT last_claim_date, current_streak FROM users WHERE id = $1', [userId]);
+        const user = result.rows[0];
+        const now = new Date();
+        const lastClaim = user.last_claim_date ? new Date(user.last_claim_date) : null;
+        if (lastClaim && now.toDateString() === lastClaim.toDateString()) {
+            return reply.status(400).send({ error: 'Already claimed today' });
+        }
+        let newStreak = 1;
+        if (lastClaim) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (yesterday.toDateString() === lastClaim.toDateString()) {
+                newStreak = (user.current_streak || 0) + 1;
+            }
+        }
+        const baseBonusCoins = 100 + (newStreak - 1) * 10;
+        const bonusCoins = baseBonusCoins * rewardMultiplier;
+        const bonusRupees = bonusCoins / 1000;
+        // 1. Update User Streak
+        await db.query('UPDATE users SET current_streak = $1, last_claim_date = NOW() WHERE id = $2', [newStreak, userId]);
+        // 2. Credit Wallet
+        await db.query(`UPDATE wallets SET 
+                balance = balance + $1, 
+                total_earned = total_earned + $1,
+                total_coins = COALESCE(total_coins, 0) + $2,
+                updated_at = NOW() 
+             WHERE user_id = $3`, [bonusRupees, bonusCoins, userId]);
+        // 3. Log Transaction
+        const description = rewardMultiplier === 10
+            ? `Daily Bonus 10X (Day ${newStreak})`
+            : `Daily Bonus (Day ${newStreak})`;
+        await db.query(`INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
+             VALUES ($1, $2, $3, $4, 'BONUS', 'COMPLETED', NOW())`, [userId, bonusRupees, bonusCoins, description]);
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+        return reply.send({
+            success: true,
+            newBalance: walletRes.rows[0].balance,
+            streak: newStreak,
+            reward: bonusCoins
+        });
     }
     catch (error) {
+        console.error("claimBonus error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });
     }
 };
@@ -347,3 +419,22 @@ const handleRapidReachPostback = async (req, reply) => {
     }
 };
 exports.handleRapidReachPostback = handleRapidReachPostback;
+const updateProfile = async (req, reply) => {
+    const userId = req.userId;
+    const { full_name, phone_number } = req.body;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+        await db.query('UPDATE users SET full_name = COALESCE($1, full_name), phone_number = COALESCE($2, phone_number) WHERE id = $3', [full_name, phone_number, userId]);
+        // Fetch updated profile
+        const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+        delete user.password_hash; // Safety
+        return reply.send({ success: true, user });
+    }
+    catch (error) {
+        console.error("updateProfile error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.updateProfile = updateProfile;
