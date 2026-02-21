@@ -1,5 +1,5 @@
 
-const API_URL = location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://task-buks-backend.vercel.app'; // Update if needed
+const API_URL = location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://task-buks-backend.vercel.app';
 const ADMIN_KEY_STORAGE = 'taskbuks_admin_key';
 
 let currentKey = localStorage.getItem(ADMIN_KEY_STORAGE);
@@ -15,7 +15,6 @@ function adminLogin() {
     const key = document.getElementById('admin-key').value;
     if (!key) return;
 
-    // Optimistic check (real check happens on API call)
     localStorage.setItem(ADMIN_KEY_STORAGE, key);
     currentKey = key;
     showDashboard();
@@ -42,14 +41,14 @@ async function fetchAdmin(endpoint, options = {}) {
     try {
         const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
         if (res.status === 403) {
-            logout(); // Invalid key
+            logout();
             alert("Invalid or expired Admin Key");
             return null;
         }
         return await res.json();
     } catch (e) {
         console.error("Admin API Error:", e);
-        document.getElementById('connection-status').innerHTML = '<span class="text-red-500">Connection Error</span>';
+        document.getElementById('connection-status').innerHTML = '<span class="text-red-500">● Disconnected</span>';
         return null;
     }
 }
@@ -61,12 +60,14 @@ async function refreshData() {
         document.getElementById('stat-tasks').innerText = stats.totalTasks;
         document.getElementById('stat-payouts').innerText = '₹' + stats.totalPayouts.toFixed(2);
         document.getElementById('stat-active').innerText = stats.activeUsers;
+        document.getElementById('stat-pending-count').innerText = stats.pendingWithdrawals || 0;
+        document.getElementById('stat-pending-amount').innerText = '₹' + (stats.pendingAmount || 0).toFixed(2);
     }
 
-    // Load Users by default
     loadUsers();
 }
 
+// --- USERS ---
 async function loadUsers() {
     const users = await fetchAdmin('/admin/users');
     if (!users) return;
@@ -98,7 +99,7 @@ async function loadUsers() {
             <td class="px-6 py-4 text-right">
                 <button onclick="toggleBan('${u.id}', ${!u.is_active})" 
                     class="text-xs font-bold px-3 py-1.5 rounded-lg border ${u.is_active ? 'border-red-200 text-red-500 hover:bg-red-50' : 'border-emerald-200 text-emerald-500 hover:bg-emerald-50'} transition-colors">
-                    ${u.is_active ? 'Ban User' : 'Unban'}
+                    ${u.is_active ? 'Ban' : 'Unban'}
                 </button>
             </td>
         `;
@@ -114,27 +115,12 @@ async function toggleBan(userId, isActive) {
         body: JSON.stringify({ userId, isActive })
     });
 
-    if (res && res.success) {
-        loadUsers(); // Refresh
-    }
+    if (res && res.success) loadUsers();
 }
 
-// Tasks Logic
-function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById(`view-${tab}`).classList.remove('hidden');
-
-    document.getElementById('tab-users').className = tab === 'users' ? 'pb-2 px-4 text-sm font-bold border-b-2 border-blue-500 text-blue-600 transition-colors' : 'pb-2 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors';
-    document.getElementById('tab-tasks').className = tab === 'tasks' ? 'pb-2 px-4 text-sm font-bold border-b-2 border-indigo-500 text-indigo-600 transition-colors' : 'pb-2 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors';
-
-    if (tab === 'tasks') {
-        loadTasks(); // Fetch tasks when tab switched might be better, or just rely on global data if stored
-    }
-}
-
+// --- TASKS ---
 async function loadTasks() {
-    // Reuse the public API for getting tasks, but render differently
-    const res = await fetch(`${API_URL}/api/offers`); // This is public
+    const res = await fetch(`${API_URL}/api/offers`);
     const tasks = await res.json();
 
     const grid = document.getElementById('tasks-grid');
@@ -157,14 +143,21 @@ async function loadTasks() {
             <p class="text-xs text-slate-500 line-clamp-2 mb-4 h-8">${t.description}</p>
             <div class="flex items-center justify-between">
                 <span class="text-sm font-black text-slate-800">🪙 ${t.reward}</span>
-                <a href="${t.action_url || '#'}" target="_blank" class="text-[10px] font-bold text-blue-500 hover:underline">Test Link ↗</a>
             </div>
         `;
         grid.appendChild(card);
     });
 }
 
-// Modal Logic
+async function deleteTask(taskId) {
+    if (!confirm('Delete this task?')) return;
+    const res = await fetchAdmin('/admin/tasks/delete', {
+        method: 'POST',
+        body: JSON.stringify({ taskId })
+    });
+    if (res && res.success) loadTasks();
+}
+
 function openAddTaskModal() {
     document.getElementById('task-modal').classList.remove('hidden');
     document.getElementById('task-modal').classList.add('flex');
@@ -187,9 +180,135 @@ async function handleCreateTask(e) {
     if (res && res.success) {
         closeTaskModal();
         e.target.reset();
-        loadTasks(); // Refresh list
-        alert("Task created successfully!");
+        loadTasks();
+        alert("Task created!");
     } else {
         alert("Failed to create task");
     }
+}
+
+// --- WITHDRAWALS ---
+async function loadWithdrawals() {
+    const withdrawals = await fetchAdmin('/admin/withdrawals');
+    if (!withdrawals) return;
+
+    const tbody = document.getElementById('withdrawals-table-body');
+    const emptyState = document.getElementById('withdrawals-empty');
+    tbody.innerHTML = '';
+
+    if (withdrawals.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    withdrawals.forEach(w => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0';
+
+        const statusColors = {
+            'PENDING': 'bg-amber-100 text-amber-700',
+            'COMPLETED': 'bg-emerald-100 text-emerald-600',
+            'FAILED': 'bg-red-100 text-red-600'
+        };
+
+        const date = new Date(w.created_at).toLocaleDateString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        let actions = '';
+        if (w.status === 'PENDING') {
+            actions = `
+                <button onclick="approveWithdrawal('${w.id}')" 
+                    class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors mr-1">
+                    ✓ Paid
+                </button>
+                <button onclick="rejectWithdrawal('${w.id}')" 
+                    class="text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+                    ✗ Reject
+                </button>
+            `;
+        } else {
+            const processedDate = w.processed_at ? new Date(w.processed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
+            actions = `<span class="text-xs text-slate-400">${processedDate}</span>`;
+            if (w.admin_notes) {
+                actions += `<span class="text-xs text-slate-300 block mt-1">${w.admin_notes}</span>`;
+            }
+        }
+
+        tr.innerHTML = `
+            <td class="px-5 py-4">
+                <div class="font-bold text-sm text-slate-700">${w.full_name || 'Unknown'}</div>
+                <div class="text-xs text-slate-400">${w.email}</div>
+            </td>
+            <td class="px-5 py-4">
+                <span class="font-mono text-sm font-bold text-blue-600">${w.upi_id || 'N/A'}</span>
+            </td>
+            <td class="px-5 py-4 font-mono text-sm font-bold text-slate-800">₹${parseFloat(w.amount).toFixed(2)}</td>
+            <td class="px-5 py-4">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${statusColors[w.status] || 'bg-slate-100 text-slate-500'}">
+                    ${w.status}
+                </span>
+            </td>
+            <td class="px-5 py-4 text-xs text-slate-400">${date}</td>
+            <td class="px-5 py-4 text-right">${actions}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function approveWithdrawal(transactionId) {
+    if (!confirm('Mark this withdrawal as PAID? Make sure you have sent the UPI payment to the user.')) return;
+
+    const res = await fetchAdmin('/admin/withdrawals/update', {
+        method: 'POST',
+        body: JSON.stringify({ transactionId, status: 'COMPLETED', adminNotes: 'Payment sent via UPI' })
+    });
+
+    if (res && res.success) {
+        alert(res.message);
+        loadWithdrawals();
+        refreshData(); // Update stats
+    }
+}
+
+async function rejectWithdrawal(transactionId) {
+    const notes = prompt('Reason for rejection (optional):');
+    if (notes === null) return; // User cancelled
+
+    const res = await fetchAdmin('/admin/withdrawals/update', {
+        method: 'POST',
+        body: JSON.stringify({ transactionId, status: 'FAILED', adminNotes: notes || 'Rejected by admin' })
+    });
+
+    if (res && res.success) {
+        alert(res.message);
+        loadWithdrawals();
+        refreshData();
+    }
+}
+
+// --- TAB SWITCHING ---
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`view-${tab}`).classList.remove('hidden');
+
+    const tabConfig = {
+        users: { color: 'blue' },
+        tasks: { color: 'indigo' },
+        withdrawals: { color: 'amber' }
+    };
+
+    ['users', 'tasks', 'withdrawals'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+            btn.className = `pb-3 px-5 text-sm font-bold border-b-2 border-${tabConfig[t].color}-500 text-${tabConfig[t].color}-600 transition-colors`;
+        } else {
+            btn.className = 'pb-3 px-5 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors';
+        }
+    });
+
+    if (tab === 'tasks') loadTasks();
+    if (tab === 'withdrawals') loadWithdrawals();
 }

@@ -4,65 +4,12 @@
         {
             "src": "backend/src/app.ts",
             "use": "@vercel/node"
-        },
-        {
-            "src": "index.html",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "app.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "api.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "store.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "controller.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "app-ads.txt",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "ads.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "md5.js",
-            "use": "@vercel/static"
         }
     ],
     "routes": [
         {
-            "src": "/app-ads.txt",
-            "dest": "/app-ads.txt"
-        },
-        {
-            "src": "/api/(.*)",
-            "dest": "backend/src/app.ts",
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization"
-            }
-        },
-        {
-            "src": "/auth/(.*)",
-            "dest": "backend/src/app.ts"
-        },
-        {
-            "src": "/(.*).(js|css|png|jpg|svg|json|webp|txt)",
-            "dest": "/$1.$2"
-        },
-        {
             "src": "/(.*)",
-            "dest": "/index.html"
+            "dest": "/backend/src/app.ts"
         }
     ]
 }

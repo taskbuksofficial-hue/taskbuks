@@ -19,7 +19,7 @@ server.register(cors, {
 // Serve Admin Panel
 server.register(fastifyStatic, {
     root: path.join(__dirname, '../public'),
-    prefix: '/admin/', // access via /admin/ (simplified)
+    prefix: '/', // Serve at root
 });
 
 // Auth Middleware
@@ -39,7 +39,7 @@ const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 
 import { register, login } from './controllers/authController';
-import { getProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback, addCoins } from './controllers/appController';
+import { getProfile, updateProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback, addCoins, requestWithdrawal, getWithdrawalStatus } from './controllers/appController';
 
 // Auth Routes (Custom)
 server.post('/auth/register', register);
@@ -55,6 +55,7 @@ server.get('/auth/login', async (req, reply) => {
 
 // App Routes (Phase 3) - Secured with preHandler
 server.get('/api/profile', { preHandler: [authenticate] }, getProfile);
+server.post('/api/profile', { preHandler: [authenticate] }, updateProfile); // Update Profile
 server.get('/api/offers', getOffers); // Offers can be public?
 server.get('/api/streak', { preHandler: [authenticate] }, getStreak);
 server.post('/api/task/start', { preHandler: [authenticate] }, startTask);
@@ -74,14 +75,20 @@ server.get('/api/surveys', { preHandler: [authenticate] }, getCPXSurveys);
 // Transactions (Protected)
 server.get('/api/transactions', { preHandler: [authenticate] }, getTransactions);
 
+// Withdrawal Routes (Protected)
+server.post('/api/withdraw/request', { preHandler: [authenticate] }, requestWithdrawal);
+server.get('/api/withdraw/status', { preHandler: [authenticate] }, getWithdrawalStatus);
+
 // --- ADMIN ROUTES (Protected by x-admin-key) ---
-import { getAdminStats, getAdminUsers, toggleUserBan, createAdminTask, deleteAdminTask } from './controllers/adminController';
+import { getAdminStats, getAdminUsers, toggleUserBan, createAdminTask, deleteAdminTask, getAdminWithdrawals, updateWithdrawalStatus } from './controllers/adminController';
 
 server.get('/admin/stats', getAdminStats);
 server.get('/admin/users', getAdminUsers);
 server.post('/admin/users/ban', toggleUserBan);
 server.post('/admin/tasks/create', createAdminTask);
 server.post('/admin/tasks/delete', deleteAdminTask);
+server.get('/admin/withdrawals', getAdminWithdrawals);
+server.post('/admin/withdrawals/update', updateWithdrawalStatus);
 
 // Export server for Vercel
 export default async (req: any, res: any) => {

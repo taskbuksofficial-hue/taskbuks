@@ -1,237 +1,1761 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskBuks Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <title>Task Buks</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22C55E", // Vibrant green from logo
+                        secondary: "#EAB308", // Gold from logo
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                },
+            },
+        };
+    </script>
+
     <style>
-        .page-section {
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        #app-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            /* pure white for clean look */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+        }
+
+        .dark #app-loading-overlay {
+            background: #000000;
+            /* true black for OLED */
+        }
+
+        .animate-loading {
+            animation: loading 2s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(300%);
+            }
+        }
+
+        header {
+            padding-top: env(safe-area-inset-top);
+            min-height: calc(4.5rem + env(safe-area-inset-top));
+            /* Taller header */
+            display: flex;
+            align-items: flex-end;
+            /* Align content to bottom */
+            padding-bottom: 12px;
+            /* Space from bottom */
+        }
+
+        header+.h-12 {
+            display: none;
+            /* remove the spacer div if we use header padding */
+        }
+
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-header {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .gradient-banner {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+        }
+
+        .gold-glow {
+            box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
 
-        .page-section.active {
-            display: block;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* Smooth transitions for section switching */
+        .page-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-breathing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0px);
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.85;
+                filter: blur(0.5px);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0px);
+            }
+        }
+
+        .animate-pulse-breathing {
+            animation: pulse-breathing 3s ease-in-out infinite;
+        }
+
+        #app-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            /* pure white for clean look */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+        }
+
+        .dark #app-loading-overlay {
+            background: #000000;
+            /* true black for OLED */
+        }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Games Grid Styles — Apple-quality */
+        .games-header-gradient {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            position: relative;
+        }
+
+        .games-header-gradient::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .game-card-apple {
+            position: relative;
+            border-radius: 20px;
+            padding: 16px 14px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.28s ease;
+            overflow: hidden;
+        }
+
+        .dark .game-card-apple {
+            background: rgba(30, 30, 40, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .game-card-apple:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .game-card-apple .gc-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .game-card-apple .gc-coin {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        .game-card-apple .gc-play {
+            width: 100%;
+            padding: 8px 0;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card-apple .gc-play::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .game-card-apple .gc-play:active {
+            transform: scale(0.97);
+        }
+
+        @keyframes floatIcon {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(12deg);
+            }
+
+            50% {
+                transform: translateY(-6px) rotate(15deg);
+            }
         }
     </style>
 </head>
 
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300 min-h-screen pb-24">
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-section" class="flex flex-col items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-slate-100">
-            <span class="material-icons-round text-6xl text-blue-500 mb-4">admin_panel_settings</span>
-            <h1 class="text-2xl font-bold mb-2">Admin Access</h1>
-            <p class="text-slate-500 text-sm mb-6">Enter your secure key to continue</p>
-
-            <input type="password" id="admin-key" placeholder="Enter Admin Key"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 transition-all">
-
-            <button onclick="adminLogin()"
-                class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
-                Unlock Dashboard
-            </button>
-            <p id="login-error" class="text-red-500 text-xs mt-3 hidden">Invalid Access Key</p>
+    <!-- Apple-style Loading Overlay -->
+    <div id="app-loading-overlay">
+        <div class="relative flex flex-col items-center">
+            <img src="logo.png" class="w-24 h-24 object-contain animate-pulse-breathing mb-4" alt="TaskBuks">
+            <div class="h-1 w-32 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary animate-loading" style="width: 30%"></div>
+            </div>
+            <div id="loading-status" class="mt-4 text-xs text-slate-400 font-medium">Initializing...</div>
         </div>
     </div>
 
-    <!-- DASHBOARD SCREEN -->
-    <div id="dashboard-section" class="hidden min-h-screen flex flex-col">
-        <!-- Header -->
-        <header
-            class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-            <div class="flex items-center gap-3">
+    <!-- Header -->
+    <div id="app-header-spacer" class="hidden h-24 w-full"></div> <!-- Increased spacer -->
+    <header id="app-header"
+        class="hidden fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-2 mb-1"> <!-- Added bottom margin for alignment -->
+            <img src="logo.png" alt="TaskBuks" class="h-9 w-auto hidden" id="app-logo"
+                onerror="this.classList.add('hidden'); document.getElementById('brand-text').classList.remove('hidden')">
+            <div id="brand-text" class="flex items-center gap-1">
+                <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Task<span
+                        class="text-primary">Buks</span></span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 mb-1"> <!-- Added margin -->
+            <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full cursor-pointer nav-item hover:scale-105 transition-transform"
+                data-target="wallet"
+                style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(34,197,94,0.08)); border: 1px solid rgba(16,185,129,0.15);">
+                <span class="material-icons-round text-base" style="color:#10b981;">monetization_on</span>
+                <span class="text-sm font-bold text-slate-800 dark:text-white user-balance">0</span>
+            </div>
+            <button id="notification-bell-btn"
+                class="w-10 h-10 rounded-full flex items-center justify-center relative text-slate-600 dark:text-gray-300 hover:scale-105 transition-transform"
+                style="background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04);"
+                onclick="document.getElementById('notification-panel').classList.toggle('hidden');">
+                <span class="material-icons-round" style="font-size:22px;">notifications</span>
+                <span id="notif-badge"
+                    class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-800"
+                    style="background:#ef4444;"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notification Panel -->
+    <div id="notification-panel"
+        class="hidden fixed top-16 right-3 left-3 z-[60] max-h-[70vh] overflow-y-auto rounded-2xl"
+        style="background: rgba(255,255,255,0.97); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.5);">
+        <div class="p-5 pb-3 flex items-center justify-between border-b" style="border-color: rgba(0,0,0,0.06);">
+            <h3 class="text-[17px] font-bold text-slate-900">Notifications</h3>
+            <button onclick="document.getElementById('notification-panel').classList.add('hidden');"
+                class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(0,0,0,0.04);">
+                <span class="material-icons-round text-slate-400" style="font-size:18px;">close</span>
+            </button>
+        </div>
+        <div id="notification-list" class="p-4 space-y-2">
+            <!-- Welcome Notification -->
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background:rgba(99,102,241,0.05);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style="background: linear-gradient(135deg, #6366f1, #818cf8);">
+                    <span class="material-icons-round text-white" style="font-size:18px;">celebration</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-[13px] text-slate-800">Welcome to TaskBuks!</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Complete tasks, play games & earn real money. Start
+                        now!</p>
+                    <p class="text-[10px] text-slate-300 mt-1">Just now</p>
+                </div>
+            </div>
+            <!-- Daily Bonus Reminder -->
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background:rgba(234,179,8,0.05);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style="background: linear-gradient(135deg, #eab308, #facc15);">
+                    <span class="material-icons-round text-white" style="font-size:18px;">redeem</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-[13px] text-slate-800">Daily Bonus Available!</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Claim your daily bonus to keep your streak alive.</p>
+                    <p class="text-[10px] text-slate-300 mt-1">Today</p>
+                </div>
+            </div>
+            <!-- Survey Available -->
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background:rgba(168,85,247,0.05);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style="background: linear-gradient(135deg, #a855f7, #c084fc);">
+                    <span class="material-icons-round text-white" style="font-size:18px;">poll</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-[13px] text-slate-800">New Surveys Available</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Earn up to ₹200 by completing new surveys.</p>
+                    <p class="text-[10px] text-slate-300 mt-1">Today</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="px-5 pt-6 pb-24">
+
+        <!-- Skeleton Loader (Shown when loading & no cache) -->
+        <div id="dashboard-skeleton" class="hidden space-y-6 animate-pulse">
+            <!-- Balance Card Skeleton -->
+            <div class="h-48 rounded-[32px] bg-gray-200 dark:bg-gray-800 w-full mb-6"></div>
+
+            <!-- Quick Actions Skeleton -->
+            <div class="flex justify-between gap-4">
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+            </div>
+
+            <!-- Task List Skeleton -->
+            <div class="space-y-4 pt-4">
+                <div class="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded mx-auto mb-4"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+                <div class="h-24 w-full bg-gray-200 dark:bg-gray-800 rounded-[24px]"></div>
+            </div>
+        </div>
+
+        <!-- LOGIN SECTION -->
+        <div id="login"
+            class="page-section hidden flex flex-col items-center py-12 min-h-screen space-y-6 overflow-y-auto">
+            <div class="text-center space-y-2 mb-4">
+                <h1 class="text-4xl font-black text-slate-900 dark:text-white">Task<span
+                        class="text-primary">Buks</span></h1>
+                <p class="text-slate-500 font-medium">Earn money by completing simple tasks</p>
+            </div>
+
+            <!-- Main Menu (Sign In / Sign Up Selection) -->
+            <div id="auth-menu" class="w-full max-w-xs space-y-4">
+                <button onclick="showAuthForm('signin')"
+                    class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 hover:scale-105 transition-transform">
+                    <span class="material-icons-round">login</span>
+                    Sign In to Start
+                </button>
+                <button onclick="showAuthForm('signup')"
+                    class="w-full bg-white dark:bg-gray-800 text-slate-900 dark:text-white border border-gray-200 dark:border-gray-700 font-bold py-4 rounded-2xl shadow-sm flex items-center justify-center gap-3 hover:scale-105 transition-transform">
+                    <span class="material-icons-round">person_add</span>
+                    New User? Register
+                </button>
+            </div>
+
+            <!-- Sign In Form -->
+            <div id="signin-form" class="hidden w-full max-w-xs space-y-4">
                 <div
-                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
-                    TB</div>
-                <h1 class="text-xl font-bold text-slate-800">TaskBuks <span class="text-blue-500">Admin</span></h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <span id="connection-status" class="text-xs font-medium text-emerald-500 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connected
-                </span>
-                <button onclick="logout()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
-                    <span class="material-icons-round">logout</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-8">
-
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Stat Card 1 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <span class="material-icons-round">group</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Total Users</p>
-                        <h3 id="stat-users" class="text-2xl font-black text-slate-800">...</h3>
-                    </div>
-                </div>
-                <!-- Stat Card 2 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                        <span class="material-icons-round">task_alt</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Active Tasks</p>
-                        <h3 id="stat-tasks" class="text-2xl font-black text-slate-800">...</h3>
-                    </div>
-                </div>
-                <!-- Stat Card 3 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                        <span class="material-icons-round">payments</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Total Payouts</p>
-                        <h3 id="stat-payouts" class="text-2xl font-black text-slate-800">...</h3>
-                    </div>
-                </div>
-                <!-- Stat Card 4 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                        <span class="material-icons-round">local_fire_department</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Active Today</p>
-                        <h3 id="stat-active" class="text-2xl font-black text-slate-800">...</h3>
-                    </div>
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Welcome Back</h3>
+                    <form onsubmit="handleLogin(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="login-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="login-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-primary text-white font-bold py-3 rounded-xl mt-2 shadow-lg shadow-primary/20">
+                            Sign In
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
                 </div>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex gap-4 border-b border-slate-200">
-                <button onclick="switchTab('users')" id="tab-users"
-                    class="pb-2 px-4 text-sm font-bold border-b-2 border-blue-500 text-blue-600 transition-colors">
-                    Manage Users
-                </button>
-                <button onclick="switchTab('tasks')" id="tab-tasks"
-                    class="pb-2 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors">
-                    Manage Tasks
-                </button>
-            </div>
-
-            <!-- Tab Content: Users -->
-            <div id="view-users" class="tab-content block animate-fade-in">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                        <h3 class="font-bold text-slate-700">Recent Users</h3>
-                        <button onclick="refreshData()"
-                            class="text-xs font-bold text-blue-600 hover:underline">Refresh</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-xs">
-                                <tr>
-                                    <th class="px-6 py-4">User</th>
-                                    <th class="px-6 py-4">Balance</th>
-                                    <th class="px-6 py-4">Status</th>
-                                    <th class="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-table-body" class="divide-y divide-slate-100">
-                                <!-- Filled by JS -->
-                                <tr>
-                                    <td colspan="4" class="px-6 py-8 text-center text-slate-400">Loading users...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- Sign Up Form -->
+            <div id="signup-form" class="hidden w-full max-w-xs space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Create Account</h3>
+                    <form onsubmit="handleRegister(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Full Name</label>
+                            <input type="text" id="reg-name" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="reg-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Phone Number</label>
+                            <input type="tel" id="reg-phone" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-primary mb-1 flex items-center gap-1">
+                                <span class="material-icons-round text-sm">confirmation_number</span>
+                                Referral Code (Optional)
+                            </label>
+                            <input type="text" id="reg-referral"
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm"
+                                placeholder="Enter coupon/referral code">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="reg-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-secondary text-slate-900 font-bold py-3 rounded-xl mt-2 shadow-lg shadow-secondary/20">
+                            Create Account
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
                 </div>
             </div>
 
-            <!-- Tab Content: Tasks -->
-            <div id="view-tasks" class="tab-content hidden animate-fade-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-700 text-lg">Active Campaigns</h3>
-                    <button onclick="openAddTaskModal()"
-                        class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-transform active:scale-95">
-                        <span class="material-icons-round text-sm">add</span> New Task
-                    </button>
-                </div>
-
-                <div id="tasks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Filled by JS -->
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div id="task-modal"
-        class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
-            <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <span class="material-icons-round">close</span>
-            </button>
-            <h2 class="text-xl font-bold mb-6">Create New Task</h2>
-
-            <form id="create-task-form" onsubmit="handleCreateTask(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
-                    <input type="text" name="title" required
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
-                    <textarea name="description" rows="2"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Reward (Coins)</label>
-                        <input type="number" name="reward" required
-                            class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-                        <select name="category"
-                            class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                            <option value="App">App Install</option>
-                            <option value="Survey">Survey</option>
-                            <option value="Video">Video</option>
-                            <option value="Games">Game</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Action URL</label>
-                    <input type="url" name="url" required
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        placeholder="https://...">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon URL</label>
-                    <input type="url" name="icon"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        placeholder="https://...">
-                </div>
-
-                <div class="pt-4">
-                    <button type="submit"
-                        class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20">
-                        Publish Task
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
 
-    <script src="admin.js"></script>
+        <!-- HOME SECTION -->
+        <div id="home" class="page-section hidden space-y-8">
+            <!-- Carousel Section -->
+            <section class="relative">
+                <div id="home-carousel"
+                    class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar rounded-[24px] ios-shadow">
+
+                    <!-- Slide 1: Refer & Earn -->
+                    <div
+                        class="min-w-full snap-center relative overflow-hidden gradient-banner p-6 text-white h-48 flex items-center">
+                        <div class="relative z-10 w-2/3">
+                            <h2 class="text-2xl font-extrabold leading-tight mb-1">Refer <span
+                                    class="text-secondary">&amp;</span> Earn</h2>
+                            <p class="text-xs opacity-90 mb-4 font-medium">Get 500 coins per friend who joins.</p>
+                            <button
+                                class="bg-secondary text-slate-900 font-bold px-5 py-2 rounded-full text-xs hover:scale-105 transition-transform nav-item"
+                                data-target="refer">
+                                Refer Now
+                            </button>
+                        </div>
+                        <div class="absolute right-[-10px] bottom-[-10px] w-40 h-40 opacity-90">
+                            <img alt="referral" class="w-full h-full object-contain"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsJqyd5E7tnIDG8bpBycQoy9Ph4dd7to2Xck_Dgsqk_v1-AIxKPXOLpH5MXV53yraYqyaHpjy47v44hGVIztS9ijwJQrjNhf8-TSx7bCkO1qxc0zJ4K4N9E-nqPu5q3XciJ96nENhcO3px7s1NdC0ojZLxSELyo2q4Z-GGJM7k0l19mz0jdcjARAQM_Rkslh6H9p9ebLp_3Rj_-2bRXD4CzYMjqXHTjXxQDGLGqSgv0fvlj4vSKm3VwSJ3I_srahODz20iftkzVLA" />
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: Watch & Earn -->
+                    <div class="min-w-full snap-center relative overflow-hidden bg-slate-900 h-48 flex items-center cursor-pointer"
+                        onclick="window.ads.showRewarded()">
+                        <img src="carousel_video_promo.png"
+                            class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Video Ads">
+                        <div class="relative z-10 p-6 text-white">
+                            <h2 class="text-2xl font-extrabold leading-tight mb-1">Watch <span
+                                    class="text-primary">&amp;</span> Earn</h2>
+                            <p class="text-xs opacity-90 mb-4 font-medium">Earn ₹10 per video watched!</p>
+                            <div class="bg-primary text-white font-bold px-5 py-2 rounded-full inline-block text-xs">
+                                Watch Now</div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Daily Bonus Reminder -->
+                    <div class="min-w-full snap-center relative overflow-hidden bg-gradient-to-br from-indigo-600 to-purple-700 h-48 flex items-center cursor-pointer"
+                        onclick="document.getElementById('daily-bonus-popup').classList.remove('hidden'); document.getElementById('daily-bonus-popup').classList.add('flex');">
+                        <div class="relative z-10 p-6 text-white w-2/3">
+                            <h2 class="text-2xl font-extrabold leading-tight mb-1">Daily Bonus</h2>
+                            <p class="text-xs opacity-90 mb-4 font-medium">Don't forget to claim your daily login
+                                reward.</p>
+                            <div
+                                class="bg-white/20 backdrop-blur-sm text-white border border-white/30 font-bold px-5 py-2 rounded-full inline-block text-xs">
+                                Claim Now</div>
+                        </div>
+                        <div class="absolute right-0 bottom-0 p-4">
+                            <span class="material-icons-round text-8xl text-white/20">redeem</span>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Slide 5: Sponsored Ad (Unity) -->
+                    <div class="min-w-full snap-center relative overflow-hidden bg-black h-48 flex items-center cursor-pointer"
+                        onclick="window.ads.showInterstitial()">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 opacity-90">
+                        </div>
+                        <div
+                            class="relative z-10 p-6 text-white w-full flex flex-col items-center justify-center text-center">
+                            <div class="bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded mb-2">
+                                ADVERTISEMENT</div>
+                            <h2 class="text-2xl font-extrabold leading-tight mb-1">Sponsored <span
+                                    class="text-yellow-400">Content</span></h2>
+                            <p class="text-xs opacity-70 mb-4 font-medium max-w-[200px]">Check out our partners and
+                                support the app.</p>
+                            <div
+                                class="bg-white text-black font-bold px-6 py-2 rounded-full inline-block text-xs hover:scale-105 transition-transform mb-4">
+                                Open Offer
+                            </div>
+                            <!-- Carousel Banner Ad Container -->
+                            <div id="ad-banner-carousel"
+                                class="w-full h-[50px] flex items-center justify-center bg-white/5 rounded-lg border border-white/10">
+                                <span class="text-[9px] text-white/30 uppercase tracking-widest font-bold">Banner
+                                    Ad</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dots Indicators -->
+                <div class="flex justify-center gap-2 mt-3">
+                    <div class="w-2 h-2 rounded-full bg-primary carousel-dot" data-index="0"></div>
+                    <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="1"></div>
+                    <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="2"></div>
+                    <div class="w-2 h-2 rounded-full bg-gray-300 carousel-dot" data-index="3"></div>
+                </div>
+            </section>
+
+            <!-- Partner Offers Removed -->
+
+            <!-- Daily Bonus Popup Modal -->
+            <div id="daily-bonus-popup" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div id="daily-bonus-section"
+                    class="bg-white dark:bg-gray-800 rounded-[28px] p-5 w-full max-w-sm relative shadow-2xl"
+                    style="animation: modalBounce 0.4s ease-out;">
+                    <button
+                        onclick="document.getElementById('daily-bonus-popup').classList.add('hidden'); document.getElementById('daily-bonus-popup').classList.remove('flex');"
+                        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center z-10">
+                        <span class="material-icons-round text-slate-500 text-lg">close</span>
+                    </button>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-icons-round text-amber-500">card_giftcard</span>
+                        <h3 class="font-bold text-base dark:text-white">Daily Bonus</h3>
+                        <span id="streak-badge"
+                            class="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-auto">🔥
+                            0 Day
+                            Streak</span>
+                    </div>
+
+                    <!-- 7-Day Streak Pills -->
+                    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar justify-center">
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="1">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                100</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="2">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                110</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="3">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                120</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="4">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                130</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="5">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                140</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="6">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                150</div>
+                            <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
+                        </div>
+                        <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="7">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
+                                200</div>
+                            <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 text-center mb-3">Claim your bonus daily to maintain the streak
+                        &
+                        earn extra bonus!</p>
+
+                    <div class="space-y-3">
+                        <button id="claim-bonus-btn-10x"
+                            class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                            onclick="window.claimDailyBonus10XUI()">
+                            <span class="material-icons-round text-amber-500">play_circle</span>
+                            Claim 10X Bonus (Watch Video)
+                        </button>
+
+                        <button id="claim-bonus-btn"
+                            class="w-full bg-gray-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
+                            onclick="window.claimDailyBonusUI()">
+                            Normal Claim
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bonus Reward Modal -->
+            <div id="bonus-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-6"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div class="bg-white dark:bg-gray-800 rounded-[28px] p-6 w-full max-w-sm text-center relative shadow-2xl"
+                    style="animation: modalBounce 0.4s ease-out;">
+                    <button
+                        onclick="document.getElementById('bonus-modal').classList.add('hidden'); document.getElementById('bonus-modal').classList.remove('flex');"
+                        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <span class="material-icons-round text-slate-500 text-lg">close</span>
+                    </button>
+
+                    <p class="text-sm font-bold text-slate-500 mb-3">You've Earned</p>
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <span class="text-3xl">🪙</span>
+                        <span id="bonus-earned-amount"
+                            class="text-4xl font-black text-slate-900 dark:text-white">1</span>
+                    </div>
+
+                    <div class="text-6xl mb-4">🎁</div>
+
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">Congratulations!</h3>
+                    <p class="text-sm text-slate-400 mb-4">You have successfully claimed<br>your daily reward.</p>
+
+                    <!-- Mini streak in modal -->
+                    <div id="modal-streak-pills" class="flex justify-center gap-1.5 mb-3">
+                        <!-- Filled by JS -->
+                    </div>
+                    <p class="text-[10px] text-slate-400">Claim your bonus daily to maintain the streak & earn extra
+                        bonus!</p>
+                </div>
+            </div>
+
+            <section class="grid grid-cols-4 gap-4">
+                <div class="flex flex-col items-center gap-2 cursor-pointer"
+                    onclick="document.getElementById('daily-bonus-popup').classList.remove('hidden'); document.getElementById('daily-bonus-popup').classList.add('flex');">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl text-primary">redeem</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Daily
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewardedSmart()">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl text-secondary">stars</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">10x
+                        Bonus</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer nav-item" data-target="surveys">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-3xl" style="color:#a855f7;">poll</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Take
+                        Survey</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="window.ads.showRewardedSmart()">
+                    <div
+                        class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl ios-shadow flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform">
+                        <svg viewBox="0 0 24 24" class="w-10 h-10 fill-red-600">
+                            <path
+                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.612 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                        </svg>
+                    </div>
+                    <span class="text-[11px] font-semibold text-center text-slate-500 dark:text-gray-400">Watch
+                        Video</span>
+                </div>
+            </section>
+
+
+            <!-- Games Grid Section — Apple Quality -->
+            <section id="games-section" class="space-y-5">
+                <div class="rounded-[28px] overflow-hidden"
+                    style="box-shadow: 0 2px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);">
+                    <!-- Premium Header -->
+                    <div class="games-header-gradient px-7 pt-8 pb-7 text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-[11px] font-semibold uppercase tracking-widest opacity-60 mb-1">Game Center
+                            </p>
+                            <h2 class="text-[26px] font-extrabold tracking-tight leading-tight">Play & Earn</h2>
+                            <p class="text-[13px] font-medium opacity-70 mt-1">Complete games to earn real coins</p>
+                        </div>
+                        <div class="absolute right-3 bottom-2 opacity-15"
+                            style="animation: floatIcon 4s ease-in-out infinite;">
+                            <span class="material-icons-round" style="font-size: 100px;">sports_esports</span>
+                        </div>
+                    </div>
+
+                    <!-- Games Grid -->
+                    <div class="p-4 pt-5" style="background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);">
+                        <div class="dark:hidden"></div>
+                        <div class="grid grid-cols-2 gap-3">
+
+                            <!-- Trivia Quiz -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #EEF2FF, #E0E7FF);">
+                                    🧠</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Trivia Quiz
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Test your knowledge</p>
+                                    <span class="gc-coin" style="color:#6366f1; background:rgba(99,102,241,0.08);">
+                                        🪙 5 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Trivia Quiz" data-reward="5"
+                                    style="background: linear-gradient(135deg, #6366f1, #818cf8); color: white; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Memory Game -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #FDF2F8, #FCE7F3);">
+                                    🃏</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Memory Game
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Match the pairs</p>
+                                    <span class="gc-coin" style="color:#ec4899; background:rgba(236,72,153,0.08);">
+                                        🪙 20 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Memory Game" data-reward="20"
+                                    style="background: linear-gradient(135deg, #ec4899, #f472b6); color: white; box-shadow: 0 4px 14px rgba(236,72,153,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Number Guess -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #ECFEFF, #CFFAFE);">
+                                    🔢</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Number Guess
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Guess the number</p>
+                                    <span class="gc-coin" style="color:#06b6d4; background:rgba(6,182,212,0.08);">
+                                        🪙 15 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Number Guess" data-reward="15"
+                                    style="background: linear-gradient(135deg, #06b6d4, #22d3ee); color: white; box-shadow: 0 4px 14px rgba(6,182,212,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Color Match -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #F0FDF4, #DCFCE7);">
+                                    🎨</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Color Match
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Match the colors</p>
+                                    <span class="gc-coin" style="color:#22c55e; background:rgba(34,197,94,0.08);">
+                                        🪙 12 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Color Match" data-reward="12"
+                                    style="background: linear-gradient(135deg, #22c55e, #4ade80); color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Coin Flip -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #FEFCE8, #FEF9C3);">
+                                    🪙</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Coin Flip
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Heads or tails</p>
+                                    <span class="gc-coin" style="color:#eab308; background:rgba(234,179,8,0.08);">
+                                        🪙 10 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Coin Flip" data-reward="10"
+                                    style="background: linear-gradient(135deg, #eab308, #facc15); color: white; box-shadow: 0 4px 14px rgba(234,179,8,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Dice Roll -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #FEF2F2, #FECACA);">
+                                    🎲</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Dice Roll
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Roll and win</p>
+                                    <span class="gc-coin" style="color:#ef4444; background:rgba(239,68,68,0.08);">
+                                        🪙 15 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Dice Roll" data-reward="15"
+                                    style="background: linear-gradient(135deg, #ef4444, #f87171); color: white; box-shadow: 0 4px 14px rgba(239,68,68,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Ludo -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #FAF5FF, #F3E8FF);">
+                                    🎯</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Ludo</h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Classic board game</p>
+                                    <span class="gc-coin" style="color:#a855f7; background:rgba(168,85,247,0.08);">
+                                        🪙 40 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Ludo" data-reward="40"
+                                    style="background: linear-gradient(135deg, #a855f7, #c084fc); color: white; box-shadow: 0 4px 14px rgba(168,85,247,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                            <!-- Snake & Ladders -->
+                            <div class="game-card-apple flex flex-col items-center text-center gap-3">
+                                <div class="gc-icon" style="background: linear-gradient(145deg, #ECFDF5, #D1FAE5);">
+                                    🐍</div>
+                                <div class="w-full">
+                                    <h4 class="font-bold text-[13px] text-slate-800 dark:text-white mb-0.5">Snake &
+                                        Ladders</h4>
+                                    <p class="text-[11px] text-slate-400 mb-2">Climb up, slide down</p>
+                                    <span class="gc-coin" style="color:#10b981; background:rgba(16,185,129,0.08);">
+                                        🪙 40 coins</span>
+                                </div>
+                                <button class="gc-play game-play-btn" data-game="Snake and Ladders" data-reward="40"
+                                    style="background: linear-gradient(135deg, #10b981, #34d399); color: white; box-shadow: 0 4px 14px rgba(16,185,129,0.3);">
+                                    Play Now
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- Dino Runner — Featured Game -->
+                        <div class="game-card-apple mt-3 flex items-center gap-4"
+                            style="background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04)); border: 1px solid rgba(59,130,246,0.1);">
+                            <div class="gc-icon shrink-0"
+                                style="background: linear-gradient(145deg, #DBEAFE, #BFDBFE);">
+                                🦖</div>
+                            <div class="flex-1 min-w-0 text-left">
+                                <h4 class="font-bold text-[13px] text-slate-800 dark:text-white">Dino Runner</h4>
+                                <p class="text-[11px] text-slate-400">Jump over obstacles</p>
+                            </div>
+                            <span class="gc-coin shrink-0" style="color:#3b82f6; background:rgba(59,130,246,0.08);">
+                                🪙 20</span>
+                            <button class="gc-play game-play-btn shrink-0" data-game="Dino Runner" data-reward="20"
+                                style="width:auto; padding:8px 20px; background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; box-shadow: 0 4px 14px rgba(59,130,246,0.3);">
+                                Play
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- LUDO GAME SECTION -->
+        <div id="game-ludo" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('Ludo')">arrow_back</button>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ludo</h2>
+                <span
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    40 coins</span>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-4 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-center mb-4">
+                    <canvas id="ludo-canvas" style="max-width:100%; border-radius:16px;"></canvas>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span id="ludo-dice" class="text-5xl cursor-default">⚀</span>
+                        <button onclick="window.miniGames.ludo.rollDice()"
+                            class="bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform">
+                            🎲 Roll Dice
+                        </button>
+                    </div>
+                    <button onclick="window.miniGames.ludo.restart()"
+                        class="bg-gray-100 dark:bg-gray-700 text-slate-500 dark:text-gray-300 font-bold px-4 py-3 rounded-xl text-xs">
+                        Restart
+                    </button>
+                </div>
+
+                <p id="ludo-status"
+                    class="text-xs text-slate-500 dark:text-gray-400 mt-3 text-center font-medium bg-gray-50 dark:bg-gray-900 rounded-xl py-2 px-3">
+                    Roll the dice to start!
+                </p>
+
+                <div class="flex items-center justify-center gap-6 mt-3">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-green-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">You</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">CPU</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner Ad Placeholder -->
+            <div id="ludo-banner-ad"
+                class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-3 text-center border border-gray-200 dark:border-gray-700">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
+                <div class="h-12 flex items-center justify-center">
+                    <span class="text-xs text-slate-300">Banner Ad Space</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SNAKE AND LADDERS GAME SECTION -->
+        <div id="game-snl" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('Snake and Ladders')">arrow_back</button>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Snake & Ladders</h2>
+                <span
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    40 coins</span>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-4 ios-shadow border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-center mb-4">
+                    <canvas id="snl-canvas" style="max-width:100%; border-radius:16px;"></canvas>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span id="snl-dice" class="text-5xl cursor-default">⚀</span>
+                        <button onclick="window.miniGames.snl.rollDice()"
+                            class="bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform">
+                            🎲 Roll Dice
+                        </button>
+                    </div>
+                    <button onclick="window.miniGames.snl.restart()"
+                        class="bg-gray-100 dark:bg-gray-700 text-slate-500 dark:text-gray-300 font-bold px-4 py-3 rounded-xl text-xs">
+                        Restart
+                    </button>
+                </div>
+
+                <p id="snl-status"
+                    class="text-xs text-slate-500 dark:text-gray-400 mt-3 text-center font-medium bg-gray-50 dark:bg-gray-900 rounded-xl py-2 px-3">
+                    Roll the dice to start!
+                </p>
+
+                <div class="flex items-center justify-center gap-6 mt-3">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-green-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">You</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div> <span
+                            class="text-[10px] font-bold text-slate-500">CPU</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner Ad Placeholder -->
+            <div id="snl-banner-ad"
+                class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-3 text-center border border-gray-200 dark:border-gray-700">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
+                <div class="h-12 flex items-center justify-center">
+                    <span class="text-xs text-slate-300">Banner Ad Space</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- GENERIC GAME CONTAINER -->
+        <div id="game-generic" class="page-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="window.miniGames.closeGame('generic')">arrow_back</button>
+                <h2 id="generic-game-title" class="text-xl font-bold text-slate-900 dark:text-white">Game</h2>
+                <span id="generic-game-badge"
+                    class="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full ml-auto">💰
+                    0</span>
+            </div>
+            <div id="generic-game-body"
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700 min-h-[400px]">
+                <!-- Dynamically populated by games.js -->
+            </div>
+
+            <!-- Banner Ad Placeholder -->
+            <div id="generic-banner-ad"
+                class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-3 text-center border border-gray-200 dark:border-gray-700">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
+                <div class="h-12 flex items-center justify-center">
+                    <span class="text-xs text-slate-300">Banner Ad Space</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SURVEYS SECTION -->
+        <div id="surveys" class="page-section hidden space-y-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Available Surveys</h2>
+
+            <div id="rapidoreach-container" class="min-h-[400px]">
+                <!-- Rapido Reach Iframe will be injected here -->
+                <div class="flex flex-col items-center justify-center py-10 text-center">
+                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-icons-round text-4xl text-primary animate-pulse">poll</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Loading Surveys...</h3>
+                    <p class="text-sm text-slate-400 dark:text-gray-500 max-w-[200px]">Connecting to Rapido Reach for
+                        high-paying surveys.</p>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- REFER SECTION — Apple Quality -->
+        <div id="refer" class="page-section hidden space-y-5">
+
+            <!-- Section Header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center"
+                        style="background:rgba(0,0,0,0.04);"
+                        onclick="document.querySelector('[data-target=home]').click()">
+                        <span class="material-icons-round text-slate-600"
+                            style="font-size:20px;">arrow_back_ios_new</span>
+                    </button>
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Invite
+                            Friends</p>
+                        <h2 class="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white">Refer &
+                            Earn</h2>
+                    </div>
+                </div>
+                <div class="w-11 h-11 rounded-full flex items-center justify-center"
+                    style="background:rgba(16,185,129,0.08);">
+                    <span class="material-icons-round" style="color:#10b981; font-size:24px;">people</span>
+                </div>
+            </div>
+
+            <!-- Hero Reward Banner -->
+            <div class="relative overflow-hidden rounded-[24px]"
+                style="background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05) inset;">
+                <!-- Ambient glow -->
+                <div class="absolute inset-0 pointer-events-none">
+                    <div class="absolute -right-12 -top-12 w-44 h-44 rounded-full"
+                        style="background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%);"></div>
+                    <div class="absolute -left-8 -bottom-8 w-36 h-36 rounded-full"
+                        style="background: radial-gradient(circle, rgba(234,179,8,0.15) 0%, transparent 70%);"></div>
+                </div>
+                <div class="relative z-10 p-6 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4"
+                        style="background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 8px 24px rgba(16,185,129,0.3);">
+                        <span class="material-icons-round text-white" style="font-size:32px;">card_giftcard</span>
+                    </div>
+                    <h3 class="text-[28px] font-black text-white tracking-tight leading-tight">Earn 500 Coins</h3>
+                    <p class="text-[13px] mt-1" style="color:rgba(255,255,255,0.5);">For every friend who joins &
+                        completes 2 offers</p>
+                    <div class="flex items-center justify-center gap-2 mt-3">
+                        <span class="text-[11px] font-bold px-3 py-1 rounded-full"
+                            style="background:rgba(16,185,129,0.15); color:#34d399;">You earn 500 🪙</span>
+                        <span class="text-white/30">+</span>
+                        <span class="text-[11px] font-bold px-3 py-1 rounded-full"
+                            style="background:rgba(234,179,8,0.15); color:#fbbf24;">They earn 500 🪙</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works — Steps -->
+            <div>
+                <h3 class="text-[13px] font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                    <span class="material-icons-round" style="font-size:16px; color:#6366f1;">auto_awesome</span>
+                    How It Works
+                </h3>
+                <div class="space-y-2.5">
+                    <!-- Step 1 -->
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">share</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">Share Your Link</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Send your invite link to friends</p>
+                        </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(59,130,246,0.08); color:#3b82f6;">1</span>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">task_alt</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">They Complete 2 Offers</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Your friend downloads & completes offers</p>
+                        </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(245,158,11,0.08); color:#f59e0b;">2</span>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="flex items-center gap-3.5 p-3.5 rounded-[18px]"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                            style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">currency_rupee</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[13px] text-slate-800">You Both Earn 500 Coins</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Credited instantly to your wallet</p>
+                        </div>
+                        <span class="text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style="background:rgba(16,185,129,0.08); color:#10b981;">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral Code Card -->
+            <div class="rounded-[22px] p-5 text-center"
+                style="background: linear-gradient(145deg, rgba(16,185,129,0.06), rgba(34,197,94,0.03)); border: 1px solid rgba(16,185,129,0.12); box-shadow: 0 2px 8px rgba(16,185,129,0.06);">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Your Referral Code</p>
+                <div class="flex items-center justify-center gap-3">
+                    <p id="referral-code" class="text-[28px] font-black tracking-[0.2em]" style="color:#10b981;">...</p>
+                    <button class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90"
+                        style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16,185,129,0.3);"
+                        onclick="copyToClipboard(document.getElementById('referral-code').innerText)">
+                        <span class="material-icons-round text-white" style="font-size:18px;">content_copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Share Section -->
+            <div class="text-center space-y-4">
+                <h3 class="text-[13px] font-bold text-slate-800 dark:text-white">Share Your Invite</h3>
+                <div class="flex justify-center gap-5">
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="window.open('https://wa.me/?text=Join%20TaskBuks%20and%20earn%20real%20money!%20Use%20my%20code:%20' + document.getElementById('referral-code').innerText)">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 6px 20px rgba(37,211,102,0.3);">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png"
+                                class="w-7 h-7 invert brightness-0">
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-semibold">WhatsApp</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="window.open('https://t.me/share/url?text=Join%20TaskBuks!%20Code:%20' + document.getElementById('referral-code').innerText)">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #0088cc, #229ED9); box-shadow: 0 6px 20px rgba(0,136,204,0.3);">
+                            <span class="material-icons-round text-white" style="font-size:24px;">send</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-semibold">Telegram</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1.5 group"
+                        onclick="navigator.share({title: 'TaskBuks', text: 'Join TaskBuks and earn real money! Use my code: ' + document.getElementById('referral-code').innerText, url: 'https://taskbuks.com'})">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90"
+                            style="background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 6px 20px rgba(99,102,241,0.3);">
+                            <span class="material-icons-round text-white" style="font-size:24px;">ios_share</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-semibold">More</span>
+                    </button>
+                </div>
+                <div class="flex items-center justify-center gap-1.5">
+                    <span class="material-icons-round" style="font-size:12px; color:#10b981;">verified</span>
+                    <p class="text-[10px] font-bold text-slate-300">Trusted by 9L+ users</p>
+                </div>
+            </div>
+
+            <!-- Your Referrals -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style="background:rgba(168,85,247,0.08);">
+                            <span class="material-icons-round" style="color:#a855f7; font-size:18px;">group</span>
+                        </div>
+                        <h3 class="font-bold text-[14px] text-slate-800">Your Referrals</h3>
+                    </div>
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                        style="color:#a855f7; background:rgba(168,85,247,0.08);">1 friend</span>
+                </div>
+                <div class="rounded-[18px] overflow-hidden"
+                    style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                                style="background: linear-gradient(135deg, #6366f1, #818cf8);">
+                                <span class="text-white font-bold text-[13px]">A</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-[13px] text-slate-800">Amit</h4>
+                                <p class="text-[11px] text-slate-400">Joined today</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                            style="background:rgba(16,185,129,0.08); color:#10b981;">+500 coins</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WALLET SECTION — Apple Quality -->
+        <div id="wallet" class="page-section hidden space-y-5">
+
+            <!-- Section Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Your Earnings
+                    </p>
+                    <h2 class="text-[26px] font-extrabold tracking-tight text-slate-900 dark:text-white">Wallet</h2>
+                </div>
+                <div class="w-11 h-11 rounded-full flex items-center justify-center"
+                    style="background:rgba(16,185,129,0.08);">
+                    <span class="material-icons-round"
+                        style="color:#10b981; font-size:24px;">account_balance_wallet</span>
+                </div>
+            </div>
+
+            <!-- Premium Balance Card -->
+            <div class="relative overflow-hidden rounded-[24px]"
+                style="background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05) inset;">
+                <!-- Ambient glow -->
+                <div class="absolute inset-0 pointer-events-none">
+                    <div class="absolute -right-16 -top-16 w-52 h-52 rounded-full"
+                        style="background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%);"></div>
+                    <div class="absolute -left-12 -bottom-12 w-40 h-40 rounded-full"
+                        style="background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);"></div>
+                    <div class="absolute right-1/3 top-1/2 w-32 h-32 rounded-full"
+                        style="background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 60%);"></div>
+                </div>
+                <!-- Card lines pattern -->
+                <div class="absolute inset-0 pointer-events-none opacity-[0.03]"
+                    style="background-image: repeating-linear-gradient(90deg, white 0px, white 1px, transparent 1px, transparent 60px);">
+                </div>
+
+                <div class="relative z-10 p-7">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <span class="material-icons-round text-white"
+                                style="font-size:18px;">account_balance_wallet</span>
+                        </div>
+                        <p class="text-slate-400 text-[11px] font-semibold tracking-widest uppercase">Available Balance
+                        </p>
+                    </div>
+                    <h3 class="text-[42px] font-black text-white tracking-tight leading-none user-balance">₹0.00</h3>
+
+                    <div class="flex items-center gap-0 mt-6 rounded-2xl overflow-hidden"
+                        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                        <div class="flex-1 py-3 px-4 text-center">
+                            <p class="text-[10px] font-semibold uppercase tracking-wider"
+                                style="color:rgba(255,255,255,0.35);">Lifetime</p>
+                            <p class="text-white font-bold text-[17px] mt-0.5 user-lifetime-earnings">₹0.00</p>
+                        </div>
+                        <div class="w-px h-10" style="background:rgba(255,255,255,0.06);"></div>
+                        <div class="flex-1 py-3 px-4 text-center">
+                            <p class="text-[10px] font-semibold uppercase tracking-wider"
+                                style="color:rgba(255,255,255,0.35);">Pending</p>
+                            <p class="text-white font-bold text-[17px] mt-0.5">₹0.00</p>
+                        </div>
+                        <div class="w-px h-10" style="background:rgba(255,255,255,0.06);"></div>
+                        <div class="flex-1 py-3 px-4 text-center">
+                            <p class="text-[10px] font-semibold uppercase tracking-wider"
+                                style="color:rgba(255,255,255,0.35);">Withdrawn</p>
+                            <p class="text-white font-bold text-[17px] mt-0.5">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdraw Progress Card -->
+            <div class="rounded-[22px] p-5 overflow-hidden"
+                style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style="background:rgba(16,185,129,0.08);">
+                            <span class="material-icons-round" style="color:#10b981; font-size:18px;">trending_up</span>
+                        </div>
+                        <h3 class="font-bold text-[14px] text-slate-800">Withdraw Progress</h3>
+                    </div>
+                    <span id="withdraw-progress-text" class="text-[12px] font-bold px-2.5 py-1 rounded-full"
+                        style="color:#10b981; background:rgba(16,185,129,0.08);">₹0 / ₹100</span>
+                </div>
+                <div class="w-full rounded-full h-2.5 overflow-hidden" style="background:rgba(0,0,0,0.04);">
+                    <div id="withdraw-progress-bar" class="h-full rounded-full transition-all duration-1000 ease-out"
+                        style="width: 0%; background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 0 12px rgba(16,185,129,0.4);">
+                    </div>
+                </div>
+                <button id="withdraw-btn"
+                    class="mt-4 w-full font-bold py-3.5 rounded-2xl text-[14px] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16,185,129,0.3);"
+                    disabled>
+                    <span class="material-icons-round" style="font-size:18px;">account_balance</span>
+                    Withdraw to UPI (Min ₹100)
+                </button>
+            </div>
+
+            <!-- Quick Earn Actions -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-[18px] p-4 cursor-pointer transition-transform active:scale-[0.97] nav-item"
+                    data-target="home" onclick="if(window.ads) window.ads.showRewarded()"
+                    style="background: linear-gradient(145deg, rgba(245,158,11,0.06), rgba(251,191,36,0.04)); border: 1px solid rgba(245,158,11,0.1);">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                        style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                        <span class="material-icons-round text-white" style="font-size:20px;">play_circle</span>
+                    </div>
+                    <h4 class="font-bold text-[13px] text-slate-800">Watch & Earn</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">₹10 per video</p>
+                </div>
+                <div class="rounded-[18px] p-4 cursor-pointer transition-transform active:scale-[0.97] nav-item"
+                    data-target="surveys"
+                    style="background: linear-gradient(145deg, rgba(168,85,247,0.06), rgba(139,92,246,0.04)); border: 1px solid rgba(168,85,247,0.1);">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                        style="background: linear-gradient(135deg, #a855f7, #c084fc);">
+                        <span class="material-icons-round text-white" style="font-size:20px;">poll</span>
+                    </div>
+                    <h4 class="font-bold text-[13px] text-slate-800">Surveys</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Earn up to ₹200</p>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style="background:rgba(99,102,241,0.08);">
+                            <span class="material-icons-round"
+                                style="color:#6366f1; font-size:18px;">receipt_long</span>
+                        </div>
+                        <h3 class="font-bold text-[14px] text-slate-800 dark:text-white">Recent Transactions</h3>
+                    </div>
+                </div>
+                <div id="transaction-list" class="rounded-[18px] p-4 space-y-1"
+                    style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);">
+                    <!-- Injected by app.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="profile" class="page-section hidden space-y-6">
+            <!-- Header -->
+            <div
+                class="flex items-center gap-4 text-white p-4 bg-primary rounded-[24px] shadow-lg shadow-green-200 dark:shadow-none">
+                <div class="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center bg-white/20">
+                    <span class="material-icons-round text-4xl">person</span>
+                </div>
+                <div>
+                    <h2 id="profile-name" class="text-lg font-bold">Loading...</h2>
+                    <p id="profile-phone" class="text-white/80 text-sm font-medium">Loading...</p>
+                </div>
+                <button class="ml-auto bg-white/20 p-2 rounded-full backdrop-blur-sm" onclick="window.editProfileUI()">
+                    <span class="material-icons-round text-white">edit</span>
+                </button>
+            </div>
+
+            <!-- Details Form -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-6 ios-shadow border border-gray-100 dark:border-gray-700 space-y-5">
+                <!-- Email -->
+                <div class="relative">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Email Address</label>
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 py-2">
+                        <span id="profile-email" class="font-medium text-slate-900 dark:text-white">Loading...</span>
+                        <span
+                            class="text-[10px] text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span class="material-icons-round text-[10px]">error</span> Un-Verified
+                        </span>
+                    </div>
+                </div>
+
+                <!-- DOB -->
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Date Of Birth</label>
+                    <input type="text" placeholder="YYYY-MM-DD"
+                        class="w-full border-0 border-b border-gray-200 dark:border-gray-600 bg-transparent py-2 px-0 focus:ring-0 text-slate-900 dark:text-white placeholder-slate-300">
+                </div>
+
+                <!-- Gender -->
+                <div>
+                    <label
+                        class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Gender</label>
+                    <div class="flex gap-4">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" class="peer sr-only" checked>
+                            <div
+                                class="border border-green-500 text-green-600 dark:text-green-400 font-bold text-center py-2 rounded-xl peer-checked:bg-green-500 peer-checked:text-white transition-colors">
+                                Male</div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" class="peer sr-only">
+                            <div
+                                class="border border-gray-200 dark:border-gray-600 text-slate-400 font-bold text-center py-2 rounded-xl peer-checked:bg-green-500 peer-checked:text-white transition-colors">
+                                Female</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Community Banner -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-[24px] p-5 ios-shadow border border-gray-100 dark:border-gray-700">
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm mb-4 text-center">Join Our Community For
+                    Early Updates!</h3>
+                <div class="flex gap-3">
+                    <button
+                        class="flex-1 bg-[#25D366] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-none hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png"
+                            class="w-4 h-4 invert brightness-0"> Whatsapp
+                    </button>
+                    <button
+                        class="flex-1 bg-[#0088cc] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none hover:scale-105 transition-transform">
+                        <span class="material-icons-round text-sm">send</span> Telegram
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Links -->
+            <div class="space-y-3">
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+                    onclick="window.toggleTheme()">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">language</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Language / Theme</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">help_outline</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">FAQs</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">chat_bubble_outline</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Feedback</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('about').classList.remove('hidden');">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">groups</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">About Us</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('privacy').classList.remove('hidden');">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">visibility</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Privacy Policy</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+
+                <button
+                    class="w-full bg-white dark:bg-gray-800 p-4 rounded-2xl ios-shadow border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('terms').classList.remove('hidden');">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">description</span>
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-white text-sm">Terms & Conditions</span>
+                    </div>
+                    <span class="material-icons-round text-slate-300">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Logout -->
+            <button onclick="window.controller.signOut()"
+                class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 dark:shadow-none flex items-center justify-center gap-2">
+                <span class="material-icons-round">logout</span> Log Out
+            </button>
+
+            <p class="text-center text-xs font-bold text-primary pb-4">Version V2.4.9</p>
+        </div>
+
+        <!-- ABOUT US SECTION -->
+        <div id="about" class="page-section hidden space-y-6">
+            <div class="flex items-center gap-4 mb-4">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('profile').classList.remove('hidden');">arrow_back</button>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">About Us</h2>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow space-y-4">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-2">
+                    <span class="material-icons-round text-primary text-4xl">info</span>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Task Buks Official</h3>
+                <p class="text-sm text-slate-500 dark:text-gray-400 leading-relaxed">
+                    Task Buks is a premier rewards platform designed to help users earn extra income by completing
+                    simple, everyday tasks. We pride ourselves on transparency, reliability, and providing the best
+                    earning opportunities in the market.
+                </p>
+                <div class="p-4 bg-green-50 dark:bg-green-900/10 rounded-xl border border-primary/20">
+                    <h4 class="font-bold text-primary text-sm mb-2 flex items-center gap-2">
+                        <span class="material-icons-round text-sm">verified</span> Verified Partner: CPX Research
+                    </h4>
+                    <p class="text-[11px] text-slate-600 dark:text-gray-400">
+                        We have partnered with <strong>CPX Research</strong> to provide our users with high-quality,
+                        high-paying market research surveys. This collaboration ensures a steady stream of rewarding
+                        opportunities for our community.
+                    </p>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-gray-400 leading-relaxed">
+                    Our mission is to empower individuals globally by making digital earning accessible to everyone,
+                    regardless of their location or background.
+                </p>
+            </div>
+        </div>
+
+        <!-- PRIVACY POLICY SECTION -->
+        <div id="privacy" class="page-section hidden space-y-6">
+            <div class="flex items-center gap-4 mb-4">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('profile').classList.remove('hidden');">arrow_back</button>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Privacy Policy</h2>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow prose prose-sm dark:prose-invert max-w-none">
+                <p class="text-xs text-slate-400 mb-4">Last Updated: February 20, 2024</p>
+                <h4 class="text-slate-900 dark:text-white font-bold">1. Information We Collect</h4>
+                <p>We collect information you provide directly to us (name, email, phone number) and information about
+                    your usage of the app to improve our services and process rewards.</p>
+
+                <h4 class="text-slate-900 dark:text-white font-bold">2. How We Use Data</h4>
+                <p>Your data is used to verify task completions, process withdrawals, and communicate with you about
+                    your account. We share necessary data with partners like CPX Research to provide targeted survey
+                    opportunities.</p>
+
+                <h4 class="text-slate-900 dark:text-white font-bold">3. Data Security</h4>
+                <p>We implement industry-standard security measures to protect your personal information from
+                    unauthorized access or disclosure.</p>
+            </div>
+        </div>
+
+        <!-- TERMS & CONDITIONS SECTION -->
+        <div id="terms" class="page-section hidden space-y-6">
+            <div class="flex items-center gap-4 mb-4">
+                <button class="material-icons-round text-slate-900 dark:text-white"
+                    onclick="document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden')); document.getElementById('profile').classList.remove('hidden');">arrow_back</button>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Terms of Service</h2>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-[24px] border border-gray-100 dark:border-gray-700 ios-shadow prose prose-sm dark:prose-invert max-w-none">
+                <p class="text-xs text-slate-400 mb-4">Effective Date: February 20, 2024</p>
+                <h4 class="text-slate-900 dark:text-white font-bold">1. User Eligibility</h4>
+                <p>You must be at least 13 years of age to use Task Buks. One account per user is strictly enforced.</p>
+
+                <h4 class="text-slate-900 dark:text-white font-bold">2. Earning & Withdrawals</h4>
+                <p>Rewards are credited upon successful verification of tasks. Withdrawals are processed within 24-72
+                    hours after reaching the minimum threshold.</p>
+
+                <h4 class="text-slate-900 dark:text-white font-bold">3. Prohibited Activities</h4>
+                <p>Use of VPNs, multiple accounts, or automated scripts to complete tasks will lead to permanent account
+                    suspension and forfeiture of balance.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <!-- Bottom Nav -->
+    <!-- Static Overlay Removed - Merged into Top -->
+
+    <nav
+        class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
+        <button class="flex flex-col items-center gap-1 text-primary active nav-item" data-target="home">
+            <span class="material-icons-round">home</span>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="surveys">
+            <span class="material-icons-round">poll</span>
+            <span class="text-[10px] font-bold">Surveys</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="wallet">
+            <span class="material-icons-round">account_balance_wallet</span>
+            <span class="text-[10px] font-bold">Wallet</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item" data-target="refer">
+            <span class="material-icons-round">person_add_alt</span>
+            <span class="text-[10px] font-bold">Refer</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400 dark:text-gray-500 nav-item"
+            data-target="profile">
+            <span class="material-icons-round">person</span>
+            <span class="text-[10px] font-bold">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Global Error Handler -->
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            const status = document.getElementById('loading-status');
+            if (status) {
+                status.textContent = "Error: " + msg;
+                status.style.color = "red";
+            }
+            document.getElementById('loading-spinner')?.classList.add('hidden');
+            document.getElementById('retry-init')?.classList.remove('hidden');
+            return false;
+        };
+    </script>
+
+    <!-- Load scripts sequentially with debug status -->
+    <script>document.getElementById('loading-status').textContent = "Loading ads...";</script>
+    <script src="ads.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading API...";</script>
+    <script src="api.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Store...";</script>
+    <script src="store.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Controller...";</script>
+    <script src="controller.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading MD5...";</script>
+    <script src="md5.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Games...";</script>
+    <script src="games.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Starting App...";</script>
+    <script src="app.js?v=1.5"
+        onerror="document.getElementById('loading-status').textContent='Error: Failed to load app.js'; document.getElementById('loading-status').style.color='red';"></script>
 </body>
 
 </html>

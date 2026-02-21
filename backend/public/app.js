@@ -452,68 +452,51 @@
                 btn.innerHTML = 'Normal Claim';
                 btn.classList.remove('hidden');
             }
+        }
 
-            // Update 10X Card on Home Screen
-            const card10x = document.getElementById('daily-bonus-card-10x');
-            if (card10x) {
-                if (claimed) {
-                    card10x.style.opacity = '0.6';
-                    card10x.style.filter = 'grayscale(100%)';
-                    card10x.onclick = () => window.showToast("🔥 Daily Bonus already claimed! Come back tomorrow.");
-                    card10x.querySelector('h4').textContent = "Claimed";
-                    card10x.querySelector('p').textContent = "Come back tomorrow";
-                } else {
-                    card10x.style.opacity = '1';
-                    card10x.style.filter = 'none';
-                    card10x.onclick = () => window.claimDailyBonus10XUI();
-                    card10x.querySelector('h4').textContent = "10X Bonus";
-                    card10x.querySelector('p').textContent = "Watch Video & Earn";
-                }
+        if (btn10x) {
+            if (claimed) {
+                btn10x.disabled = true;
+                btn10x.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">check_circle</span> Already Claimed';
+                btn10x.className = 'w-full bg-gray-100 dark:bg-gray-700 text-slate-400 font-bold py-3.5 rounded-xl text-sm cursor-not-allowed flex items-center justify-center gap-2';
+            } else {
+                btn10x.disabled = false;
+                btn10x.innerHTML = '<span class="material-icons-round text-amber-500">play_circle</span> Claim 10X Bonus (Watch Video)';
+                btn10x.className = 'w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all';
             }
-
         }
     }
 
     // Global function for the onclick
     window.claimDailyBonusUI = async function () {
-        const res = await controller.claimDailyBonus(1);
-        if (res && res.success) {
-            showBonusRewardModal(res.reward);
-        }
+        await controller.claimDailyBonus(1);
+        showBonusRewardModal();
     };
 
     window.claimDailyBonus10XUI = async function () {
-        const res = await controller.claimDailyBonus10X();
-        if (res && res.success) {
-            showBonusRewardModal(res.reward);
-        }
+        await controller.claimDailyBonus10X();
+        showBonusRewardModal();
     };
 
-    function showBonusRewardModal(rewardAmount) {
+    function showBonusRewardModal() {
         const state = store.getState();
         const streak = state.dailyStreak?.currentStreak || 1;
 
-        // 1. Set the earned amount
-        const amountEl = document.getElementById('bonus-earned-amount');
-        if (amountEl) {
-            amountEl.textContent = rewardAmount || (100 + (streak - 1) * 10);
-        }
-
-        // 2. Build mini streak pills in modal
+        // Build mini streak pills in modal
         const modalPills = document.getElementById('modal-streak-pills');
         if (modalPills) {
             let html = '';
             for (let i = 1; i <= 7; i++) {
                 const isComplete = i <= streak;
                 const isDay7 = i === 7;
-                const baseReward = isDay7 ? '200' : (100 + (i - 1) * 10);
+                const reward = isDay7 ? '200' : (100 + (i - 1) * 10);
                 const bg = isComplete
                     ? 'bg-primary text-white border-primary'
                     : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
                 html += `
                         <div class="flex flex-col items-center">
                             <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[8px] font-bold border-2 ${bg}">
-                                ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : baseReward}
+                                ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : reward}
                             </div>
                             <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>
                         </div>`;
@@ -521,7 +504,7 @@
             modalPills.innerHTML = html;
         }
 
-        // 3. Show modal
+        // Show modal
         const modal = document.getElementById('bonus-modal');
         if (modal) {
             modal.classList.remove('hidden');

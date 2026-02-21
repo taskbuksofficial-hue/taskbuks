@@ -4,8 +4,34 @@
  * Wrapped in IIFE to prevent global namespace collisions
  */
 (function () {
+    // Defines updateStatus globally for this scope immediately
+    const updateStatus = (msg, isError = false) => {
+        const el = document.getElementById('loading-status');
+        if (el) {
+            el.textContent = msg;
+            if (isError) el.style.color = "red";
+        }
+        if (isError) {
+            document.getElementById('loading-spinner')?.classList.add('hidden');
+            document.getElementById('retry-init')?.classList.remove('hidden');
+        }
+    };
+
+    updateStatus("Parsing App...");
+
     const store = window.store;
     const controller = window.controller;
+
+    if (!store) {
+        console.error("Critical: window.store is undefined");
+        updateStatus("Error: Store not loaded", true);
+        return;
+    }
+    if (!controller) {
+        console.error("Critical: window.controller is undefined");
+        updateStatus("Error: Controller not loaded", true);
+        return;
+    }
 
     // --- AUTH UI HELPERS ---
     window.showAuthForm = (type) => {
@@ -22,6 +48,24 @@
         }
     };
 
+    // --- VIEW SWITCHING HELPERS ---
+    window.showAppView = () => {
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('home').classList.remove('hidden');
+        document.querySelector('nav').classList.remove('hidden');
+        document.getElementById('app-header')?.classList.remove('hidden');
+        document.getElementById('app-header-spacer')?.classList.remove('hidden');
+        setupCarousel(); // Re-init carousel if needed
+    };
+
+    window.showLoginView = () => {
+        document.getElementById('login').classList.remove('hidden');
+        document.getElementById('home').classList.add('hidden');
+        document.querySelector('nav').classList.add('hidden');
+        document.getElementById('app-header')?.classList.add('hidden');
+        document.getElementById('app-header-spacer')?.classList.add('hidden');
+    };
+
     window.handleLogin = async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
@@ -34,7 +78,7 @@
         try {
             const success = await controller.login(email, password);
             if (success) {
-                // UI update handled by state change
+                window.showAppView();
             } else {
                 showToast("Invalid credentials");
                 btn.disabled = false;
@@ -54,7 +98,8 @@
             full_name: document.getElementById('reg-name').value,
             email: document.getElementById('reg-email').value,
             phone_number: document.getElementById('reg-phone').value,
-            password: document.getElementById('reg-password').value
+            password: document.getElementById('reg-password').value,
+            referral_code: document.getElementById('reg-referral').value
         };
         const btn = e.target.querySelector('button');
 
@@ -64,7 +109,7 @@
         try {
             const success = await controller.register(data);
             if (success) {
-                // UI update handled by state change
+                window.showAppView();
             } else {
                 showToast("Registration failed");
                 btn.disabled = false;
@@ -125,6 +170,51 @@
             progressBar.style.width = `${pct}%`;
             if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹100`;
             if (withdrawBtn) withdrawBtn.disabled = balance < 100;
+        }
+
+        // Withdrawal Status Banner
+        const withdrawal = state.withdrawal;
+        const statusBanner = document.getElementById('withdrawal-status-banner');
+        if (statusBanner && withdrawal && withdrawal.hasWithdrawal) {
+            const w = withdrawal.withdrawal;
+            statusBanner.classList.remove('hidden');
+
+            const icon = document.getElementById('withdrawal-status-icon');
+            const title = document.getElementById('withdrawal-status-title');
+            const desc = document.getElementById('withdrawal-status-desc');
+            const badge = document.getElementById('withdrawal-status-badge');
+
+            if (w.status === 'PENDING') {
+                icon.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+                icon.querySelector('span').textContent = 'hourglass_top';
+                title.textContent = `Withdrawal of ₹${w.amount} is being processed`;
+                desc.textContent = 'Please allow up to 24 hours for payment.';
+                badge.textContent = 'PENDING';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-amber-100 text-amber-700';
+                statusBanner.style.background = 'rgba(245,158,11,0.04)';
+                statusBanner.style.borderColor = 'rgba(245,158,11,0.15)';
+                if (withdrawBtn) withdrawBtn.disabled = true;
+            } else if (w.status === 'COMPLETED') {
+                icon.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+                icon.querySelector('span').textContent = 'check_circle';
+                title.textContent = `₹${w.amount} sent to your UPI! ✅`;
+                desc.textContent = `Payment completed. UPI: ${w.upiId}`;
+                badge.textContent = 'PAID';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-emerald-100 text-emerald-600';
+                statusBanner.style.background = 'rgba(16,185,129,0.04)';
+                statusBanner.style.borderColor = 'rgba(16,185,129,0.15)';
+            } else if (w.status === 'FAILED') {
+                icon.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
+                icon.querySelector('span').textContent = 'cancel';
+                title.textContent = `Withdrawal of ₹${w.amount} was rejected`;
+                desc.textContent = w.adminNotes || 'Amount has been refunded to your wallet.';
+                badge.textContent = 'REJECTED';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-red-100 text-red-600';
+                statusBanner.style.background = 'rgba(239,68,68,0.04)';
+                statusBanner.style.borderColor = 'rgba(239,68,68,0.15)';
+            }
+        } else if (statusBanner) {
+            statusBanner.classList.add('hidden');
         }
 
         // 2. Tasks (Home)
@@ -320,7 +410,57 @@
                 `}).join('');
             }
         }
+        // 6. Profile Data (Dynamic)
+        if (user) {
+            const nameEl = document.getElementById('profile-name');
+            const phoneEl = document.getElementById('profile-phone');
+            const emailEl = document.getElementById('profile-email');
+
+            // Header Name
+            const headerNameEl = document.getElementById('header-profile-name');
+
+            if (nameEl) nameEl.textContent = user.full_name || 'User';
+            if (phoneEl) phoneEl.textContent = user.phone_number || 'No Phone';
+            if (emailEl) emailEl.textContent = user.email || 'No Email';
+            if (headerNameEl) headerNameEl.textContent = "Hi, " + (user.full_name ? user.full_name.split(' ')[0] : 'User');
+        }
     }
+
+    // --- PROFILE EDIT ---
+    window.editProfileUI = async () => {
+        const state = store.getState();
+        const user = state.user || {};
+
+        const newName = prompt("Enter your full name:", user.full_name || "");
+        if (newName === null) return; // Cancelled
+
+        const newPhone = prompt("Enter your phone number:", user.phone_number || "");
+        if (newPhone === null) return; // Cancelled
+
+        if (!newName || !newPhone) {
+            showToast("Name and Phone are required.");
+            return;
+        }
+
+        try {
+            updateStatus("Updating Profile...");
+            const success = await controller.updateProfile(newName, newPhone);
+            if (success) {
+                showToast("Profile Updated!");
+                render(); // Re-render to show changes immediately
+            } else {
+                showToast("Update failed.");
+            }
+        } catch (e) {
+            showToast("Error: " + e.message);
+        } finally {
+            // Hide status/spinner if we showed one
+            const loadingOverlay = document.getElementById('app-loading-overlay');
+            if (loadingOverlay) loadingOverlay.style.opacity = '0';
+            // Reuse updateStatus logic but usually it shows spinner, so maybe we don't need updateStatus here if it blocks UI too much
+            // Just showToast is enough.
+        }
+    };
 
     // --- DAILY BONUS RENDERING ---
 
@@ -338,77 +478,104 @@
             const day = parseInt(el.dataset.day);
             const pill = el.querySelector('div');
             if (day <= streak) {
-                pill.className = 'w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-primary bg-primary text-white transition-all shadow-md shadow-primary/20';
+                pill.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-primary bg-primary text-white transition-all shadow-md shadow-primary/20';
                 pill.innerHTML = '<span class="material-icons-round text-base">check</span>';
             }
         });
 
-        // Update claim button
+        // Update claim buttons
         const btn = document.getElementById('claim-bonus-btn');
+        const btn10x = document.getElementById('claim-bonus-btn-10x');
+
         if (btn) {
             if (claimed) {
                 btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">check_circle</span> Claimed Today!';
-                btn.className = 'w-full bg-gray-200 dark:bg-gray-700 text-slate-400 font-bold py-3 rounded-xl text-sm cursor-not-allowed';
+                btn.innerHTML = 'Claimed Today!';
+                btn.classList.add('hidden');
             } else {
                 btn.disabled = false;
-                btn.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">redeem</span> Claim ₹1 Daily Bonus';
-                btn.className = 'w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all';
+                btn.innerHTML = 'Normal Claim';
+                btn.classList.remove('hidden');
             }
+
+            // Update 10X Card on Home Screen
+            const card10x = document.getElementById('daily-bonus-card-10x');
+            if (card10x) {
+                if (claimed) {
+                    card10x.style.opacity = '0.6';
+                    card10x.style.filter = 'grayscale(100%)';
+                    card10x.onclick = () => window.showToast("🔥 Daily Bonus already claimed! Come back tomorrow.");
+                    card10x.querySelector('h4').textContent = "Claimed";
+                    card10x.querySelector('p').textContent = "Come back tomorrow";
+                } else {
+                    card10x.style.opacity = '1';
+                    card10x.style.filter = 'none';
+                    card10x.onclick = () => window.claimDailyBonus10XUI();
+                    card10x.querySelector('h4').textContent = "10X Bonus";
+                    card10x.querySelector('p').textContent = "Watch Video & Earn";
+                }
+            }
+
         }
     }
 
     // Global function for the onclick
     window.claimDailyBonusUI = async function () {
+        const res = await controller.claimDailyBonus(1);
+        if (res && res.success) {
+            showBonusRewardModal(res.reward);
+        }
+    };
+
+    window.claimDailyBonus10XUI = async function () {
+        const res = await controller.claimDailyBonus10X();
+        if (res && res.success) {
+            showBonusRewardModal(res.reward);
+        }
+    };
+
+    function showBonusRewardModal(rewardAmount) {
         const state = store.getState();
-        if (state.dailyStreak?.isClaimedToday) {
-            showToast('Already claimed today!');
-            return;
+        const streak = state.dailyStreak?.currentStreak || 1;
+
+        // 1. Set the earned amount
+        const amountEl = document.getElementById('bonus-earned-amount');
+        if (amountEl) {
+            amountEl.textContent = rewardAmount || (100 + (streak - 1) * 10);
         }
 
-        await controller.claimDailyBonus();
-
-        // After claiming, show the modal
-        const streak = store.getState().dailyStreak?.currentStreak || 1;
-        const amount = streak >= 7 ? 2 : 1;
-
-        // Set earned amount
-        const amountEl = document.getElementById('bonus-earned-amount');
-        if (amountEl) amountEl.textContent = amount;
-
-        // Build mini streak pills in modal
+        // 2. Build mini streak pills in modal
         const modalPills = document.getElementById('modal-streak-pills');
         if (modalPills) {
             let html = '';
             for (let i = 1; i <= 7; i++) {
                 const isComplete = i <= streak;
                 const isDay7 = i === 7;
-                const reward = isDay7 ? '₹2' : '₹1';
+                const baseReward = isDay7 ? '200' : (100 + (i - 1) * 10);
                 const bg = isComplete
                     ? 'bg-primary text-white border-primary'
                     : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
                 html += `
-                    <div class="flex flex-col items-center">
-                        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold border-2 ${bg}">
-                            ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : reward}
-                        </div>
-                        <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>
-                    </div>`;
+                        <div class="flex flex-col items-center">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[8px] font-bold border-2 ${bg}">
+                                ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : baseReward}
+                            </div>
+                            <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>
+                        </div>`;
             }
             modalPills.innerHTML = html;
         }
 
-        // Show modal
+        // 3. Show modal
         const modal = document.getElementById('bonus-modal');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
 
-        // Re-render streak and balance
         renderStreak();
-        render();
-    };
+        render(); // Force UI sync
+    }
 
     // --- SETUP ---
 
@@ -469,6 +636,11 @@
             const next = current === 'light' ? 'dark' : 'light';
             store.setState({ ui: { ...store.getState().ui, theme: next } });
             document.documentElement.classList.toggle('dark');
+
+            // Sync Android Status Bar
+            if (window.Android && window.Android.setStatusBarMode) {
+                window.Android.setStatusBarMode(next === 'light' ? 'dark' : 'light');
+            }
         };
     }
 
@@ -527,97 +699,207 @@
                     showToast(`Starting ${gameName}...`);
                 }
             };
+            // --- Carousel logic ---
+            const carouselScroll = () => {
+                const carousel = document.getElementById('home-carousel');
+                if (!carousel) return;
+
+                const dots = document.querySelectorAll('.carousel-dot');
+                const scrollPos = carousel.scrollLeft;
+                const width = carousel.offsetWidth;
+                const index = Math.round(scrollPos / width);
+
+                dots.forEach((dot, i) => {
+                    if (i === index) {
+                        dot.classList.add('bg-primary');
+                        dot.classList.remove('bg-gray-300');
+                    } else {
+                        dot.classList.remove('bg-primary');
+                        dot.classList.add('bg-gray-300');
+                    }
+                });
+
+                // Show Banner Ad when on Slide 3 (Index 3 - Zero based, Slide 5 is index 4 if we have 5 slides)
+                // Let's check the index of the "Sponsored" slide.
+                // Dot 0: Refer, Dot 1: Watch, Dot 2: Daily, Dot 3: Sponsored?
+                // Wait, index.html had 4 dots but 5 slides? Let me check.
+
+                if (index === 3 || index === 4) {
+                    if (window.ads) window.ads.setBannerVisible(true, 'ad-banner-carousel');
+                } else {
+                    // Only hide if we're not in a game
+                    if (!document.getElementById('home').classList.contains('hidden')) {
+                        if (window.ads) window.ads.setBannerVisible(false);
+                    }
+                }
+            }
+
+            const carousel = document.getElementById('home-carousel');
+            if (carousel) {
+                carousel.addEventListener('scroll', carouselScroll);
+            }
         });
     }
 
     // Initialize
     const initApp = async () => {
+        updateStatus("Initializing...");
         console.log("Initializing App...");
 
-        // Initial setup
-        setupNavigation();
-        setupGlobalListeners();
-        setupGameCards();
-        store.subscribe(() => { render(); renderStreak(); });
-
-        // Show Loading Overlay (Use Static)
-        const loadingOverlay = document.getElementById('app-loading-overlay');
-        if (loadingOverlay) loadingOverlay.style.opacity = '1';
-
-        const updateStatus = (msg, isError = false) => {
-            const el = document.getElementById('loading-status');
-            if (el) el.textContent = msg;
-            if (isError) {
-                document.getElementById('loading-spinner')?.classList.add('hidden');
-                document.getElementById('retry-init')?.classList.remove('hidden');
-            }
-        };
-
-        const cleanup = () => {
-            console.log("Removing loading overlay");
+        // Safety Timeout reference
+        let safetyTimer = setTimeout(() => {
             const loadingOverlay = document.getElementById('app-loading-overlay');
-            if (loadingOverlay) {
-                loadingOverlay.style.opacity = '0';
-                loadingOverlay.style.visibility = 'hidden';
-                setTimeout(() => {
-                    if (loadingOverlay.parentNode) loadingOverlay.remove();
-                }, 600);
-            }
-            render();
-        };
-
-        // Safety Timeout (15s)
-        setTimeout(() => {
-            // Just force render if stuck
             if (loadingOverlay && loadingOverlay.style.opacity !== '0') {
+                console.warn("Safety timeout triggered - forcing cleanup");
                 cleanup();
             }
-        }, 8000);
+        }, 4000);
+
+        const cleanup = () => {
+            if (safetyTimer) clearTimeout(safetyTimer);
+            console.log("Cleaning up loading overlay...");
+
+            const loadingOverlay = document.getElementById('app-loading-overlay');
+            if (loadingOverlay) {
+                // Force hide immediately
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.visibility = 'hidden';
+                loadingOverlay.style.display = 'none'; // ADDED: Direct hide
+                loadingOverlay.remove(); // ADDED: Direct remove
+            }
+
+            try {
+                render();
+            } catch (e) {
+                console.error("Render error in cleanup:", e);
+            }
+        };
 
         try {
+            updateStatus("Setting up UI...");
+            setupNavigation();
+            setupGlobalListeners();
+            setupGameCards();
+
+            updateStatus("Subscribing Store...");
+            store.subscribe(() => { render(); renderStreak(); });
+
             // Check for Local Token
             const token = localStorage.getItem('auth_token');
 
             if (token) {
                 console.log("Found local token, validating...");
                 updateStatus("Syncing account...");
-                const success = await controller.loginWithToken(token);
+                const success = await controller.loginWithToken(token).catch(e => {
+                    console.error("Token login error:", e);
+                    return false;
+                });
 
                 if (success) {
                     updateStatus("Loading data...");
                     await controller.loadDashboard();
+                    window.showAppView();
 
-                    // Show Home and Nav
-                    document.getElementById('home').classList.remove('hidden');
-                    document.querySelector('nav').classList.remove('hidden');
-                    document.getElementById('login').classList.add('hidden');
-
-                    setupCarousel();
+                    // Sync Android Status Bar (Default to light theme/dark icons)
+                    if (window.Android && window.Android.setStatusBarMode) {
+                        window.Android.setStatusBarMode('dark');
+                    }
                 } else {
-                    // Token invalid
                     console.log("Token invalid, showing login");
                     localStorage.removeItem('auth_token');
-                    document.getElementById('login').classList.remove('hidden');
-                    document.getElementById('home').classList.add('hidden');
-                    document.querySelector('nav').classList.add('hidden');
+                    window.showLoginView();
                 }
             } else {
                 console.log("No token, showing login");
-                document.getElementById('login').classList.remove('hidden');
+                updateStatus("Ready!"); // Clear "Subscribing Store..." message
                 document.getElementById('home').classList.add('hidden');
                 document.querySelector('nav').classList.add('hidden');
+                document.getElementById('app-header')?.classList.add('hidden');
+                document.getElementById('app-header-spacer')?.classList.add('hidden');
+                // Ensure login view is visible
+                const loginSection = document.getElementById('login');
+                if (loginSection) loginSection.classList.remove('hidden');
+
+                // Sync Android Status Bar (Default to light theme/dark icons if no token)
+                if (window.Android && window.Android.setStatusBarMode) {
+                    window.Android.setStatusBarMode('dark');
+                }
             }
 
             cleanup();
         } catch (err) {
             console.error("Init Error:", err);
             updateStatus("Error: " + err.message, true);
+            // Even on error, try to show something (like login) if possible, or just cleanup so they can see the error
+            cleanup();
         }
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-        initApp();
-    }
+    // Start
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await initApp();
+        } catch (e) {
+            console.error("InitApp Fatal Error:", e);
+        }
+    });
+
+    // --- WITHDRAWAL MODAL FUNCTIONS ---
+    window.openWithdrawModal = function () {
+        const state = window.store.getState();
+        const balance = parseFloat(state.wallet?.currentBalance || 0);
+
+        // Pre-fill amount with current balance (floored to integer)
+        const amountInput = document.getElementById('withdraw-amount-input');
+        if (amountInput) amountInput.value = Math.floor(balance);
+
+        const modal = document.getElementById('withdraw-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+
+    window.closeWithdrawModal = function () {
+        const modal = document.getElementById('withdraw-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    window.submitWithdrawal = async function () {
+        const upiId = document.getElementById('withdraw-upi-input')?.value?.trim();
+        const amount = parseFloat(document.getElementById('withdraw-amount-input')?.value);
+
+        if (!upiId) {
+            window.showToast('Please enter your UPI ID');
+            return;
+        }
+        if (!amount || amount < 100) {
+            window.showToast('Minimum withdrawal is ₹100');
+            return;
+        }
+
+        const submitBtn = document.getElementById('withdraw-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-icons-round animate-spin" style="font-size:18px;">refresh</span> Processing...';
+        }
+
+        try {
+            await window.controller.requestWithdrawal(upiId, amount);
+            closeWithdrawModal();
+            // Refresh withdrawal status
+            await window.controller.checkWithdrawalStatus();
+        } catch (error) {
+            // Error already shown by controller
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px;">send</span> Request Withdrawal';
+            }
+        }
+    };
+
 })();

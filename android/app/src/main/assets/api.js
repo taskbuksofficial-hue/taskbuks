@@ -5,9 +5,13 @@
 
 // REPLACE WITH YOUR COMPUTER'S LOCAL IP (Simulate "Cloud")
 // const BASE_URL = "http://10.0.2.2:3000"; // For Emulator
-const LOCAL_IP_URL = "http://172.20.54.180:3000"; // For Physical Device
+const LOCAL_IP_URL = "https://taskbuks.vercel.app"; // For Physical Device
 
 const getBaseUrl = () => {
+    // Specifically handle the Android virtual domain
+    if (window.location.hostname === 'app.assets.local') {
+        return LOCAL_IP_URL;
+    }
     // If running on Vercel or any other web host
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
         return window.location.origin;
@@ -33,8 +37,23 @@ const fetchJson = async (endpoint, options = {}) => {
             ...options,
             headers: { ...headers, ...options.headers }
         });
-        if (!res.ok) throw new Error(`API Error: ${res.status}`);
-        return await res.json();
+
+        // Parse JSON regardless of status
+        let data;
+        try {
+            data = await res.json();
+        } catch (err) {
+            // Handle empty or non-JSON responses
+            data = null;
+        }
+
+        if (!res.ok) {
+            // Use the error message from backend if available
+            const errorMessage = data?.error || `API Error: ${res.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return data;
     } catch (e) {
         console.error("API Call Failed:", e);
         throw e;
@@ -48,6 +67,13 @@ window.api = {
     // 1. Get User Profile
     async getProfile() {
         return await fetchJson('/api/profile');
+    },
+
+    async updateProfile(data) {
+        return await fetchJson('/api/profile', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
     },
 
     // 2. Get Offers
@@ -69,9 +95,10 @@ window.api = {
     },
 
     // 5. Claim Daily Bonus
-    async claimDailyBonus() {
+    async claimDailyBonus(multiplier = 1, fixed_reward = null) {
         return await fetchJson('/api/bonus/claim', {
-            method: 'POST'
+            method: 'POST',
+            body: JSON.stringify({ multiplier, fixed_reward })
         });
     },
 
@@ -81,11 +108,18 @@ window.api = {
         return { status: "success", reward: 5 };
     },
 
-    // 7. Clerk Login
-    async loginWithClerk(token) {
-        return await fetchJson('/auth/clerk', {
+    // 7. Custom Auth
+    async login(identifier, password) {
+        return await fetchJson('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ token })
+            body: JSON.stringify({ identifier, password })
+        });
+    },
+
+    async register(data) {
+        return await fetchJson('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(data)
         });
     },
 
@@ -103,5 +137,13 @@ window.api = {
     // 9. Get Transactions
     async getTransactions() {
         return await fetchJson('/api/transactions');
+    },
+
+    // 10. Add Coins (Generic)
+    async addCoins(coins, description) {
+        return await fetchJson('/api/coins/add', {
+            method: 'POST',
+            body: JSON.stringify({ coins, description })
+        });
     }
 };

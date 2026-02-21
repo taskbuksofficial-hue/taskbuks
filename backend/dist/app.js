@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
 const path_1 = __importDefault(require("path"));
 const static_1 = __importDefault(require("@fastify/static"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 dotenv_1.default.config();
-const clerk = (0, clerk_sdk_node_1.Clerk)({ secretKey: process.env.CLERK_SECRET_KEY });
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod';
 const server = (0, fastify_1.default)({ logger: true });
 // Register Plugins
 server.register(cors_1.default, {
@@ -19,7 +19,7 @@ server.register(cors_1.default, {
 // Serve Admin Panel
 server.register(static_1.default, {
     root: path_1.default.join(__dirname, '../public'),
-    prefix: '/admin/', // access via /admin/ (simplified)
+    prefix: '/', // Serve at root
 });
 // Auth Middleware
 const authenticate = async (req, reply) => {
@@ -29,24 +29,28 @@ const authenticate = async (req, reply) => {
     }
     const token = authHeader.replace('Bearer ', '');
     try {
-        // In a real app, use verifyToken or verifySession. 
-        // For simplicity with what we have:
-        const client = await clerk.clients.verifyClient(token);
-        if (!client || !client.sessions[0]) {
-            throw new Error('Invalid session');
-        }
-        req.userId = client.sessions[0].userId;
+        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        req.userId = decoded.userId;
     }
     catch (error) {
-        return reply.status(401).send({ error: 'Unauthorized' });
+        return reply.status(401).send({ error: 'Unauthorized: Invalid token' });
     }
 };
 const authController_1 = require("./controllers/authController");
 const appController_1 = require("./controllers/appController");
-// Auth Routes
-server.post('/auth/clerk', authController_1.clerkLogin);
+// Auth Routes (Custom)
+server.post('/auth/register', authController_1.register);
+server.post('/auth/login', authController_1.login);
+// Helpful error for GET requests (User confusion)
+server.get('/auth/register', async (req, reply) => {
+    return reply.status(405).send({ error: 'Method Not Allowed. Please use POST to register.' });
+});
+server.get('/auth/login', async (req, reply) => {
+    return reply.status(405).send({ error: 'Method Not Allowed. Please use POST to login.' });
+});
 // App Routes (Phase 3) - Secured with preHandler
 server.get('/api/profile', { preHandler: [authenticate] }, appController_1.getProfile);
+server.post('/api/profile', { preHandler: [authenticate] }, appController_1.updateProfile); // Update Profile
 server.get('/api/offers', appController_1.getOffers); // Offers can be public?
 server.get('/api/streak', { preHandler: [authenticate] }, appController_1.getStreak);
 server.post('/api/task/start', { preHandler: [authenticate] }, appController_1.startTask);

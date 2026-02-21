@@ -8,7 +8,6 @@
         "start": "cd backend && npm start"
     },
     "dependencies": {
-        "@clerk/clerk-sdk-node": "^4.13.23",
         "@fastify/cors": "^10.0.2",
         "@types/bcryptjs": "^2.4.6",
         "@types/jsonwebtoken": "^9.0.10",

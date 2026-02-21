@@ -106,12 +106,11 @@ window.controller = {
         try {
             // 2. Network Fetch (Background/Update)
             // We use allSettled or catch individually to prevent one failure from blocking the others
-            const [profile, offers, streakStatus, transactions, withdrawalStatus] = await Promise.all([
+            const [profile, offers, streakStatus, transactions] = await Promise.all([
                 api.getProfile(), // Profile is critical, let it fail if needed? No, we need it.
                 api.getOffers().catch(err => { console.warn("Offers failed", err); return []; }),
                 api.getStreakStatus().catch(err => { console.warn("Streak failed", err); return { streak: 0, claimedToday: false }; }),
-                api.getTransactions().catch(err => { console.warn("Tx failed", err); return []; }),
-                api.getWithdrawalStatus().catch(err => { console.warn("Withdrawal status failed", err); return { hasWithdrawal: false }; })
+                api.getTransactions().catch(err => { console.warn("Tx failed", err); return []; })
             ]);
 
             if (!profile) throw new Error("Failed to load profile");
@@ -133,7 +132,6 @@ window.controller = {
                     isClaimedToday: streakStatus.claimedToday || false
                 },
                 transactions: transactions || [],
-                withdrawal: withdrawalStatus || { hasWithdrawal: false },
                 ui: { ...store.getState().ui, isLoading: false }
             };
 
@@ -212,16 +210,16 @@ window.controller = {
         }
     },
 
-    // 6. Claim Daily Bonus (Normal or Video)
-    async claimDailyBonus(multiplier = 1, fixed_reward = null) {
+    // 6. Claim Daily Bonus (Normal or 10X)
+    async claimDailyBonus(multiplier = 1) {
         const state = store.getState();
         if (state.dailyStreak.isClaimedToday) {
             window.showToast("Already claimed for today!");
-            return null;
+            return;
         }
 
         try {
-            const res = await api.claimDailyBonus(multiplier, fixed_reward);
+            const res = await api.claimDailyBonus(multiplier);
             if (res.success) {
                 // Update local state with real DB values
                 store.setState(s => ({
@@ -235,26 +233,15 @@ window.controller = {
                         ...s.wallet,
                         currentBalance: res.newBalance,
                         totalCoins: (res.newBalance * 1000)
-                    },
-                    transactions: [{
-                        id: Date.now(),
-                        amount: res.reward / 1000,
-                        coins: res.reward,
-                        description: fixed_reward ? "Watch & Earn (20 Coins)" : (multiplier > 1 ? `Daily Bonus 10X` : `Daily Bonus`),
-                        date: new Date().toISOString(),
-                        type: 'credit'
-                    }, ...s.transactions]
+                    }
                 }));
 
                 window.showToast(`Success! +${res.reward} coins credited.`);
                 this.loadDashboard(); // Refresh full state
-                return res; // Return response for UI
             }
-            return res;
         } catch (error) {
             console.error("Daily Bonus failed:", error);
-            window.showToast(error.message || "Failed to claim bonus. Try again.");
-            return null;
+            window.showToast("Failed to claim bonus. Try again.");
         }
     },
 
@@ -262,28 +249,23 @@ window.controller = {
         const state = store.getState();
         if (state.dailyStreak.isClaimedToday) {
             window.showToast("Already claimed for today!");
-            return null;
+            return;
         }
 
-        return new Promise((resolve) => {
-            // 1. Trigger Rewarded Video
-            if (window.ads && window.ads.showRewarded) {
-                window.showToast("Loading Video Ad for 10 Coins...");
-                window.ads.showRewarded(async (amount) => {
-                    if (amount > 0) {
-                        // Ad completed - claim 10 coins
-                        const res = await this.claimDailyBonus(null, 10); // fixed_reward = 10
-                        resolve(res);
-                    } else {
-                        window.showToast("Ad not completed. Bonus cancelled.");
-                        resolve(null);
-                    }
-                });
-            } else {
-                window.showToast("Ads not available. Try normal claim.");
-                resolve(null);
-            }
-        });
+        // 1. Trigger Rewarded Video
+        if (window.ads && window.ads.showRewarded) {
+            window.showToast("Loading Video Ad for 10X Bonus...");
+            window.ads.showRewarded(async (amount) => {
+                if (amount > 0) {
+                    // Ad completed - claim 10X!
+                    await this.claimDailyBonus(10);
+                } else {
+                    window.showToast("Ad not completed. 10X bonus cancelled.");
+                }
+            });
+        } else {
+            window.showToast("Ads not available. Try normal claim.");
+        }
     },
 
     // Complete Task Logic (Simulation)
@@ -422,45 +404,5 @@ window.controller = {
         }).catch(err => {
             console.warn("Coin sync failed:", err);
         });
-    },
-
-    // --- WITHDRAWAL ---
-    async requestWithdrawal(upiId, amount) {
-        try {
-            const res = await api.requestWithdrawal(upiId, amount);
-            if (res.success) {
-                // Update store with withdrawal info
-                store.setState(s => ({
-                    withdrawal: {
-                        hasWithdrawal: true,
-                        ...res.withdrawal,
-                        createdAt: new Date().toISOString()
-                    },
-                    wallet: {
-                        ...s.wallet,
-                        currentBalance: s.wallet.currentBalance - amount
-                    }
-                }));
-                window.showToast(res.message || "Withdrawal requested!");
-                if (window.render) window.render();
-                return res;
-            }
-        } catch (error) {
-            console.error("Withdrawal request failed:", error);
-            window.showToast(error.message || "Withdrawal failed. Try again.");
-            throw error;
-        }
-    },
-
-    async checkWithdrawalStatus() {
-        try {
-            const res = await api.getWithdrawalStatus();
-            store.setState({ withdrawal: res });
-            if (window.render) window.render();
-            return res;
-        } catch (error) {
-            console.error("Check withdrawal status failed:", error);
-        }
     }
 };
-

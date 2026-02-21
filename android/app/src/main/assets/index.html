@@ -30,10 +30,7 @@
             },
         };
     </script>
-    <script async crossorigin="anonymous"
-        data-clerk-publishable-key="pk_test_Y2FwaXRhbC13aGFsZS0yMi5jbGVyay5hY2NvdW50cy5kZXYk"
-        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript">
-        </script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -83,190 +80,214 @@
             padding-bottom: 12px;
             /* Space from bottom */
         }
-    </style>
 
-    header+.h-12 {
-    display: none;
-    /* remove the spacer div if we use header padding */
-    }
+        header+.h-12 {
+            display: none;
+            /* remove the spacer div if we use header padding */
+        }
 
-    .ios-shadow {
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-    }
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
 
-    .glass-header {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    }
+        .glass-header {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
 
-    .gradient-banner {
-    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-    }
+        .gradient-banner {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+        }
 
-    .gold-glow {
-    box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
-    }
+        .gold-glow {
+            box-shadow: 0 4px 20px -5px rgba(234, 179, 8, 0.2);
+        }
 
-    .no-scrollbar::-webkit-scrollbar {
-    display: none;
-    }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
 
-    .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
-    /* Smooth transitions for section switching */
-    .page-section {
-    animation: fadeIn 0.3s ease-in-out;
-    }
+        /* Smooth transitions for section switching */
+        .page-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
-    @keyframes fadeIn {
-    @keyframes pulse-breathing {
-    0% { transform: scale(1); opacity: 1; filter: blur(0px); }
-    50% { transform: scale(1.05); opacity: 0.85; filter: blur(0.5px); }
-    100% { transform: scale(1); opacity: 1; filter: blur(0px); }
-    }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
 
-    .animate-pulse-breathing {
-    animation: pulse-breathing 3s ease-in-out infinite;
-    }
+            to {
+                opacity: 1;
+            }
+        }
 
-    #app-loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: #ffffff; /* pure white for clean look */
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
-    }
+        @keyframes pulse-breathing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0px);
+            }
 
-    .dark #app-loading-overlay {
-    background: #000000; /* true black for OLED */
-    }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.85;
+                filter: blur(0.5px);
+            }
 
-    @keyframes modalBounce {
-    0% {
-    transform: scale(0.7);
-    opacity: 0;
-    }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0px);
+            }
+        }
 
-    50% {
-    transform: scale(1.05);
-    }
+        .animate-pulse-breathing {
+            animation: pulse-breathing 3s ease-in-out infinite;
+        }
 
-    100% {
-    transform: scale(1);
-    opacity: 1;
-    }
-    }
+        #app-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            /* pure white for clean look */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+        }
 
-    button:active {
-    transform: scale(0.95);
-    }
+        .dark #app-loading-overlay {
+            background: #000000;
+            /* true black for OLED */
+        }
 
-    /* Games Grid Styles — Apple-quality */
-    .games-header-gradient {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-    position: relative;
-    }
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
 
-    .games-header-gradient::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
-    pointer-events: none;
-    }
+            50% {
+                transform: scale(1.05);
+            }
 
-    .game-card-apple {
-    position: relative;
-    border-radius: 20px;
-    padding: 16px 14px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-    transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.28s ease;
-    overflow: hidden;
-    }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
 
-    .dark .game-card-apple {
-    background: rgba(30, 30, 40, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
-    }
+        button:active {
+            transform: scale(0.95);
+        }
 
-    .game-card-apple:active {
-    transform: scale(0.96);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    }
+        /* Games Grid Styles — Apple-quality */
+        .games-header-gradient {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            position: relative;
+        }
 
-    .game-card-apple .gc-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
+        .games-header-gradient::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
 
-    .game-card-apple .gc-coin {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 20px;
-    letter-spacing: 0.02em;
-    }
+        .game-card-apple {
+            position: relative;
+            border-radius: 20px;
+            padding: 16px 14px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.28s ease;
+            overflow: hidden;
+        }
 
-    .game-card-apple .gc-play {
-    width: 100%;
-    padding: 8px 0;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    border: none;
-    cursor: pointer;
-    transition: all 0.22s ease;
-    position: relative;
-    overflow: hidden;
-    }
+        .dark .game-card-apple {
+            background: rgba(30, 30, 40, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
 
-    .game-card-apple .gc-play::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
-    pointer-events: none;
-    }
+        .game-card-apple:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
 
-    .game-card-apple .gc-play:active {
-    transform: scale(0.97);
-    }
+        .game-card-apple .gc-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
 
-    @keyframes floatIcon {
+        .game-card-apple .gc-coin {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.02em;
+        }
 
-    0%,
-    100% {
-    transform: translateY(0) rotate(12deg);
-    }
+        .game-card-apple .gc-play {
+            width: 100%;
+            padding: 8px 0;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-    50% {
-    transform: translateY(-6px) rotate(15deg);
-    }
-    }
+        .game-card-apple .gc-play::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .game-card-apple .gc-play:active {
+            transform: scale(0.97);
+        }
+
+        @keyframes floatIcon {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(12deg);
+            }
+
+            50% {
+                transform: translateY(-6px) rotate(15deg);
+            }
+        }
     </style>
 </head>
 
@@ -280,13 +301,14 @@
             <div class="h-1 w-32 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-full bg-primary animate-loading" style="width: 30%"></div>
             </div>
+            <div id="loading-status" class="mt-4 text-xs text-slate-400 font-medium">Initializing...</div>
         </div>
     </div>
 
     <!-- Header -->
-    <div class="h-24 w-full"></div> <!-- Increased spacer -->
-    <header
-        class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 border-b border-gray-100 dark:border-gray-800">
+    <div id="app-header-spacer" class="hidden h-24 w-full"></div> <!-- Increased spacer -->
+    <header id="app-header"
+        class="hidden fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 glass-header px-6 border-b border-gray-100 dark:border-gray-800">
         <div class="flex items-center gap-2 mb-1"> <!-- Added bottom margin for alignment -->
             <img src="logo.png" alt="TaskBuks" class="h-9 w-auto hidden" id="app-logo"
                 onerror="this.classList.add('hidden'); document.getElementById('brand-text').classList.remove('hidden')">
@@ -389,20 +411,99 @@
         </div>
 
         <!-- LOGIN SECTION -->
-        <div id="login" class="page-section hidden flex flex-col items-center justify-center min-h-[80vh] space-y-8">
-            <div class="text-center space-y-2">
+        <div id="login"
+            class="page-section hidden flex flex-col items-center justify-center py-12 min-h-screen space-y-6 overflow-y-auto">
+            <div class="text-center space-y-2 mb-4">
                 <h1 class="text-4xl font-black text-slate-900 dark:text-white">Task<span
                         class="text-primary">Buks</span></h1>
                 <p class="text-slate-500 font-medium">Earn money by completing simple tasks</p>
             </div>
 
-            <div class="w-full max-w-xs space-y-4">
-                <button id="sign-in-btn"
+            <!-- Main Menu (Sign In / Sign Up Selection) -->
+            <div id="auth-menu" class="w-full max-w-xs space-y-4">
+                <button onclick="showAuthForm('signin')"
                     class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 hover:scale-105 transition-transform">
                     <span class="material-icons-round">login</span>
                     Sign In to Start
                 </button>
+                <button onclick="showAuthForm('signup')"
+                    class="w-full bg-white dark:bg-gray-800 text-slate-900 dark:text-white border border-gray-200 dark:border-gray-700 font-bold py-4 rounded-2xl shadow-sm flex items-center justify-center gap-3 hover:scale-105 transition-transform">
+                    <span class="material-icons-round">person_add</span>
+                    New User? Register
+                </button>
             </div>
+
+            <!-- Sign In Form -->
+            <div id="signin-form" class="hidden w-full max-w-xs space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Welcome Back</h3>
+                    <form onsubmit="handleLogin(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="login-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="login-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-primary text-white font-bold py-3 rounded-xl mt-2 shadow-lg shadow-primary/20">
+                            Sign In
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signup-form" class="hidden w-full max-w-xs space-y-4">
+                <div
+                    class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Create Account</h3>
+                    <form onsubmit="handleRegister(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Full Name</label>
+                            <input type="text" id="reg-name" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" id="reg-email" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Phone Number</label>
+                            <input type="tel" id="reg-phone" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-primary mb-1 flex items-center gap-1">
+                                <span class="material-icons-round text-sm">confirmation_number</span>
+                                Referral Code (Optional)
+                            </label>
+                            <input type="text" id="reg-referral"
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm"
+                                placeholder="Enter coupon/referral code">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+                            <input type="password" id="reg-password" required
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-secondary text-slate-900 font-bold py-3 rounded-xl mt-2 shadow-lg shadow-secondary/20">
+                            Create Account
+                        </button>
+                    </form>
+                    <button onclick="showAuthForm('menu')"
+                        class="w-full text-center text-xs text-slate-400 mt-4 underline">Back</button>
+                </div>
+            </div>
+
         </div>
 
         <!-- HOME SECTION -->
@@ -478,8 +579,31 @@
                             <p class="text-xs opacity-70 mb-4 font-medium max-w-[200px]">Check out our partners and
                                 support the app.</p>
                             <div
-                                class="bg-white text-black font-bold px-6 py-2 rounded-full inline-block text-xs hover:scale-105 transition-transform">
+                                class="bg-white text-black font-bold px-6 py-2 rounded-full inline-block text-xs hover:scale-105 transition-transform mb-4">
                                 Open Offer
+                            </div>
+                            <!-- Carousel Banner Ad Container -->
+                            <div id="ad-banner-carousel" class="w-full h-full hidden">
+                                <div
+                                    class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-r from-slate-900 to-slate-800 rounded-[24px] relative overflow-hidden border border-white/10 shadow-inner">
+                                    <div class="absolute inset-0 opacity-10"
+                                        style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E');">
+                                    </div>
+                                    <div class="z-10 flex flex-col items-center">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span
+                                                class="material-icons-round text-amber-500 text-2xl animate-pulse">star</span>
+                                            <h3 class="text-white font-bold text-sm tracking-wide">SPONSORED</h3>
+                                            <span
+                                                class="material-icons-round text-amber-500 text-2xl animate-pulse">star</span>
+                                        </div>
+                                        <p class="text-slate-400 text-[10px] text-center max-w-[80%] leading-tight">
+                                            Check out our premium partners below for exclusive offers!</p>
+                                    </div>
+                                    <div
+                                        class="absolute bottom-0 w-full h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -494,73 +618,7 @@
                 </div>
             </section>
 
-            <!-- Second Carousel (Offers & Partners) -->
-            <section class="relative">
-                <div class="flex items-center gap-2 mb-3 px-1">
-                    <span class="material-icons-round text-amber-500 text-sm">stars</span>
-                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Partner Offers</h3>
-                </div>
-                <div id="home-carousel-2"
-                    class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar rounded-[24px] ios-shadow">
-
-                    <!-- Slide 1: AdGem -->
-                    <div
-                        class="min-w-full snap-center relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white h-40 flex items-center">
-                        <div class="relative z-10 w-3/4">
-                            <h2 class="text-xl font-extrabold leading-tight mb-1">Top <span
-                                    class="text-yellow-200">Paying</span> Tasks</h2>
-                            <p class="text-[11px] opacity-90 mb-3 font-medium">Complete offers to earn 5000+ coins.</p>
-                            <button
-                                class="bg-white text-orange-600 font-bold px-4 py-1.5 rounded-full text-[11px] hover:scale-105 transition-transform"
-                                onclick="window.location.hash='tasks'">
-                                View Offers
-                            </button>
-                        </div>
-                        <div class="absolute right-[-20px] bottom-[-20px] opacity-20">
-                            <span class="material-icons-round" style="font-size: 120px;">local_offer</span>
-                        </div>
-                    </div>
-
-                    <!-- Slide 2: CPALeab -->
-                    <div class="min-w-full snap-center relative overflow-hidden bg-blue-600 h-40 flex items-center cursor-pointer"
-                        onclick="window.open('https://cpalead.com', '_blank')">
-                        <div class="relative z-10 p-6 text-white">
-                            <h2 class="text-xl font-extrabold leading-tight mb-1">Special <span
-                                    class="text-blue-200">Surveys</span></h2>
-                            <p class="text-[11px] opacity-90 mb-3 font-medium">Quick surveys, instant rewards.</p>
-                            <div
-                                class="bg-blue-800 text-white font-bold px-4 py-1.5 rounded-full inline-block text-[11px]">
-                                Start Now</div>
-                        </div>
-                        <div class="absolute right-4 bottom-4 opacity-30">
-                            <span class="material-icons-round" style="font-size: 60px;">assignment</span>
-                        </div>
-                    </div>
-
-                    <!-- Slide 3: More Games -->
-                    <div class="min-w-full snap-center relative overflow-hidden bg-emerald-600 h-40 flex items-center cursor-pointer"
-                        onclick="document.getElementById('games-section').scrollIntoView({behavior: 'smooth'})">
-                        <div
-                            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
-                        </div>
-                        <div class="relative z-10 p-6 text-white">
-                            <div
-                                class="bg-white text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded mb-2 inline-block">
-                                NEW</div>
-                            <h2 class="text-xl font-extrabold leading-tight mb-1">Play <span
-                                    class="text-emerald-200">More Games</span></h2>
-                            <p class="text-[11px] opacity-90 mb-3 font-medium">Discover 10+ new mini-games.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dots Indicators 2 -->
-                <div class="flex justify-center gap-2 mt-3">
-                    <div class="w-1.5 h-1.5 rounded-full bg-primary carousel-dot-2" data-index="0"></div>
-                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300 carousel-dot-2" data-index="1"></div>
-                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300 carousel-dot-2" data-index="2"></div>
-                </div>
-            </section>
+            <!-- Partner Offers Removed -->
 
             <!-- Daily Bonus Popup Modal -->
             <div id="daily-bonus-popup" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
@@ -586,44 +644,44 @@
                     <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar justify-center">
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="1">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                100</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="2">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                110</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="3">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                120</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="4">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                130</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="5">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                140</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="6">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                ₹1</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
+                                150</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="7">
                             <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
-                                ₹2</div>
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
+                                200</div>
                             <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
                         </div>
                     </div>
@@ -632,12 +690,14 @@
                         &
                         earn extra bonus!</p>
 
-                    <button id="claim-bonus-btn"
-                        class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
-                        onclick="window.claimDailyBonusUI()">
-                        <span class="material-icons-round text-sm align-middle mr-1">redeem</span>
-                        Claim ₹1 Daily Bonus
-                    </button>
+                    <div class="space-y-3">
+
+                        <button id="claim-bonus-btn"
+                            class="w-full bg-gray-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
+                            onclick="window.claimDailyBonusUI()">
+                            Normal Claim
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1343,15 +1403,16 @@
 
             <!-- Quick Earn Actions -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-[18px] p-4 cursor-pointer transition-transform active:scale-[0.97] nav-item"
-                    data-target="home" onclick="if(window.ads) window.ads.showRewarded()"
+                <div id="daily-bonus-card-10x"
+                    class="rounded-[18px] p-4 cursor-pointer transition-transform active:scale-[0.97] nav-item"
+                    data-target="home" onclick="window.claimDailyBonus10XUI()"
                     style="background: linear-gradient(145deg, rgba(245,158,11,0.06), rgba(251,191,36,0.04)); border: 1px solid rgba(245,158,11,0.1);">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
                         style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
                         <span class="material-icons-round text-white" style="font-size:20px;">play_circle</span>
                     </div>
-                    <h4 class="font-bold text-[13px] text-slate-800">Watch & Earn</h4>
-                    <p class="text-[11px] text-slate-400 mt-0.5">₹10 per video</p>
+                    <h4 class="font-bold text-[13px] text-slate-800">10 Coins</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Watch Video & Earn</p>
                 </div>
                 <div class="rounded-[18px] p-4 cursor-pointer transition-transform active:scale-[0.97] nav-item"
                     data-target="surveys"
@@ -1393,10 +1454,10 @@
                     <span class="material-icons-round text-4xl">person</span>
                 </div>
                 <div>
-                    <h2 class="text-lg font-bold">Sumit Kumar</h2>
-                    <p class="text-white/80 text-sm font-medium">+91 89500 13181</p>
+                    <h2 id="profile-name" class="text-lg font-bold">Loading...</h2>
+                    <p id="profile-phone" class="text-white/80 text-sm font-medium">Loading...</p>
                 </div>
-                <button class="ml-auto bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                <button class="ml-auto bg-white/20 p-2 rounded-full backdrop-blur-sm" onclick="window.editProfileUI()">
                     <span class="material-icons-round text-white">edit</span>
                 </button>
             </div>
@@ -1408,7 +1469,7 @@
                 <div class="relative">
                     <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Email Address</label>
                     <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 py-2">
-                        <span class="font-medium text-slate-900 dark:text-white">sumitkumards07@gmail.com</span>
+                        <span id="profile-email" class="font-medium text-slate-900 dark:text-white">Loading...</span>
                         <span
                             class="text-[10px] text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <span class="material-icons-round text-[10px]">error</span> Un-Verified
@@ -1444,14 +1505,7 @@
                 </div>
             </div>
 
-            <!-- Verify Banner -->
-            <div
-                class="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 p-3 rounded-xl text-center">
-                <p class="text-xs text-orange-800 dark:text-orange-200 font-medium">
-                    <span class="underline font-bold cursor-pointer">Verify</span> your email to get more rewarding
-                    offers.
-                </p>
-            </div>
+
 
             <!-- Community Banner -->
             <div
@@ -1649,20 +1703,10 @@
 
     <!-- Bottom Nav -->
     <!-- Bottom Nav -->
-    <!-- Static Loading Overlay (Default Visible) -->
-    <div id="app-loading-overlay">
-        <div class="text-2xl font-black mb-4">Task<span class="text-primary">Buks</span></div>
-        <div id="loading-spinner"
-            class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <div id="loading-status" class="mt-4 text-xs text-slate-400 text-center px-6">Connecting...</div>
-        <div class="flex gap-4 mt-8">
-            <button id="retry-init" onclick="window.location.reload()"
-                class="hidden bg-primary text-white px-6 py-2 rounded-full text-xs font-bold shadow-lg">Retry</button>
-        </div>
-    </div>
+    <!-- Static Overlay Removed - Merged into Top -->
 
     <nav
-        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
+        class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
         <button class="flex flex-col items-center gap-1 text-primary active nav-item" data-target="home">
             <span class="material-icons-round">home</span>
             <span class="text-[10px] font-bold">Home</span>
@@ -1688,13 +1732,42 @@
         </button>
     </nav>
 
-    <!-- Load scripts sequentially -->
+    <!-- Global Error Handler -->
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            const status = document.getElementById('loading-status');
+            if (status) {
+                status.textContent = "Error: " + msg;
+                status.style.color = "red";
+            }
+            document.getElementById('loading-spinner')?.classList.add('hidden');
+            document.getElementById('retry-init')?.classList.remove('hidden');
+            return false;
+        };
+    </script>
+
+    <!-- Load scripts sequentially with debug status -->
+    <script>document.getElementById('loading-status').textContent = "Loading ads...";</script>
     <script src="ads.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading API...";</script>
     <script src="api.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Store...";</script>
     <script src="store.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Controller...";</script>
+    <script src="controller.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading MD5...";</script>
     <script src="md5.js"></script>
-    <script src="games.js" defer></script>
-    <script src="app.js?v=1.1"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Loading Games...";</script>
+    <script src="games.js"></script>
+
+    <script>document.getElementById('loading-status').textContent = "Starting App...";</script>
+    <script src="app.js?v=1.5"
+        onerror="document.getElementById('loading-status').textContent='Error: Failed to load app.js'; document.getElementById('loading-status').style.color='red';"></script>
 </body>
 
 </html>
