@@ -1,5 +1,5 @@
 
-const API_URL = location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://task-buks-backend.vercel.app';
+const API_URL = location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://taskbuks.vercel.app';
 const ADMIN_KEY_STORAGE = 'taskbuks_admin_key';
 
 let currentKey = localStorage.getItem(ADMIN_KEY_STORAGE);
