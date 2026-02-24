@@ -78,15 +78,19 @@ async function loadUsers() {
     users.forEach(u => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0';
+        const rawName = u.full_name;
+        const displayName = (!rawName || rawName === 'undefined' || rawName.trim() === '') ? 'User_' + u.id.substring(0, 5) : rawName;
+        const initial = displayName[0].toUpperCase();
+
         tr.innerHTML = `
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">
-                        ${u.full_name ? u.full_name[0] : 'U'}
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 uppercase">
+                        ${initial}
                     </div>
                     <div>
-                        <div class="font-bold text-slate-700">${u.full_name || 'Unknown'}</div>
-                        <div class="text-xs text-slate-400">${u.email}</div>
+                        <div class="font-bold text-slate-700">${displayName}</div>
+                        <div class="text-xs text-slate-400">${u.email || 'No Email'}</div>
                     </div>
                 </div>
             </td>
