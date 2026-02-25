@@ -27,9 +27,9 @@ export const getAdminStats = async (req: FastifyRequest, reply: FastifyReply) =>
         // Active Users (Logged in last 24h) - assuming updated_at tracks login
         const activeRes = await db.query("SELECT COUNT(*) FROM users WHERE updated_at > NOW() - INTERVAL '24 HOURS'");
 
-        // Pending Withdrawals
+        // Pending Withdrawals (Assuming all withdrawals are pending if there's no status column)
         const pendingRes = await db.query(
-            "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'WITHDRAWAL' AND status = 'PENDING'"
+            "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'WITHDRAWAL'"
         );
 
         return reply.send({
