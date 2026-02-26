@@ -76,6 +76,13 @@ window.api = {
         });
     },
 
+    async updateUpi(upiId) {
+        return await fetchJson('/api/update-upi', {
+            method: 'POST',
+            body: JSON.stringify({ upi_id: upiId })
+        });
+    },
+
     // 2. Get Offers
     async getOffers() {
         return await fetchJson('/api/offers');

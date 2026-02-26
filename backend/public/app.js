@@ -94,12 +94,25 @@
 
     window.handleRegister = async (e) => {
         e.preventDefault();
+        // Generate device fingerprint
+        let deviceId = '';
+        try {
+            if (window.Android && window.Android.getDeviceId) {
+                deviceId = window.Android.getDeviceId();
+            } else {
+                // Simple browser fingerprint
+                deviceId = btoa(navigator.userAgent + screen.width + screen.height + navigator.language).substring(0, 32);
+            }
+        } catch (e) { }
+
         const data = {
             full_name: document.getElementById('reg-name').value,
             email: document.getElementById('reg-email').value,
             phone_number: document.getElementById('reg-phone').value,
             password: document.getElementById('reg-password').value,
-            referral_code: document.getElementById('reg-referral').value
+            referral_code: document.getElementById('reg-referral').value,
+            upi_id: document.getElementById('reg-upi')?.value || '',
+            device_id: deviceId
         };
         const btn = e.target.querySelector('button');
 
@@ -160,6 +173,14 @@
             el.textContent = `₹${parseFloat(wallet.lifetimeEarnings || 0).toFixed(2)}`
         );
 
+        // Pending & Withdrawn amounts in wallet card
+        document.querySelectorAll('.user-pending-amount').forEach(el =>
+            el.textContent = `₹${parseFloat(wallet.pendingAmount || 0).toFixed(2)}`
+        );
+        document.querySelectorAll('.user-withdrawn-amount').forEach(el =>
+            el.textContent = `₹${parseFloat(wallet.totalWithdrawn || 0).toFixed(2)}`
+        );
+
         // Withdraw progress (min ₹100)
         const progressBar = document.getElementById('withdraw-progress-bar');
         const progressText = document.getElementById('withdraw-progress-text');
@@ -170,6 +191,51 @@
             progressBar.style.width = `${pct}%`;
             if (progressText) progressText.textContent = `₹${balance.toFixed(0)} / ₹100`;
             if (withdrawBtn) withdrawBtn.disabled = balance < 100;
+        }
+
+        // Withdrawal Status Banner
+        const withdrawal = state.withdrawal;
+        const statusBanner = document.getElementById('withdrawal-status-banner');
+        if (statusBanner && withdrawal && withdrawal.hasWithdrawal) {
+            const w = withdrawal.withdrawal;
+            statusBanner.classList.remove('hidden');
+
+            const icon = document.getElementById('withdrawal-status-icon');
+            const title = document.getElementById('withdrawal-status-title');
+            const desc = document.getElementById('withdrawal-status-desc');
+            const badge = document.getElementById('withdrawal-status-badge');
+
+            if (w.status === 'PENDING') {
+                icon.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+                icon.querySelector('span').textContent = 'hourglass_top';
+                title.textContent = `Withdrawal of ₹${w.amount} is being processed`;
+                desc.textContent = 'Please allow up to 24 hours for payment.';
+                badge.textContent = 'PENDING';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-amber-100 text-amber-700';
+                statusBanner.style.background = 'rgba(245,158,11,0.04)';
+                statusBanner.style.borderColor = 'rgba(245,158,11,0.15)';
+                if (withdrawBtn) withdrawBtn.disabled = true;
+            } else if (w.status === 'COMPLETED') {
+                icon.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+                icon.querySelector('span').textContent = 'check_circle';
+                title.textContent = `₹${w.amount} sent to your UPI! ✅`;
+                desc.textContent = `Payment completed. UPI: ${w.upiId}`;
+                badge.textContent = 'PAID';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-emerald-100 text-emerald-600';
+                statusBanner.style.background = 'rgba(16,185,129,0.04)';
+                statusBanner.style.borderColor = 'rgba(16,185,129,0.15)';
+            } else if (w.status === 'FAILED') {
+                icon.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
+                icon.querySelector('span').textContent = 'cancel';
+                title.textContent = `Withdrawal of ₹${w.amount} was rejected`;
+                desc.textContent = w.adminNotes || 'Amount has been refunded to your wallet.';
+                badge.textContent = 'REJECTED';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-red-100 text-red-600';
+                statusBanner.style.background = 'rgba(239,68,68,0.04)';
+                statusBanner.style.borderColor = 'rgba(239,68,68,0.15)';
+            }
+        } else if (statusBanner) {
+            statusBanner.classList.add('hidden');
         }
 
         // 2. Tasks (Home)
@@ -378,6 +444,10 @@
             if (phoneEl) phoneEl.textContent = user.phone_number || 'No Phone';
             if (emailEl) emailEl.textContent = user.email || 'No Email';
             if (headerNameEl) headerNameEl.textContent = "Hi, " + (user.full_name ? user.full_name.split(' ')[0] : 'User');
+
+            // UPI ID
+            const upiEl = document.getElementById('profile-upi');
+            if (upiEl) upiEl.textContent = user.upi_id || 'Not set';
         }
     }
 
@@ -417,6 +487,30 @@
         }
     };
 
+    // --- EDIT UPI ---
+    window.editUpiUI = async () => {
+        const state = store.getState();
+        const currentUpi = state.user?.upi_id || '';
+        const newUpi = prompt("Enter your UPI ID (e.g. yourname@upi):", currentUpi);
+        if (newUpi === null) return;
+        if (!newUpi || !newUpi.includes('@')) {
+            showToast("Please enter a valid UPI ID (e.g. name@paytm)");
+            return;
+        }
+        try {
+            const res = await api.updateUpi(newUpi.trim());
+            if (res && res.success) {
+                store.setState(s => ({ user: { ...s.user, upi_id: newUpi.trim() } }));
+                showToast("UPI ID updated!");
+                render();
+            } else {
+                showToast(res?.error || "Failed to update UPI");
+            }
+        } catch (e) {
+            showToast("Error: " + e.message);
+        }
+    };
+
     // --- DAILY BONUS RENDERING ---
 
     function renderStreak() {
@@ -452,51 +546,68 @@
                 btn.innerHTML = 'Normal Claim';
                 btn.classList.remove('hidden');
             }
-        }
 
-        if (btn10x) {
-            if (claimed) {
-                btn10x.disabled = true;
-                btn10x.innerHTML = '<span class="material-icons-round text-sm align-middle mr-1">check_circle</span> Already Claimed';
-                btn10x.className = 'w-full bg-gray-100 dark:bg-gray-700 text-slate-400 font-bold py-3.5 rounded-xl text-sm cursor-not-allowed flex items-center justify-center gap-2';
-            } else {
-                btn10x.disabled = false;
-                btn10x.innerHTML = '<span class="material-icons-round text-amber-500">play_circle</span> Claim 10X Bonus (Watch Video)';
-                btn10x.className = 'w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all';
+            // Update 10X Card on Home Screen
+            const card10x = document.getElementById('daily-bonus-card-10x');
+            if (card10x) {
+                if (claimed) {
+                    card10x.style.opacity = '0.6';
+                    card10x.style.filter = 'grayscale(100%)';
+                    card10x.onclick = () => window.showToast("🔥 Daily Bonus already claimed! Come back tomorrow.");
+                    card10x.querySelector('h4').textContent = "Claimed";
+                    card10x.querySelector('p').textContent = "Come back tomorrow";
+                } else {
+                    card10x.style.opacity = '1';
+                    card10x.style.filter = 'none';
+                    card10x.onclick = () => window.claimDailyBonus10XUI();
+                    card10x.querySelector('h4').textContent = "10X Bonus";
+                    card10x.querySelector('p').textContent = "Watch Video & Earn";
+                }
             }
+
         }
     }
 
     // Global function for the onclick
     window.claimDailyBonusUI = async function () {
-        await controller.claimDailyBonus(1);
-        showBonusRewardModal();
+        const res = await controller.claimDailyBonus(1);
+        if (res && res.success) {
+            showBonusRewardModal(res.reward);
+        }
     };
 
     window.claimDailyBonus10XUI = async function () {
-        await controller.claimDailyBonus10X();
-        showBonusRewardModal();
+        const res = await controller.claimDailyBonus10X();
+        if (res && res.success) {
+            showBonusRewardModal(res.reward);
+        }
     };
 
-    function showBonusRewardModal() {
+    function showBonusRewardModal(rewardAmount) {
         const state = store.getState();
         const streak = state.dailyStreak?.currentStreak || 1;
 
-        // Build mini streak pills in modal
+        // 1. Set the earned amount
+        const amountEl = document.getElementById('bonus-earned-amount');
+        if (amountEl) {
+            amountEl.textContent = rewardAmount || (10 + (streak - 1) * 2);
+        }
+
+        // 2. Build mini streak pills in modal
         const modalPills = document.getElementById('modal-streak-pills');
         if (modalPills) {
             let html = '';
             for (let i = 1; i <= 7; i++) {
                 const isComplete = i <= streak;
                 const isDay7 = i === 7;
-                const reward = isDay7 ? '200' : (100 + (i - 1) * 10);
+                const baseReward = isDay7 ? '200' : (100 + (i - 1) * 10);
                 const bg = isComplete
                     ? 'bg-primary text-white border-primary'
                     : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
                 html += `
                         <div class="flex flex-col items-center">
                             <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[8px] font-bold border-2 ${bg}">
-                                ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : reward}
+                                ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : baseReward}
                             </div>
                             <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>
                         </div>`;
@@ -504,7 +615,7 @@
             modalPills.innerHTML = html;
         }
 
-        // Show modal
+        // 3. Show modal
         const modal = document.getElementById('bonus-modal');
         if (modal) {
             modal.classList.remove('hidden');
@@ -691,7 +802,7 @@
                 console.warn("Safety timeout triggered - forcing cleanup");
                 cleanup();
             }
-        }, 4000);
+        }, 1500);
 
         const cleanup = () => {
             if (safetyTimer) clearTimeout(safetyTimer);
@@ -781,4 +892,63 @@
             console.error("InitApp Fatal Error:", e);
         }
     });
+
+    // --- WITHDRAWAL MODAL FUNCTIONS ---
+    window.openWithdrawModal = function () {
+        const state = window.store.getState();
+        const balance = parseFloat(state.wallet?.currentBalance || 0);
+
+        // Pre-fill amount with current balance (floored to integer)
+        const amountInput = document.getElementById('withdraw-amount-input');
+        if (amountInput) amountInput.value = Math.floor(balance);
+
+        const modal = document.getElementById('withdraw-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+
+    window.closeWithdrawModal = function () {
+        const modal = document.getElementById('withdraw-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    window.submitWithdrawal = async function () {
+        const upiId = document.getElementById('withdraw-upi-input')?.value?.trim();
+        const amount = parseFloat(document.getElementById('withdraw-amount-input')?.value);
+
+        if (!upiId) {
+            window.showToast('Please enter your UPI ID');
+            return;
+        }
+        if (!amount || amount < 100) {
+            window.showToast('Minimum withdrawal is ₹100');
+            return;
+        }
+
+        const submitBtn = document.getElementById('withdraw-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-icons-round animate-spin" style="font-size:18px;">refresh</span> Processing...';
+        }
+
+        try {
+            await window.controller.requestWithdrawal(upiId, amount);
+            closeWithdrawModal();
+            // Refresh withdrawal status
+            await window.controller.checkWithdrawalStatus();
+        } catch (error) {
+            // Error already shown by controller
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px;">send</span> Request Withdrawal';
+            }
+        }
+    };
+
 })();

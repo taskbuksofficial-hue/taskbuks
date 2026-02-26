@@ -94,12 +94,25 @@
 
     window.handleRegister = async (e) => {
         e.preventDefault();
+        // Generate device fingerprint
+        let deviceId = '';
+        try {
+            if (window.Android && window.Android.getDeviceId) {
+                deviceId = window.Android.getDeviceId();
+            } else {
+                // Simple browser fingerprint
+                deviceId = btoa(navigator.userAgent + screen.width + screen.height + navigator.language).substring(0, 32);
+            }
+        } catch (e) { }
+
         const data = {
             full_name: document.getElementById('reg-name').value,
             email: document.getElementById('reg-email').value,
             phone_number: document.getElementById('reg-phone').value,
             password: document.getElementById('reg-password').value,
-            referral_code: document.getElementById('reg-referral').value
+            referral_code: document.getElementById('reg-referral').value,
+            upi_id: document.getElementById('reg-upi')?.value || '',
+            device_id: deviceId
         };
         const btn = e.target.querySelector('button');
 
@@ -431,6 +444,10 @@
             if (phoneEl) phoneEl.textContent = user.phone_number || 'No Phone';
             if (emailEl) emailEl.textContent = user.email || 'No Email';
             if (headerNameEl) headerNameEl.textContent = "Hi, " + (user.full_name ? user.full_name.split(' ')[0] : 'User');
+
+            // UPI ID
+            const upiEl = document.getElementById('profile-upi');
+            if (upiEl) upiEl.textContent = user.upi_id || 'Not set';
         }
     }
 
@@ -467,6 +484,30 @@
             if (loadingOverlay) loadingOverlay.style.opacity = '0';
             // Reuse updateStatus logic but usually it shows spinner, so maybe we don't need updateStatus here if it blocks UI too much
             // Just showToast is enough.
+        }
+    };
+
+    // --- EDIT UPI ---
+    window.editUpiUI = async () => {
+        const state = store.getState();
+        const currentUpi = state.user?.upi_id || '';
+        const newUpi = prompt("Enter your UPI ID (e.g. yourname@upi):", currentUpi);
+        if (newUpi === null) return;
+        if (!newUpi || !newUpi.includes('@')) {
+            showToast("Please enter a valid UPI ID (e.g. name@paytm)");
+            return;
+        }
+        try {
+            const res = await api.updateUpi(newUpi.trim());
+            if (res && res.success) {
+                store.setState(s => ({ user: { ...s.user, upi_id: newUpi.trim() } }));
+                showToast("UPI ID updated!");
+                render();
+            } else {
+                showToast(res?.error || "Failed to update UPI");
+            }
+        } catch (e) {
+            showToast("Error: " + e.message);
         }
     };
 
@@ -549,7 +590,7 @@
         // 1. Set the earned amount
         const amountEl = document.getElementById('bonus-earned-amount');
         if (amountEl) {
-            amountEl.textContent = rewardAmount || (100 + (streak - 1) * 10);
+            amountEl.textContent = rewardAmount || (10 + (streak - 1) * 2);
         }
 
         // 2. Build mini streak pills in modal

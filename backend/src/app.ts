@@ -39,7 +39,7 @@ const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 
 import { register, login } from './controllers/authController';
-import { getProfile, updateProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback, addCoins, requestWithdrawal, getWithdrawalStatus } from './controllers/appController';
+import { getProfile, updateProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback, addCoins, requestWithdrawal, getWithdrawalStatus, updateUpi } from './controllers/appController';
 
 // Auth Routes (Custom)
 server.post('/auth/register', register);
@@ -78,6 +78,7 @@ server.get('/api/transactions', { preHandler: [authenticate] }, getTransactions)
 // Withdrawal Routes (Protected)
 server.post('/api/withdraw/request', { preHandler: [authenticate] }, requestWithdrawal);
 server.get('/api/withdraw/status', { preHandler: [authenticate] }, getWithdrawalStatus);
+server.post('/api/update-upi', { preHandler: [authenticate] }, updateUpi);
 
 // --- ADMIN ROUTES (Protected by x-admin-key) ---
 import { getAdminStats, getAdminUsers, toggleUserBan, createAdminTask, deleteAdminTask, getAdminWithdrawals, updateWithdrawalStatus } from './controllers/adminController';

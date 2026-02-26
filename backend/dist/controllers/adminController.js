@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAdminTask = exports.createAdminTask = exports.toggleUserBan = exports.getAdminUsers = exports.getAdminStats = void 0;
+exports.updateWithdrawalStatus = exports.getAdminWithdrawals = exports.deleteAdminTask = exports.createAdminTask = exports.toggleUserBan = exports.getAdminUsers = exports.getAdminStats = void 0;
 const db = __importStar(require("../config/db"));
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'admin123'; // Simple protection for now
 const verifyAdmin = (req, reply) => {
@@ -55,11 +55,15 @@ const getAdminStats = async (req, reply) => {
         const payoutRes = await db.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'credit'");
         // Active Users (Logged in last 24h) - assuming updated_at tracks login
         const activeRes = await db.query("SELECT COUNT(*) FROM users WHERE updated_at > NOW() - INTERVAL '24 HOURS'");
+        // Pending Withdrawals
+        const pendingRes = await db.query("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'WITHDRAWAL' AND status = 'PENDING'");
         return reply.send({
             totalUsers: parseInt(userCount.rows[0].count),
             totalTasks: parseInt(taskCount.rows[0].count),
             totalPayouts: parseFloat(payoutRes.rows[0].total || '0'),
-            activeUsers: parseInt(activeRes.rows[0].count)
+            activeUsers: parseInt(activeRes.rows[0].count),
+            pendingWithdrawals: parseInt(pendingRes.rows[0].count),
+            pendingAmount: parseFloat(pendingRes.rows[0].total || '0')
         });
     }
     catch (error) {
@@ -134,3 +138,68 @@ const deleteAdminTask = async (req, reply) => {
     }
 };
 exports.deleteAdminTask = deleteAdminTask;
+// 6. Get All Withdrawals (Admin)
+const getAdminWithdrawals = async (req, reply) => {
+    if (!verifyAdmin(req, reply))
+        return;
+    try {
+        const res = await db.query(`
+            SELECT 
+                t.id, t.amount, t.upi_id, t.status, t.admin_notes, 
+                t.created_at, t.processed_at,
+                u.full_name, u.email, u.id as user_id
+            FROM transactions t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.type = 'WITHDRAWAL'
+            ORDER BY 
+                CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END,
+                t.created_at DESC
+            LIMIT 100
+        `);
+        return reply.send(res.rows);
+    }
+    catch (error) {
+        console.error("getAdminWithdrawals error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getAdminWithdrawals = getAdminWithdrawals;
+// 7. Update Withdrawal Status (Approve/Reject)
+const updateWithdrawalStatus = async (req, reply) => {
+    if (!verifyAdmin(req, reply))
+        return;
+    const { transactionId, status, adminNotes } = req.body;
+    if (!transactionId || !['COMPLETED', 'FAILED'].includes(status)) {
+        return reply.status(400).send({ error: 'Invalid parameters. Status must be COMPLETED or FAILED.' });
+    }
+    try {
+        // Get the withdrawal transaction
+        const txRes = await db.query("SELECT * FROM transactions WHERE id = $1 AND type = 'WITHDRAWAL'", [transactionId]);
+        if (txRes.rows.length === 0) {
+            return reply.status(404).send({ error: 'Withdrawal not found' });
+        }
+        const tx = txRes.rows[0];
+        if (tx.status !== 'PENDING') {
+            return reply.status(400).send({ error: `Withdrawal is already ${tx.status}` });
+        }
+        // Update the transaction status
+        await db.query(`UPDATE transactions 
+             SET status = $1, admin_notes = $2, processed_at = NOW() 
+             WHERE id = $3`, [status, adminNotes || null, transactionId]);
+        // If FAILED (rejected), refund the amount back to wallet
+        if (status === 'FAILED') {
+            await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [tx.amount, tx.user_id]);
+        }
+        return reply.send({
+            success: true,
+            message: status === 'COMPLETED'
+                ? 'Withdrawal marked as paid!'
+                : 'Withdrawal rejected. Amount refunded to user wallet.'
+        });
+    }
+    catch (error) {
+        console.error("updateWithdrawalStatus error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.updateWithdrawalStatus = updateWithdrawalStatus;

@@ -66,6 +66,9 @@ server.get('/api/pb/rr', appController_1.handleRapidReachPostback); // Short ali
 server.get('/api/surveys', { preHandler: [authenticate] }, appController_1.getCPXSurveys);
 // Transactions (Protected)
 server.get('/api/transactions', { preHandler: [authenticate] }, appController_1.getTransactions);
+// Withdrawal Routes (Protected)
+server.post('/api/withdraw/request', { preHandler: [authenticate] }, appController_1.requestWithdrawal);
+server.get('/api/withdraw/status', { preHandler: [authenticate] }, appController_1.getWithdrawalStatus);
 // --- ADMIN ROUTES (Protected by x-admin-key) ---
 const adminController_1 = require("./controllers/adminController");
 server.get('/admin/stats', adminController_1.getAdminStats);
@@ -73,6 +76,8 @@ server.get('/admin/users', adminController_1.getAdminUsers);
 server.post('/admin/users/ban', adminController_1.toggleUserBan);
 server.post('/admin/tasks/create', adminController_1.createAdminTask);
 server.post('/admin/tasks/delete', adminController_1.deleteAdminTask);
+server.get('/admin/withdrawals', adminController_1.getAdminWithdrawals);
+server.post('/admin/withdrawals/update', adminController_1.updateWithdrawalStatus);
 // Export server for Vercel
 exports.default = async (req, res) => {
     await server.ready();

@@ -76,6 +76,13 @@ window.api = {
         });
     },
 
+    async updateUpi(upiId) {
+        return await fetchJson('/api/update-upi', {
+            method: 'POST',
+            body: JSON.stringify({ upi_id: upiId })
+        });
+    },
+
     // 2. Get Offers
     async getOffers() {
         return await fetchJson('/api/offers');
@@ -95,10 +102,10 @@ window.api = {
     },
 
     // 5. Claim Daily Bonus
-    async claimDailyBonus(multiplier = 1) {
+    async claimDailyBonus(multiplier = 1, fixed_reward = null) {
         return await fetchJson('/api/bonus/claim', {
             method: 'POST',
-            body: JSON.stringify({ multiplier })
+            body: JSON.stringify({ multiplier, fixed_reward })
         });
     },
 
@@ -145,5 +152,19 @@ window.api = {
             method: 'POST',
             body: JSON.stringify({ coins, description })
         });
+    },
+
+    // 11. Request Withdrawal
+    async requestWithdrawal(upiId, amount) {
+        return await fetchJson('/api/withdraw/request', {
+            method: 'POST',
+            body: JSON.stringify({ upiId, amount })
+        });
+    },
+
+    // 12. Get Withdrawal Status
+    async getWithdrawalStatus() {
+        return await fetchJson('/api/withdraw/status');
     }
 };
+

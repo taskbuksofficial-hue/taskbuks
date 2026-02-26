@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
+exports.getWithdrawalStatus = exports.requestWithdrawal = exports.updateProfile = exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
 const db = __importStar(require("../config/db"));
 const crypto_1 = __importDefault(require("crypto"));
 const getProfile = async (req, reply) => {
@@ -137,6 +137,10 @@ const getStreak = async (req, reply) => {
                 }
             }
         }
+        else {
+            // New user or never claimed
+            streak = 0;
+        }
         return reply.send({
             streak: streak,
             claimedToday: claimedToday,
@@ -163,7 +167,7 @@ const startTask = async (req, reply) => {
 exports.startTask = startTask;
 const claimBonus = async (req, reply) => {
     const userId = req.userId;
-    const { multiplier } = req.body;
+    const { multiplier, fixed_reward } = req.body;
     const rewardMultiplier = multiplier === 10 ? 10 : 1;
     if (!userId)
         return reply.status(401).send({ error: 'Unauthorized' });
@@ -184,7 +188,10 @@ const claimBonus = async (req, reply) => {
             }
         }
         const baseBonusCoins = 100 + (newStreak - 1) * 10;
-        const bonusCoins = baseBonusCoins * rewardMultiplier;
+        let bonusCoins = baseBonusCoins * rewardMultiplier;
+        if (fixed_reward) {
+            bonusCoins = fixed_reward;
+        }
         const bonusRupees = bonusCoins / 1000;
         // 1. Update User Streak
         await db.query('UPDATE users SET current_streak = $1, last_claim_date = NOW() WHERE id = $2', [newStreak, userId]);
@@ -196,9 +203,13 @@ const claimBonus = async (req, reply) => {
                 updated_at = NOW() 
              WHERE user_id = $3`, [bonusRupees, bonusCoins, userId]);
         // 3. Log Transaction
-        const description = rewardMultiplier === 10
-            ? `Daily Bonus 10X (Day ${newStreak})`
-            : `Daily Bonus (Day ${newStreak})`;
+        let description = `Daily Bonus (Day ${newStreak})`;
+        if (fixed_reward) {
+            description = `Watch & Earn (${fixed_reward} Coins)`;
+        }
+        else if (rewardMultiplier === 10) {
+            description = `Daily Bonus 10X (Day ${newStreak})`;
+        }
         await db.query(`INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
              VALUES ($1, $2, $3, $4, 'BONUS', 'COMPLETED', NOW())`, [userId, bonusRupees, bonusCoins, description]);
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
@@ -438,3 +449,88 @@ const updateProfile = async (req, reply) => {
     }
 };
 exports.updateProfile = updateProfile;
+// --- WITHDRAWAL ENDPOINTS ---
+const requestWithdrawal = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    const { upiId, amount } = req.body;
+    if (!upiId || !upiId.trim()) {
+        return reply.status(400).send({ error: 'UPI ID is required' });
+    }
+    const withdrawAmount = parseFloat(String(amount));
+    if (isNaN(withdrawAmount) || withdrawAmount < 100) {
+        return reply.status(400).send({ error: 'Minimum withdrawal is ₹100' });
+    }
+    try {
+        // Check for existing PENDING withdrawal
+        const pendingCheck = await db.query("SELECT id FROM transactions WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'PENDING'", [userId]);
+        if (pendingCheck.rows.length > 0) {
+            return reply.status(400).send({ error: 'You already have a pending withdrawal. Please wait for it to be processed.' });
+        }
+        // Check wallet balance
+        const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        if (walletRes.rows.length === 0) {
+            return reply.status(400).send({ error: 'Wallet not found' });
+        }
+        const currentBalance = parseFloat(walletRes.rows[0].balance);
+        if (currentBalance < withdrawAmount) {
+            return reply.status(400).send({ error: `Insufficient balance. You have ₹${currentBalance.toFixed(2)}` });
+        }
+        // Deduct from wallet
+        await db.query('UPDATE wallets SET balance = balance - $1, updated_at = NOW() WHERE user_id = $2', [withdrawAmount, userId]);
+        // Create PENDING withdrawal transaction
+        await db.query(`INSERT INTO transactions (user_id, amount, description, type, status, upi_id, created_at)
+             VALUES ($1, $2, $3, 'WITHDRAWAL', 'PENDING', $4, NOW())`, [userId, withdrawAmount, `Withdrawal to UPI: ${upiId}`, upiId.trim()]);
+        return reply.send({
+            success: true,
+            message: 'Withdrawal request submitted! Payments are processed manually within 24 hours.',
+            withdrawal: {
+                amount: withdrawAmount,
+                upiId: upiId.trim(),
+                status: 'PENDING'
+            }
+        });
+    }
+    catch (error) {
+        console.error("requestWithdrawal error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.requestWithdrawal = requestWithdrawal;
+const getWithdrawalStatus = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+        // Get the most recent withdrawal (PENDING first, then latest)
+        const result = await db.query(`SELECT id, amount, upi_id, status, admin_notes, created_at, processed_at 
+             FROM transactions 
+             WHERE user_id = $1 AND type = 'WITHDRAWAL'
+             ORDER BY 
+                CASE WHEN status = 'PENDING' THEN 0 ELSE 1 END,
+                created_at DESC
+             LIMIT 1`, [userId]);
+        if (result.rows.length === 0) {
+            return reply.send({ hasWithdrawal: false });
+        }
+        const w = result.rows[0];
+        return reply.send({
+            hasWithdrawal: true,
+            withdrawal: {
+                id: w.id,
+                amount: parseFloat(w.amount),
+                upiId: w.upi_id,
+                status: w.status,
+                adminNotes: w.admin_notes,
+                createdAt: w.created_at,
+                processedAt: w.processed_at
+            }
+        });
+    }
+    catch (error) {
+        console.error("getWithdrawalStatus error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.getWithdrawalStatus = getWithdrawalStatus;

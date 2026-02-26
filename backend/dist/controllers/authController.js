@@ -66,8 +66,8 @@ const register = async (req, reply) => {
             }
         }
         // 5. Create User
-        const newUserResult = await db.query(`INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        const newUserResult = await db.query(`INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, current_streak, last_claim_date, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, 0, NULL, NOW())
              RETURNING *`, [email, hashedPassword, full_name, phone_number, newReferralCode, referredBy]);
         const user = newUserResult.rows[0];
         // 6. Handle Rewards Logic

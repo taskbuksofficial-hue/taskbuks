@@ -93,6 +93,7 @@ async function loadUsers() {
                     <div>
                         <div class="font-bold text-slate-700">${displayName}</div>
                         <div class="text-xs text-slate-400">${u.email || 'No Email'}</div>
+                        <div class="text-[10px] text-blue-500 font-medium">${u.upi_id ? '💳 ' + u.upi_id : ''}</div>
                     </div>
                 </div>
             </td>

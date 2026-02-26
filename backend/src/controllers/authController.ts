@@ -22,13 +22,32 @@ interface LoginBody {
 }
 
 export const register = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { full_name, email, phone_number, password, referral_code } = req.body as RegisterBody;
+    const { full_name, email, phone_number, password, referral_code, upi_id, device_id } = req.body as RegisterBody & { upi_id?: string, device_id?: string };
 
     if (!email || !password || !full_name) {
         return reply.status(400).send({ error: 'Missing required fields' });
     }
 
+    // Password strength validation
+    if (password.length < 6) {
+        return reply.status(400).send({ error: 'Password must be at least 6 characters' });
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        return reply.status(400).send({ error: 'Password must contain both letters and numbers' });
+    }
+
     try {
+        // Device limit: max 2 accounts per device
+        if (device_id) {
+            const deviceCheck = await db.query(
+                "SELECT COUNT(*) as count FROM users WHERE device_id = $1",
+                [device_id]
+            );
+            if (parseInt(deviceCheck.rows[0].count) >= 2) {
+                return reply.status(400).send({ error: 'Maximum 2 accounts per device. Contact support if needed.' });
+            }
+        }
+
         // 1. Check if user exists
         const existingUser = await db.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
@@ -53,10 +72,10 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // 5. Create User
         const newUserResult = await db.query(
-            `INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, current_streak, last_claim_date, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, 0, NULL, NOW())
+            `INSERT INTO users (email, password_hash, full_name, phone_number, referral_code, referred_by, upi_id, device_id, current_streak, last_claim_date, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, NULL, NOW())
              RETURNING *`,
-            [email, hashedPassword, full_name, phone_number, newReferralCode, referredBy]
+            [email, hashedPassword, full_name, phone_number, newReferralCode, referredBy, upi_id || null, device_id || null]
         );
         const user = newUserResult.rows[0];
 

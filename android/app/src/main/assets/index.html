@@ -481,6 +481,15 @@
                                 class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm">
                         </div>
                         <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
+                                <span class="material-icons-round text-sm">account_balance</span>
+                                UPI ID (for withdrawals)
+                            </label>
+                            <input type="text" id="reg-upi"
+                                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-700 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white text-sm"
+                                placeholder="yourname@upi">
+                        </div>
+                        <div>
                             <label class="block text-xs font-bold text-primary mb-1 flex items-center gap-1">
                                 <span class="material-icons-round text-sm">confirmation_number</span>
                                 Referral Code (Optional)
@@ -645,43 +654,43 @@
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="1">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                100</div>
+                                10</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 1</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="2">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                110</div>
+                                12</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 2</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="3">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                120</div>
+                                14</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 3</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="4">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                130</div>
+                                16</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 4</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="5">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                140</div>
+                                18</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 5</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="6">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-slate-400 transition-all">
-                                150</div>
+                                20</div>
                             <span class="text-[9px] text-slate-400 mt-1 font-medium">Day 6</span>
                         </div>
                         <div class="streak-day flex flex-col items-center min-w-[42px]" data-day="7">
                             <div
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-extrabold border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-600 transition-all">
-                                200</div>
+                                24</div>
                             <span class="text-[9px] text-amber-500 mt-1 font-bold">Day 7</span>
                         </div>
                     </div>
@@ -696,6 +705,12 @@
                             class="w-full bg-gray-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 font-bold py-3 rounded-xl text-sm active:scale-95 transition-all"
                             onclick="window.claimDailyBonusUI()">
                             Normal Claim
+                        </button>
+                        <button id="claim-bonus-btn-10x"
+                            class="w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-200 dark:shadow-none"
+                            onclick="window.claimDailyBonus10XUI()">
+                            <span class="material-icons-round text-sm">play_circle</span>
+                            Watch Ad & Earn 50 Coins
                         </button>
                     </div>
                 </div>
@@ -1361,13 +1376,13 @@
                         <div class="flex-1 py-3 px-4 text-center">
                             <p class="text-[10px] font-semibold uppercase tracking-wider"
                                 style="color:rgba(255,255,255,0.35);">Pending</p>
-                            <p class="text-white font-bold text-[17px] mt-0.5">₹0.00</p>
+                            <p class="text-white font-bold text-[17px] mt-0.5 user-pending-amount">₹0.00</p>
                         </div>
                         <div class="w-px h-10" style="background:rgba(255,255,255,0.06);"></div>
                         <div class="flex-1 py-3 px-4 text-center">
                             <p class="text-[10px] font-semibold uppercase tracking-wider"
                                 style="color:rgba(255,255,255,0.35);">Withdrawn</p>
-                            <p class="text-white font-bold text-[17px] mt-0.5">₹0.00</p>
+                            <p class="text-white font-bold text-[17px] mt-0.5 user-withdrawn-amount">₹0.00</p>
                         </div>
                     </div>
                 </div>
@@ -1392,13 +1407,81 @@
                         style="width: 0%; background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 0 12px rgba(16,185,129,0.4);">
                     </div>
                 </div>
-                <button id="withdraw-btn"
+                <button id="withdraw-btn" onclick="openWithdrawModal()"
                     class="mt-4 w-full font-bold py-3.5 rounded-2xl text-[14px] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16,185,129,0.3);"
                     disabled>
                     <span class="material-icons-round" style="font-size:18px;">account_balance</span>
                     Withdraw to UPI (Min ₹100)
                 </button>
+
+                <!-- Withdrawal Status Banner -->
+                <div id="withdrawal-status-banner" class="hidden mt-4 rounded-2xl p-4"
+                    style="border: 1px solid rgba(0,0,0,0.06);">
+                    <div class="flex items-center gap-3">
+                        <div id="withdrawal-status-icon"
+                            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                            <span class="material-icons-round text-white" style="font-size:20px;">hourglass_top</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="withdrawal-status-title" class="font-bold text-[13px] text-slate-800"></p>
+                            <p id="withdrawal-status-desc" class="text-[11px] text-slate-400 mt-0.5"></p>
+                        </div>
+                        <span id="withdrawal-status-badge"
+                            class="px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawal Modal -->
+            <div id="withdraw-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div class="bg-white dark:bg-gray-800 rounded-[28px] p-6 w-full max-w-sm relative shadow-2xl"
+                    style="animation: modalBounce 0.4s ease-out;">
+                    <button onclick="closeWithdrawModal()"
+                        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center z-10">
+                        <span class="material-icons-round text-slate-500 text-lg">close</span>
+                    </button>
+
+                    <div class="flex items-center gap-2 mb-5">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <span class="material-icons-round text-white" style="font-size:20px;">account_balance</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-slate-800 dark:text-white">Withdraw Earnings</h3>
+                            <p class="text-[11px] text-slate-400">Transfer to your UPI account</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5">UPI ID</label>
+                            <input id="withdraw-upi-input" type="text" placeholder="yourname@upi"
+                                class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5">Amount (₹)</label>
+                            <input id="withdraw-amount-input" type="number" min="100" step="1" placeholder="Min ₹100"
+                                class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+
+                        <div class="rounded-xl p-3 flex items-start gap-2"
+                            style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.12);">
+                            <span class="material-icons-round text-amber-500 shrink-0"
+                                style="font-size:16px; margin-top:1px;">info</span>
+                            <p class="text-[11px] text-amber-700 leading-relaxed">Payments are processed manually within
+                                24 hours. You'll be notified once payment is sent to your UPI.</p>
+                        </div>
+
+                        <button id="withdraw-submit-btn" onclick="submitWithdrawal()"
+                            class="w-full font-bold py-3.5 rounded-2xl text-[14px] transition-all flex items-center justify-center gap-2"
+                            style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16,185,129,0.3);">
+                            <span class="material-icons-round" style="font-size:18px;">send</span>
+                            Request Withdrawal
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Quick Earn Actions -->
@@ -1474,6 +1557,18 @@
                             class="text-[10px] text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <span class="material-icons-round text-[10px]">error</span> Un-Verified
                         </span>
+                    </div>
+                </div>
+
+                <!-- UPI ID -->
+                <div class="relative">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">UPI ID</label>
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 py-2">
+                        <span id="profile-upi" class="font-medium text-slate-900 dark:text-white">Not set</span>
+                        <button onclick="window.editUpiUI()"
+                            class="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span class="material-icons-round text-[10px]">edit</span> Edit
+                        </button>
                     </div>
                 </div>
 

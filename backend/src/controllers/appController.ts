@@ -657,3 +657,21 @@ export const getWithdrawalStatus = async (req: FastifyRequest, reply: FastifyRep
         return reply.status(500).send({ error: 'Internal Server Error' });
     }
 };
+
+export const updateUpi = async (req: FastifyRequest, reply: FastifyReply) => {
+    const userId = (req as any).userId;
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+    const { upi_id } = req.body as { upi_id: string };
+    if (!upi_id || !upi_id.includes('@')) {
+        return reply.status(400).send({ error: 'Please enter a valid UPI ID (e.g. name@paytm)' });
+    }
+
+    try {
+        await db.query('UPDATE users SET upi_id = $1, updated_at = NOW() WHERE id = $2', [upi_id.trim(), userId]);
+        return reply.send({ success: true, upi_id: upi_id.trim() });
+    } catch (error) {
+        console.error("updateUpi error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
