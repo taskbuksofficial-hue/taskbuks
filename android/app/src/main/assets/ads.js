@@ -173,10 +173,14 @@ window.ads = {
         console.log("Requesting Rewarded Ad (AdMob)...");
         if (window.Android && window.Android.showRewarded) {
             window.onAdRewardReceived = function (amount) {
-                console.log("Reward received:", amount);
-                if (callback) callback(amount);
-                if (window.controller && window.controller.claimVideoReward) {
-                    window.controller.claimVideoReward(amount);
+                const rewardAmount = Number(amount) || 0;
+                console.log("Reward received:", rewardAmount);
+                if (typeof callback === 'function') {
+                    callback(rewardAmount);
+                } else if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(rewardAmount);
+                } else if (window.showToast) {
+                    window.showToast("Ad not completed. No reward credited.");
                 }
             };
             window.Android.showRewarded();
@@ -195,10 +199,14 @@ window.ads = {
         if (window.Android && window.Android.showRewarded) {
             console.log("[SmartAd] Showing Native Android Ad");
             window.onAdRewardReceived = function (amount) {
-                console.log("Reward received:", amount);
-                if (callback) callback(amount);
-                if (window.controller && window.controller.claimVideoReward) {
-                    window.controller.claimVideoReward(amount);
+                const rewardAmount = Number(amount) || 0;
+                console.log("Reward received:", rewardAmount);
+                if (typeof callback === 'function') {
+                    callback(rewardAmount);
+                } else if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(rewardAmount);
+                } else if (window.showToast) {
+                    window.showToast("Ad not completed. No reward credited.");
                 }
             };
             window.Android.showRewarded();
@@ -242,14 +250,6 @@ window.ads = {
             url.searchParams.set('testAds', 'true');
         }
         window.location.href = url.toString();
-    },
-
-    setBannerVisible: function (visible) {
-        if (window.Android && window.Android.setBannerVisible) {
-            window.Android.setBannerVisible(visible);
-        } else {
-            console.log("Web Mode: Banner Visibility set to " + visible);
-        }
     },
 
     checkEnvironment: function () {
@@ -308,8 +308,11 @@ window.ads = {
  * Handle Reward callback globally
  */
 window.onAdRewardReceived = function (amount) {
-    console.log("Global Reward handler:", amount);
-    if (window.controller && window.controller.claimVideoReward) {
-        window.controller.claimVideoReward(amount);
+    const rewardAmount = Number(amount) || 0;
+    console.log("Global Reward handler:", rewardAmount);
+    if (rewardAmount > 0 && window.controller && window.controller.claimVideoReward) {
+        window.controller.claimVideoReward(rewardAmount);
+    } else if (window.showToast) {
+        window.showToast("Ad not completed. No reward credited.");
     }
 };

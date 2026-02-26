@@ -550,19 +550,11 @@
             // Update 10X Card on Home Screen
             const card10x = document.getElementById('daily-bonus-card-10x');
             if (card10x) {
-                if (claimed) {
-                    card10x.style.opacity = '0.6';
-                    card10x.style.filter = 'grayscale(100%)';
-                    card10x.onclick = () => window.showToast("🔥 Daily Bonus already claimed! Come back tomorrow.");
-                    card10x.querySelector('h4').textContent = "Claimed";
-                    card10x.querySelector('p').textContent = "Come back tomorrow";
-                } else {
-                    card10x.style.opacity = '1';
-                    card10x.style.filter = 'none';
-                    card10x.onclick = () => window.claimDailyBonus10XUI();
-                    card10x.querySelector('h4').textContent = "10X Bonus";
-                    card10x.querySelector('p').textContent = "Watch Video & Earn";
-                }
+                card10x.style.opacity = '1';
+                card10x.style.filter = 'none';
+                card10x.onclick = () => window.claimDailyBonus10XUI();
+                card10x.querySelector('h4').textContent = "10X Bonus";
+                card10x.querySelector('p').textContent = "Watch Video & Earn";
             }
 
         }

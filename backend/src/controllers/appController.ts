@@ -309,7 +309,7 @@ export const getTransactions = async (req: FastifyRequest, reply: FastifyReply) 
 
     try {
         const result = await db.query(
-            'SELECT id, amount, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            'SELECT id, amount, coins, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
             [userId]
         );
         return reply.send(result.rows);

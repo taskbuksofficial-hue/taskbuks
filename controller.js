@@ -335,7 +335,13 @@ window.controller = {
         }
     },
 
-    async claimVideoReward() {
+    async claimVideoReward(amount = 0) {
+        const rewardAmount = Number(amount) || 0;
+        if (rewardAmount <= 0) {
+            window.showToast("Ad not completed. No reward credited.");
+            return null;
+        }
+
         try {
             const res = await api.claimVideoReward();
             if (res.success) {
@@ -349,10 +355,12 @@ window.controller = {
                     }
                 });
                 window.showToast(`Congrats! +${res.reward || 50} coins (₹${(res.reward || 50) / 1000}) credited.`);
+                return res;
             }
         } catch (error) {
             console.error("Video Reward failed:", error);
             window.showToast("Failed to process reward.");
+            return null;
         }
     },
 
@@ -470,4 +478,3 @@ window.controller = {
         }
     }
 };
-

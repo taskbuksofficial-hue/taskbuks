@@ -52,7 +52,7 @@ export const getAdminUsers = async (req: FastifyRequest, reply: FastifyReply) =>
 
     try {
         const res = await db.query(`
-            SELECT u.id, u.full_name, u.email, u.is_active, u.upi_id, w.balance 
+            SELECT u.id, u.full_name, u.email, u.is_active, u.upi_id, w.balance, w.total_coins
             FROM users u 
             LEFT JOIN wallets w ON u.id::text = w.user_id 
             ORDER BY u.created_at DESC 

@@ -236,8 +236,7 @@ window.controller = {
                     wallet: {
                         ...s.wallet,
                         currentBalance: res.newBalance,
-                        totalCoins: s.wallet.totalCoins + res.reward,
-                        lifetimeEarnings: s.wallet.lifetimeEarnings + (res.reward / 1000)
+                        totalCoins: (res.newBalance * 1000)
                     },
                     transactions: [{
                         id: Date.now(),
@@ -263,10 +262,6 @@ window.controller = {
 
     async claimDailyBonus10X() {
         const state = store.getState();
-        if (state.dailyStreak.isClaimedToday) {
-            window.showToast("Already claimed for today!");
-            return null;
-        }
 
         return new Promise((resolve) => {
             // 1. Trigger Rewarded Video
@@ -274,8 +269,8 @@ window.controller = {
                 window.showToast("Loading Video Ad for 50 Coins...");
                 window.ads.showRewarded(async (amount) => {
                     if (amount > 0) {
-                        // Ad completed - claim 50 coins (₹0.05)
-                        const res = await this.claimDailyBonus(null, 50); // fixed_reward = 50
+                        // Ad completed - claim via video reward
+                        const res = await this.claimVideoReward(50);
                         resolve(res);
                     } else {
                         window.showToast("Ad not completed. Bonus cancelled.");
@@ -335,24 +330,41 @@ window.controller = {
         }
     },
 
-    async claimVideoReward() {
+    async claimVideoReward(amount = 0) {
+        // If amount is provided (from generic ads.js handler), validate it
+        if (amount !== 0) {
+            const rewardAmount = Number(amount) || 0;
+            if (rewardAmount <= 0) {
+                window.showToast("Ad not completed. No reward credited.");
+                return null;
+            }
+        }
+
         try {
             const res = await api.claimVideoReward();
             if (res.success) {
-                const currentWallet = store.getState().wallet;
-                store.setState({
+                store.setState(s => ({
                     wallet: {
-                        ...currentWallet,
+                        ...s.wallet,
                         currentBalance: res.newBalance,
-                        lifetimeEarnings: currentWallet.lifetimeEarnings + (res.reward / 1000), // res.reward is coins
-                        totalCoins: currentWallet.totalCoins + res.reward
-                    }
-                });
-                window.showToast(`Congrats! +${res.reward || 50} coins (₹${(res.reward || 50) / 1000}) credited.`);
+                        totalCoins: (s.wallet.totalCoins || 0) + res.reward
+                    },
+                    transactions: [{
+                        id: Date.now(),
+                        amount: res.reward / 1000,
+                        coins: res.reward,
+                        description: 'Watch & Earn (Video Reward)',
+                        date: new Date().toISOString(),
+                        type: 'credit'
+                    }, ...s.transactions || []]
+                }));
+                window.showToast(`Congrats! +${res.reward} coins credited.`);
+                return res;
             }
         } catch (error) {
             console.error("Video Reward failed:", error);
             window.showToast("Failed to process reward.");
+            return null;
         }
     },
 
@@ -438,10 +450,8 @@ window.controller = {
                 store.setState(s => ({
                     withdrawal: {
                         hasWithdrawal: true,
-                        withdrawal: {
-                            ...res.withdrawal,
-                            createdAt: new Date().toISOString()
-                        }
+                        ...res.withdrawal,
+                        createdAt: new Date().toISOString()
                     },
                     wallet: {
                         ...s.wallet,
@@ -470,4 +480,3 @@ window.controller = {
         }
     }
 };
-
