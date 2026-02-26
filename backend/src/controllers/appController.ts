@@ -280,8 +280,8 @@ export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // Record transaction
         await db.query(
-            'INSERT INTO transactions (user_id, amount, coins, description, type) VALUES ($1, $2, $3, $4, $5)',
-            [userId, rupees, coins, description || 'Game Reward', 'credit']
+            "INSERT INTO transactions (user_id, amount, coins, description, type, status) VALUES ($1, $2, $3, $4, 'EARNING', 'COMPLETED')",
+            [userId, rupees, coins, description || 'Game Reward']
         );
 
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
@@ -508,7 +508,7 @@ export const handleRapidReachPostback = async (req: FastifyRequest, reply: Fasti
 
         // Record transaction
         await db.query(
-            "INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, 'credit')",
+            "INSERT INTO transactions (user_id, amount, description, type, status) VALUES ($1, $2, $3, 'EARNING', 'COMPLETED')",
             [userId, amount, `Survey Completed (RR:${transId})`]
         );
 
