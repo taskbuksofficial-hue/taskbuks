@@ -175,6 +175,9 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 console.log("Reward received:", amount);
                 if (callback) callback(amount);
+                if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(amount);
+                }
             };
             window.Android.showRewarded();
         } else {
@@ -194,6 +197,9 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 console.log("Reward received:", amount);
                 if (callback) callback(amount);
+                if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(amount);
+                }
             };
             window.Android.showRewarded();
             return;
@@ -236,6 +242,14 @@ window.ads = {
             url.searchParams.set('testAds', 'true');
         }
         window.location.href = url.toString();
+    },
+
+    setBannerVisible: function (visible) {
+        if (window.Android && window.Android.setBannerVisible) {
+            window.Android.setBannerVisible(visible);
+        } else {
+            console.log("Web Mode: Banner Visibility set to " + visible);
+        }
     },
 
     checkEnvironment: function () {

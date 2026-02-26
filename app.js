@@ -575,13 +575,13 @@
             for (let i = 1; i <= 7; i++) {
                 const isComplete = i <= streak;
                 const isDay7 = i === 7;
-                const baseReward = isDay7 ? '200' : (100 + (i - 1) * 10);
+                const baseReward = '50';
                 const bg = isComplete
                     ? 'bg-primary text-white border-primary'
-                    : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
+                    : 'bg-gray-50 text-slate-400 border-gray-200';
                 html += `
                         <div class="flex flex-col items-center">
-                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[8px] font-bold border-2 ${bg}">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold border-2 ${bg}">
                                 ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : baseReward}
                             </div>
                             <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>

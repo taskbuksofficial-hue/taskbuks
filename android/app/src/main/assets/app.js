@@ -198,6 +198,8 @@
         const statusBanner = document.getElementById('withdrawal-status-banner');
         if (statusBanner && withdrawal && withdrawal.hasWithdrawal) {
             const w = withdrawal.withdrawal;
+            if (!w) return; // Defensive check for old corrupted cache
+
             statusBanner.classList.remove('hidden');
 
             const icon = document.getElementById('withdrawal-status-icon');
@@ -244,32 +246,7 @@
         if (taskContainer) {
             const availableTasks = tasks.available || [];
 
-            // Handle Top Offer (Show the first AdGem offer as Top Offer)
-            const adgemOffer = availableTasks.find(t => t.type === 'adgem');
-            if (adgemOffer && topOfferContainer) {
-                topOfferContainer.innerHTML = `
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
-                                <img src="${adgemOffer.icon_url}" class="w-full h-full object-cover" alt="${adgemOffer.title}">
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-base dark:text-white leading-none">${adgemOffer.title}</h4>
-                                <p class="text-[10px] text-slate-400 mt-1">High-paying game</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-500 dark:text-gray-400 mb-4 leading-relaxed w-2/3">${adgemOffer.description}</p>
-                        <div class="flex items-center gap-2">
-                            <div class="bg-orange-500 text-white text-[11px] font-bold px-4 py-2 rounded-full shadow-lg shadow-orange-500/30">Start Earning ₹${adgemOffer.reward}</div>
-                            <span class="text-[10px] font-bold text-orange-500 animate-pulse">Hot 🔥</span>
-                        </div>
-                    </div>
-                    <div class="absolute right-[-10px] top-1/2 -translate-y-1/2 opacity-10">
-                         <img src="${adgemOffer.icon_url}" class="w-32 h-32 object-cover rounded-full grayscale" alt="decoration">
-                    </div>
-                `;
-                topOfferContainer.onclick = () => window.open(adgemOffer.link, '_blank');
-            }
+            // AdGem Top Offer removed
 
             if (availableTasks.length === 0) {
                 taskContainer.innerHTML = `<div class="w-full text-center py-8 text-slate-400 text-xs">No tasks available right now.</div>`;
@@ -277,7 +254,7 @@
                 taskContainer.innerHTML = availableTasks.map(task => {
                     const reward = task.reward || task.payout_amount || 0;
                     const subtitle = task.description || task.subtitle || "Complete this task";
-                    const bgColor = task.bg_color || task.bgColor || (task.type === 'adgem' ? 'bg-orange-500' : 'bg-indigo-500');
+                    const bgColor = task.bg_color || task.bgColor || 'bg-indigo-500';
                     const iconUrl = task.icon_url || task.icon;
 
                     return `
@@ -306,9 +283,7 @@
                         const id = btn.dataset.id;
                         const link = btn.dataset.link;
 
-                        if (id.startsWith('adgem_') && link) {
-                            window.open(link, '_blank');
-                        } else {
+                        if (id) {
                             console.log("Start Task Clicked:", id);
                             controller.startTask(id);
                             showToast("Task started! Check 'Ongoing'");
@@ -600,13 +575,13 @@
             for (let i = 1; i <= 7; i++) {
                 const isComplete = i <= streak;
                 const isDay7 = i === 7;
-                const baseReward = isDay7 ? '200' : (100 + (i - 1) * 10);
+                const baseReward = '50';
                 const bg = isComplete
                     ? 'bg-primary text-white border-primary'
-                    : (isDay7 ? 'bg-amber-50 text-amber-600 border-amber-400' : 'bg-gray-50 text-slate-400 border-gray-200');
+                    : 'bg-gray-50 text-slate-400 border-gray-200';
                 html += `
                         <div class="flex flex-col items-center">
-                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[8px] font-bold border-2 ${bg}">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold border-2 ${bg}">
                                 ${isComplete ? '<span class="material-icons-round text-sm">check</span>' : baseReward}
                             </div>
                             <span class="text-[8px] text-slate-400 mt-0.5">Day ${i}</span>

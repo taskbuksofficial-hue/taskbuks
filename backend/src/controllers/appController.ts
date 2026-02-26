@@ -139,7 +139,7 @@ export const getStreak = async (req: FastifyRequest, reply: FastifyReply) => {
         return reply.send({
             streak: streak,
             claimedToday: claimedToday,
-            nextReward: 100 + (streak * 10)
+            nextReward: 50
         });
     } catch (error) {
         console.error("getStreak error:", error);
@@ -189,20 +189,8 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
             }
         }
 
-        // NEW ECONOMY: ₹0.10/ad revenue, 50% margin = ₹0.05/ad to user
-        // Free daily: 10 coins (₹0.01) + streak bonus of 2 coins/day
-        // Ad-based: fixed 50 coins (₹0.05) = 50% of ₹0.10 ad revenue
-        let bonusCoins;
-        if (fixed_reward) {
-            // Watch & Earn or ad-based claim
-            bonusCoins = fixed_reward;
-        } else if (rewardMultiplier === 10) {
-            // 10X daily with ad = fixed 50 coins
-            bonusCoins = 50;
-        } else {
-            // Free daily claim: 10 + (streak * 2), max 30 coins
-            bonusCoins = Math.min(10 + (newStreak - 1) * 2, 30);
-        }
+        // NEW ECONOMY: all bonuses unconditionally give 50 coins.
+        let bonusCoins = 50;
 
         const bonusRupees = bonusCoins / 1000;
 

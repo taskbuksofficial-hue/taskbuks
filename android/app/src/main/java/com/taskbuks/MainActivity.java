@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         webSettings.setDatabaseEnabled(true);
         String cachePath = getApplicationContext().getCacheDir().getAbsolutePath();
-        webSettings.setAppCachePath(cachePath);
+        // webSettings.setAppCachePath(cachePath); // Deprecated in API 33+
 
         // WebViewAssetLoader setup
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
