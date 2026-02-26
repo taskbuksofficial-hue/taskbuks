@@ -58,17 +58,14 @@ server.post('/api/bonus/claim', { preHandler: [authenticate] }, appController_1.
 server.post('/api/reward/video', { preHandler: [authenticate] }, appController_1.claimVideoReward);
 server.post('/api/coins/add', { preHandler: [authenticate] }, appController_1.addCoins);
 // Postbacks (Public - S2S)
-server.get('/api/postback/adgem', appController_1.handleAdGemPostback);
-server.get('/api/postback/cpx', appController_1.handleCPXPostback);
 server.get('/api/postback/rapidreach', appController_1.handleRapidReachPostback);
 server.get('/api/pb/rr', appController_1.handleRapidReachPostback); // Short alias (< 100 chars)
-// Surveys (Protected)
-server.get('/api/surveys', { preHandler: [authenticate] }, appController_1.getCPXSurveys);
 // Transactions (Protected)
 server.get('/api/transactions', { preHandler: [authenticate] }, appController_1.getTransactions);
 // Withdrawal Routes (Protected)
 server.post('/api/withdraw/request', { preHandler: [authenticate] }, appController_1.requestWithdrawal);
 server.get('/api/withdraw/status', { preHandler: [authenticate] }, appController_1.getWithdrawalStatus);
+server.post('/api/update-upi', { preHandler: [authenticate] }, appController_1.updateUpi);
 // --- ADMIN ROUTES (Protected by x-admin-key) ---
 const adminController_1 = require("./controllers/adminController");
 server.get('/admin/stats', adminController_1.getAdminStats);

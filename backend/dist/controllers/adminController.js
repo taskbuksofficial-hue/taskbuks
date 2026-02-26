@@ -51,9 +51,9 @@ const getAdminStats = async (req, reply) => {
     try {
         const userCount = await db.query('SELECT COUNT(*) FROM users');
         const taskCount = await db.query('SELECT COUNT(*) FROM tasks');
-        // Total Payouts
-        const payoutRes = await db.query("SELECT SUM(amount) as total FROM transactions WHERE type = 'credit'");
-        // Active Users (Logged in last 24h) - assuming updated_at tracks login
+        // Total Payouts (all earnings credited)
+        const payoutRes = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type IN ('EARNING', 'BONUS', 'REFERRAL')");
+        // Active Users (Logged in last 24h)
         const activeRes = await db.query("SELECT COUNT(*) FROM users WHERE updated_at > NOW() - INTERVAL '24 HOURS'");
         // Pending Withdrawals
         const pendingRes = await db.query("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'WITHDRAWAL' AND status = 'PENDING'");
@@ -67,7 +67,7 @@ const getAdminStats = async (req, reply) => {
         });
     }
     catch (error) {
-        console.error(error);
+        console.error("getAdminStats error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });
     }
 };
@@ -77,18 +77,17 @@ const getAdminUsers = async (req, reply) => {
     if (!verifyAdmin(req, reply))
         return;
     try {
-        // Simple list with balance
         const res = await db.query(`
-            SELECT u.id, u.full_name, u.email, u.is_active, w.balance 
+            SELECT u.id, u.full_name, u.email, u.is_active, u.upi_id, w.balance, w.total_coins
             FROM users u 
-            LEFT JOIN wallets w ON u.id = w.user_id 
+            LEFT JOIN wallets w ON u.id::text = w.user_id 
             ORDER BY u.created_at DESC 
             LIMIT 50
         `);
         return reply.send(res.rows);
     }
     catch (error) {
-        console.error(error);
+        console.error("getAdminUsers error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });
     }
 };
@@ -112,13 +111,13 @@ exports.toggleUserBan = toggleUserBan;
 const createAdminTask = async (req, reply) => {
     if (!verifyAdmin(req, reply))
         return;
-    const { title, description, reward, url, icon, category } = req.body;
+    const { title, description, reward, icon, category } = req.body;
     try {
-        await db.query('INSERT INTO tasks (title, description, reward, action_url, icon_url, category, is_active) VALUES ($1, $2, $3, $4, $5, $6, true)', [title, description, reward, url, icon, category || 'App']);
+        await db.query('INSERT INTO tasks (title, description, reward, icon_url, category, is_active) VALUES ($1, $2, $3, $4, $5, true)', [title, description, parseFloat(reward) || 0, icon || null, category || 'App']);
         return reply.send({ success: true });
     }
     catch (error) {
-        console.error(error);
+        console.error("createAdminTask error:", error);
         return reply.status(500).send({ error: 'Failed to create task' });
     }
 };
@@ -149,7 +148,7 @@ const getAdminWithdrawals = async (req, reply) => {
                 t.created_at, t.processed_at,
                 u.full_name, u.email, u.id as user_id
             FROM transactions t
-            JOIN users u ON t.user_id = u.id
+            JOIN users u ON t.user_id = u.id::text
             WHERE t.type = 'WITHDRAWAL'
             ORDER BY 
                 CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END,

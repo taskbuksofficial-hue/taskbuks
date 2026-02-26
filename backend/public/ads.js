@@ -175,9 +175,14 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 const rewardAmount = Number(amount) || 0;
                 console.log("Reward received:", rewardAmount);
-                if (typeof callback === 'function') {
+
+                // If caller provided a callback (e.g. Daily 10X flow), let caller decide claim path.
+                if (callback) {
                     callback(rewardAmount);
-                } else if (window.controller && window.controller.claimVideoReward) {
+                    return;
+                }
+
+                if (rewardAmount > 0 && window.controller && window.controller.claimVideoReward) {
                     window.controller.claimVideoReward(rewardAmount);
                 } else if (window.showToast) {
                     window.showToast("Ad not completed. No reward credited.");
@@ -201,9 +206,14 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 const rewardAmount = Number(amount) || 0;
                 console.log("Reward received:", rewardAmount);
-                if (typeof callback === 'function') {
+
+                // If caller provided a callback (e.g. Daily 10X flow), let caller decide claim path.
+                if (callback) {
                     callback(rewardAmount);
-                } else if (window.controller && window.controller.claimVideoReward) {
+                    return;
+                }
+
+                if (rewardAmount > 0 && window.controller && window.controller.claimVideoReward) {
                     window.controller.claimVideoReward(rewardAmount);
                 } else if (window.showToast) {
                     window.showToast("Ad not completed. No reward credited.");
@@ -250,6 +260,14 @@ window.ads = {
             url.searchParams.set('testAds', 'true');
         }
         window.location.href = url.toString();
+    },
+
+    setBannerVisible: function (visible) {
+        if (window.Android && window.Android.setBannerVisible) {
+            window.Android.setBannerVisible(visible);
+        } else {
+            console.log("Web Mode: Banner Visibility set to " + visible);
+        }
     },
 
     checkEnvironment: function () {

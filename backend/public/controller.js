@@ -236,7 +236,8 @@ window.controller = {
                     wallet: {
                         ...s.wallet,
                         currentBalance: res.newBalance,
-                        totalCoins: (res.newBalance * 1000)
+                        totalCoins: s.wallet.totalCoins + res.reward,
+                        lifetimeEarnings: s.wallet.lifetimeEarnings + (res.reward / 1000)
                     },
                     transactions: [{
                         id: Date.now(),
@@ -262,6 +263,10 @@ window.controller = {
 
     async claimDailyBonus10X() {
         const state = store.getState();
+        if (state.dailyStreak.isClaimedToday) {
+            window.showToast("Already claimed for today!");
+            return null;
+        }
 
         return new Promise((resolve) => {
             // 1. Trigger Rewarded Video
@@ -269,8 +274,8 @@ window.controller = {
                 window.showToast("Loading Video Ad for 50 Coins...");
                 window.ads.showRewarded(async (amount) => {
                     if (amount > 0) {
-                        // Ad completed - claim via video reward
-                        const res = await this.claimVideoReward(50);
+                        // Ad completed - claim 50 coins (₹0.05)
+                        const res = await this.claimDailyBonus(null, 50); // fixed_reward = 50
                         resolve(res);
                     } else {
                         window.showToast("Ad not completed. Bonus cancelled.");
@@ -331,39 +336,59 @@ window.controller = {
     },
 
     async claimVideoReward(amount = 0) {
-        // If amount is provided (from generic ads.js handler), validate it
-        if (amount !== 0) {
-            const rewardAmount = Number(amount) || 0;
-            if (rewardAmount <= 0) {
-                window.showToast("Ad not completed. No reward credited.");
-                return null;
-            }
+        const rewardAmount = Number(amount) || 0;
+        if (rewardAmount <= 0) {
+            window.showToast("Ad not completed. No reward credited.");
+            return null;
         }
+
+        const applyRewardToState = (coins, newBalanceValue, description) => {
+            const safeCoins = Number(coins) || 0;
+            const parsedBalance = Number(newBalanceValue);
+            const hasServerBalance = Number.isFinite(parsedBalance);
+
+            store.setState(s => ({
+                wallet: {
+                    ...s.wallet,
+                    currentBalance: hasServerBalance ? parsedBalance : (s.wallet.currentBalance || 0) + (safeCoins / 1000),
+                    lifetimeEarnings: (s.wallet.lifetimeEarnings || 0) + (safeCoins / 1000),
+                    totalCoins: (s.wallet.totalCoins || 0) + safeCoins
+                },
+                transactions: [{
+                    id: Date.now(),
+                    amount: safeCoins / 1000,
+                    coins: safeCoins,
+                    description: description || 'Watch & Earn (Video Reward)',
+                    date: new Date().toISOString(),
+                    type: 'credit'
+                }, ...(s.transactions || [])]
+            }));
+        };
 
         try {
             const res = await api.claimVideoReward();
-            if (res.success) {
-                store.setState(s => ({
-                    wallet: {
-                        ...s.wallet,
-                        currentBalance: res.newBalance,
-                        totalCoins: (s.wallet.totalCoins || 0) + res.reward
-                    },
-                    transactions: [{
-                        id: Date.now(),
-                        amount: res.reward / 1000,
-                        coins: res.reward,
-                        description: 'Watch & Earn (Video Reward)',
-                        date: new Date().toISOString(),
-                        type: 'credit'
-                    }, ...s.transactions || []]
-                }));
-                window.showToast(`Congrats! +${res.reward} coins credited.`);
+            if (res && res.success) {
+                const creditedCoins = Number(res.reward) || rewardAmount;
+                applyRewardToState(creditedCoins, res.newBalance, 'Watch & Earn (Video Reward)');
+                window.showToast(`Congrats! +${creditedCoins} coins (₹${(creditedCoins / 1000).toFixed(2)}) credited.`);
                 return res;
             }
-        } catch (error) {
-            console.error("Video Reward failed:", error);
-            window.showToast("Failed to process reward.");
+            throw new Error(res?.error || "Video reward response invalid");
+        } catch (primaryError) {
+            console.warn("Video reward endpoint failed, trying fallback addCoins:", primaryError);
+            try {
+                const fallbackCoins = Math.max(1, Math.round(rewardAmount || 50));
+                const fallbackRes = await api.addCoins(fallbackCoins, 'Watch & Earn (Video Reward)');
+                if (fallbackRes && fallbackRes.success !== false) {
+                    applyRewardToState(fallbackCoins, fallbackRes.newBalance, 'Watch & Earn (Video Reward)');
+                    window.showToast(`Congrats! +${fallbackCoins} coins credited.`);
+                    return { success: true, reward: fallbackCoins, newBalance: fallbackRes.newBalance, fallback: true };
+                }
+                throw new Error(fallbackRes?.error || "Fallback reward failed");
+            } catch (fallbackError) {
+                console.error("Video Reward failed:", fallbackError);
+                window.showToast(fallbackError.message || primaryError.message || "Failed to process reward.");
+            }
             return null;
         }
     },
@@ -450,8 +475,10 @@ window.controller = {
                 store.setState(s => ({
                     withdrawal: {
                         hasWithdrawal: true,
-                        ...res.withdrawal,
-                        createdAt: new Date().toISOString()
+                        withdrawal: {
+                            ...res.withdrawal,
+                            createdAt: new Date().toISOString()
+                        }
                     },
                     wallet: {
                         ...s.wallet,

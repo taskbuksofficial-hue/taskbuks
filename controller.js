@@ -342,24 +342,53 @@ window.controller = {
             return null;
         }
 
+        const applyRewardToState = (coins, newBalanceValue, description) => {
+            const safeCoins = Number(coins) || 0;
+            const parsedBalance = Number(newBalanceValue);
+            const hasServerBalance = Number.isFinite(parsedBalance);
+
+            store.setState(s => ({
+                wallet: {
+                    ...s.wallet,
+                    currentBalance: hasServerBalance ? parsedBalance : (s.wallet.currentBalance || 0) + (safeCoins / 1000),
+                    lifetimeEarnings: (s.wallet.lifetimeEarnings || 0) + (safeCoins / 1000),
+                    totalCoins: (s.wallet.totalCoins || 0) + safeCoins
+                },
+                transactions: [{
+                    id: Date.now(),
+                    amount: safeCoins / 1000,
+                    coins: safeCoins,
+                    description: description || 'Watch & Earn (Video Reward)',
+                    date: new Date().toISOString(),
+                    type: 'credit'
+                }, ...(s.transactions || [])]
+            }));
+        };
+
         try {
             const res = await api.claimVideoReward();
-            if (res.success) {
-                const currentWallet = store.getState().wallet;
-                store.setState({
-                    wallet: {
-                        ...currentWallet,
-                        currentBalance: res.newBalance,
-                        lifetimeEarnings: currentWallet.lifetimeEarnings + (res.reward / 1000), // res.reward is coins
-                        totalCoins: currentWallet.totalCoins + res.reward
-                    }
-                });
-                window.showToast(`Congrats! +${res.reward || 50} coins (₹${(res.reward || 50) / 1000}) credited.`);
+            if (res && res.success) {
+                const creditedCoins = Number(res.reward) || rewardAmount;
+                applyRewardToState(creditedCoins, res.newBalance, 'Watch & Earn (Video Reward)');
+                window.showToast(`Congrats! +${creditedCoins} coins (₹${(creditedCoins / 1000).toFixed(2)}) credited.`);
                 return res;
             }
-        } catch (error) {
-            console.error("Video Reward failed:", error);
-            window.showToast("Failed to process reward.");
+            throw new Error(res?.error || "Video reward response invalid");
+        } catch (primaryError) {
+            console.warn("Video reward endpoint failed, trying fallback addCoins:", primaryError);
+            try {
+                const fallbackCoins = Math.max(1, Math.round(rewardAmount || 50));
+                const fallbackRes = await api.addCoins(fallbackCoins, 'Watch & Earn (Video Reward)');
+                if (fallbackRes && fallbackRes.success !== false) {
+                    applyRewardToState(fallbackCoins, fallbackRes.newBalance, 'Watch & Earn (Video Reward)');
+                    window.showToast(`Congrats! +${fallbackCoins} coins credited.`);
+                    return { success: true, reward: fallbackCoins, newBalance: fallbackRes.newBalance, fallback: true };
+                }
+                throw new Error(fallbackRes?.error || "Fallback reward failed");
+            } catch (fallbackError) {
+                console.error("Video Reward failed:", fallbackError);
+                window.showToast(fallbackError.message || primaryError.message || "Failed to process reward.");
+            }
             return null;
         }
     },

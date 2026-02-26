@@ -170,6 +170,14 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
     if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
 
     try {
+        // Ensure wallet exists for legacy/imported users
+        await db.query(
+            `INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`,
+            [userId]
+        );
+
         const result = await db.query('SELECT last_claim_date, current_streak FROM users WHERE id = $1', [userId]);
         const user = result.rows[0];
 
@@ -226,10 +234,11 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
         );
 
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
 
         return reply.send({
             success: true,
-            newBalance: walletRes.rows[0].balance,
+            newBalance,
             streak: newStreak,
             reward: bonusCoins
         });
@@ -244,6 +253,14 @@ export const claimVideoReward = async (req: FastifyRequest, reply: FastifyReply)
     const rewardAmount = bonusCoins / 1000; // 50 coins = ₹0.05
 
     try {
+        // Ensure wallet exists for legacy/imported users
+        await db.query(
+            `INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`,
+            [userId]
+        );
+
         // 1. Credit Wallet
         await db.query(
             `UPDATE wallets SET 
@@ -263,8 +280,9 @@ export const claimVideoReward = async (req: FastifyRequest, reply: FastifyReply)
         );
 
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
 
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance, reward: bonusCoins });
+        return reply.send({ success: true, newBalance, reward: bonusCoins });
     } catch (error) {
         console.error("claimVideoReward error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });
@@ -282,6 +300,14 @@ export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
     const rupees = coins / 1000;
 
     try {
+        // Ensure wallet exists for legacy/imported users
+        await db.query(
+            `INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`,
+            [userId]
+        );
+
         await db.query(
             'UPDATE wallets SET balance = balance + $1, total_earned = total_earned + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3',
             [rupees, coins, userId]
@@ -294,8 +320,9 @@ export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
         );
 
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
 
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+        return reply.send({ success: true, newBalance });
     } catch (error) {
         console.error("addCoins error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });

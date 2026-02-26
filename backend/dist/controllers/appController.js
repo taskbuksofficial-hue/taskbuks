@@ -32,13 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWithdrawalStatus = exports.requestWithdrawal = exports.updateProfile = exports.handleRapidReachPostback = exports.getTransactions = exports.getCPXSurveys = exports.handleCPXPostback = exports.handleAdGemPostback = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
+exports.updateUpi = exports.getWithdrawalStatus = exports.requestWithdrawal = exports.updateProfile = exports.handleRapidReachPostback = exports.getTransactions = exports.addCoins = exports.claimVideoReward = exports.claimBonus = exports.startTask = exports.getStreak = exports.getOffers = exports.getProfile = void 0;
 const db = __importStar(require("../config/db"));
-const crypto_1 = __importDefault(require("crypto"));
 const getProfile = async (req, reply) => {
     const userId = req.userId;
     if (!userId)
@@ -46,18 +42,30 @@ const getProfile = async (req, reply) => {
     try {
         const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
         const walletResult = await db.query('SELECT * FROM wallets WHERE user_id = $1', [userId]);
-        const earningsResult = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'credit'", [userId]);
+        // Lifetime earnings = all credits (EARNING, BONUS, REFERRAL)
+        const earningsResult = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type IN ('EARNING', 'BONUS', 'REFERRAL')", [userId]);
+        // Total withdrawn (COMPLETED only)
+        const withdrawnResult = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'COMPLETED'", [userId]);
+        // Pending withdrawals
+        const pendingResult = await db.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'PENDING'", [userId]);
         if (userResult.rows.length === 0) {
             return reply.status(404).send({ error: 'User not found' });
         }
         const user = userResult.rows[0];
-        const wallet = walletResult.rows[0] || { balance: 0 };
+        delete user.password_hash; // SECURITY: never expose password hash
+        const wallet = walletResult.rows[0] || { balance: 0, total_earned: 0, total_coins: 0 };
+        const balance = parseFloat(wallet.balance) || 0;
+        const totalCoinsEarned = parseInt(wallet.total_coins) || 0;
         const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
+        const totalWithdrawn = parseFloat(withdrawnResult.rows[0]?.total || '0');
+        const pendingAmount = parseFloat(pendingResult.rows[0]?.total || '0');
         return reply.send({
             ...user,
-            balance: parseFloat(wallet.balance) || 0,
-            total_coins: parseInt(wallet.total_coins || '0'),
+            balance,
+            total_coins: totalCoinsEarned,
             lifetimeEarnings,
+            totalWithdrawn,
+            pendingAmount,
             isEmailVerified: true
         });
     }
@@ -144,7 +152,7 @@ const getStreak = async (req, reply) => {
         return reply.send({
             streak: streak,
             claimedToday: claimedToday,
-            nextReward: 100 + (streak * 10)
+            nextReward: 50
         });
     }
     catch (error) {
@@ -172,6 +180,10 @@ const claimBonus = async (req, reply) => {
     if (!userId)
         return reply.status(401).send({ error: 'Unauthorized' });
     try {
+        // Ensure wallet exists for legacy/imported users
+        await db.query(`INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`, [userId]);
         const result = await db.query('SELECT last_claim_date, current_streak FROM users WHERE id = $1', [userId]);
         const user = result.rows[0];
         const now = new Date();
@@ -187,11 +199,8 @@ const claimBonus = async (req, reply) => {
                 newStreak = (user.current_streak || 0) + 1;
             }
         }
-        const baseBonusCoins = 100 + (newStreak - 1) * 10;
-        let bonusCoins = baseBonusCoins * rewardMultiplier;
-        if (fixed_reward) {
-            bonusCoins = fixed_reward;
-        }
+        // NEW ECONOMY: all bonuses unconditionally give 50 coins.
+        let bonusCoins = 50;
         const bonusRupees = bonusCoins / 1000;
         // 1. Update User Streak
         await db.query('UPDATE users SET current_streak = $1, last_claim_date = NOW() WHERE id = $2', [newStreak, userId]);
@@ -213,9 +222,10 @@ const claimBonus = async (req, reply) => {
         await db.query(`INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
              VALUES ($1, $2, $3, $4, 'BONUS', 'COMPLETED', NOW())`, [userId, bonusRupees, bonusCoins, description]);
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
         return reply.send({
             success: true,
-            newBalance: walletRes.rows[0].balance,
+            newBalance,
             streak: newStreak,
             reward: bonusCoins
         });
@@ -228,11 +238,26 @@ const claimBonus = async (req, reply) => {
 exports.claimBonus = claimBonus;
 const claimVideoReward = async (req, reply) => {
     const userId = req.userId;
-    const rewardAmount = 10.0; // Consistent with JS reward amount
+    const bonusCoins = 50; // Watch Video = 50 Coins
+    const rewardAmount = bonusCoins / 1000; // 50 coins = ₹0.05
     try {
-        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [rewardAmount, userId]);
+        // Ensure wallet exists for legacy/imported users
+        await db.query(`INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`, [userId]);
+        // 1. Credit Wallet
+        await db.query(`UPDATE wallets SET 
+                balance = balance + $1, 
+                total_earned = total_earned + $1,
+                total_coins = COALESCE(total_coins, 0) + $2,
+                updated_at = NOW() 
+             WHERE user_id = $3`, [rewardAmount, bonusCoins, userId]);
+        // 2. Log Transaction
+        await db.query(`INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
+             VALUES ($1, $2, $3, $4, 'BONUS', 'COMPLETED', NOW())`, [userId, rewardAmount, bonusCoins, 'Watch & Earn (Video Reward)']);
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
+        return reply.send({ success: true, newBalance, reward: bonusCoins });
     }
     catch (error) {
         console.error("claimVideoReward error:", error);
@@ -248,11 +273,16 @@ const addCoins = async (req, reply) => {
     }
     const rupees = coins / 1000;
     try {
-        await db.query('UPDATE wallets SET balance = balance + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3', [rupees, coins, userId]);
+        // Ensure wallet exists for legacy/imported users
+        await db.query(`INSERT INTO wallets (user_id, balance, total_earned, total_coins, updated_at)
+             VALUES ($1, 0, 0, 0, NOW())
+             ON CONFLICT (user_id) DO NOTHING`, [userId]);
+        await db.query('UPDATE wallets SET balance = balance + $1, total_earned = total_earned + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3', [rupees, coins, userId]);
         // Record transaction
-        await db.query('INSERT INTO transactions (user_id, amount, coins, description, type) VALUES ($1, $2, $3, $4, $5)', [userId, rupees, coins, description || 'Game Reward', 'credit']);
+        await db.query("INSERT INTO transactions (user_id, amount, coins, description, type, status) VALUES ($1, $2, $3, $4, 'EARNING', 'COMPLETED')", [userId, rupees, coins, description || 'Game Reward']);
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+        const newBalance = parseFloat(walletRes.rows[0]?.balance || '0');
+        return reply.send({ success: true, newBalance });
     }
     catch (error) {
         console.error("addCoins error:", error);
@@ -260,126 +290,12 @@ const addCoins = async (req, reply) => {
     }
 };
 exports.addCoins = addCoins;
-const handleAdGemPostback = async (req, reply) => {
-    const { player_id, amount, transaction_id } = req.query;
-    const query = req.query;
-    // Security Verification (Postback Hashing v2)
-    if (process.env.ADGEM_POSTBACK_KEY && query.verifier) {
-        try {
-            const protocol = req.headers['x-forwarded-proto'] || 'https';
-            const host = req.headers['host'];
-            const originalUrl = `${protocol}://${host}${req.url}`;
-            // AdGem says: remove verifier from the end of the URL
-            const urlToHash = originalUrl.split('&verifier=')[0];
-            const expectedSignature = crypto_1.default
-                .createHmac('sha256', process.env.ADGEM_POSTBACK_KEY)
-                .update(urlToHash)
-                .digest('hex');
-            if (expectedSignature !== query.verifier) {
-                console.warn("AdGem Postback: Signature mismatch");
-                return reply.status(401).send({ error: 'Invalid verifier' });
-            }
-        }
-        catch (e) {
-            console.error("Verification failed", e);
-        }
-    }
-    if (!player_id || !amount) {
-        return reply.status(400).send({ error: 'Missing parameters' });
-    }
-    try {
-        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount, player_id]);
-        return reply.send({ success: true });
-    }
-    catch (error) {
-        console.error("handleAdGemPostback error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
-exports.handleAdGemPostback = handleAdGemPostback;
-const handleCPXPostback = async (req, reply) => {
-    const { user_id, amount_local, trans_id, status, hash } = req.query;
-    console.log("CPX Postback received:", req.query);
-    // Basic status check
-    if (status !== 'qualified') {
-        return reply.send({ success: true, message: 'Status not qualified' });
-    }
-    if (!user_id || !amount_local) {
-        return reply.status(400).send({ error: 'Missing parameters' });
-    }
-    // Security check (if CPX_SECRET_KEY is provided)
-    if (process.env.CPX_SECRET_KEY && hash) {
-        const expectedHash = crypto_1.default
-            .createHash('md5')
-            .update(`${trans_id}-${process.env.CPX_SECRET_KEY}`)
-            .digest('hex');
-        if (expectedHash !== hash) {
-            console.warn("CPX Hash mismatch");
-            // return reply.status(401).send({ error: 'Invalid hash' });
-        }
-    }
-    try {
-        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount_local, user_id]);
-        // Log transaction
-        await db.query('INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, $4)', [user_id, amount_local, 'Survey Reward (CPX)', 'SURVEY']);
-        return reply.send({ success: true });
-    }
-    catch (error) {
-        console.error("handleCPXPostback error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
-exports.handleCPXPostback = handleCPXPostback;
-const getCPXSurveys = async (req, reply) => {
-    const userId = req.userId;
-    if (!userId)
-        return reply.status(401).send({ error: 'Unauthorized' });
-    const appId = process.env.CPX_APP_ID || "31412"; // User provided App ID
-    const secretKey = process.env.CPX_SECRET_KEY;
-    if (!secretKey) {
-        console.warn("CPX_SECRET_KEY not set, cannot fetch surveys securely.");
-        return reply.send([]);
-    }
-    try {
-        // Generate Secure Hash: md5(ext_user_id + secret_key)
-        const secureHash = crypto_1.default
-            .createHash('md5')
-            .update(`${userId}-${secretKey}`)
-            .digest('hex');
-        const ipUser = req.ip; // Might need x-forwarded-for if behind proxy
-        const userAgent = req.headers['user-agent'] || '';
-        const url = `https://live-api.cpx-research.com/api/get-surveys.php?app_id=${appId}&ext_user_id=${userId}&output_method=api&ip_user=${ipUser}&user_agent=${encodeURIComponent(userAgent)}&limit=20&secure_hash=${secureHash}`;
-        console.log("Fetching CPX Surveys:", url);
-        const response = await fetch(url);
-        const data = await response.json();
-        // DEBUG: Log CPX Response
-        console.log("CPX API Status:", response.status);
-        console.log("CPX API Response:", JSON.stringify(data).substring(0, 500)); // Log first 500 chars
-        if (Array.isArray(data)) {
-            return reply.send(data);
-        }
-        else if (data.surveys) {
-            return reply.send(data.surveys); // CPX sometimes returns { surveys: [...] }
-        }
-        else if (data.error || data.status === 'error') {
-            console.error("CPX API Error:", data.error || data.message || "Unknown Error");
-            return reply.send([]);
-        }
-        console.warn("CPX returned unexpected format:", JSON.stringify(data).substring(0, 100));
-        return reply.send([]); // Fallback empty array
-    }
-    catch (error) {
-        console.error("getCPXSurveys error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
-exports.getCPXSurveys = getCPXSurveys;
 const getTransactions = async (req, reply) => {
     const userId = req.userId;
     if (!userId)
         return reply.status(401).send({ error: 'Unauthorized' });
     try {
-        const result = await db.query('SELECT id, amount, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50', [userId]);
+        const result = await db.query('SELECT id, amount, coins, description, type, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50', [userId]);
         return reply.send(result.rows);
     }
     catch (error) {
@@ -417,10 +333,11 @@ const handleRapidReachPostback = async (req, reply) => {
         }
         // Ensure wallet exists (upsert)
         await db.query("INSERT INTO wallets (user_id, balance) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING", [userId]);
-        // Credit wallet
-        await db.query('UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2', [amount, userId]);
+        // Credit wallet (added total_earned and total_coins to fix vanishing history)
+        const coins = Math.round(amount * 1000);
+        await db.query('UPDATE wallets SET balance = balance + $1, total_earned = total_earned + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3', [amount, coins, userId]);
         // Record transaction
-        await db.query("INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, 'credit')", [userId, amount, `Survey Completed (RR:${transId})`]);
+        await db.query("INSERT INTO transactions (user_id, amount, description, type, status) VALUES ($1, $2, $3, 'EARNING', 'COMPLETED')", [userId, amount, `Survey Completed (RR:${transId})`]);
         console.log(`RapidReach: Successfully credited ${amount} to ${userId}`);
         return reply.status(200).send('1');
     }
@@ -534,3 +451,21 @@ const getWithdrawalStatus = async (req, reply) => {
     }
 };
 exports.getWithdrawalStatus = getWithdrawalStatus;
+const updateUpi = async (req, reply) => {
+    const userId = req.userId;
+    if (!userId)
+        return reply.status(401).send({ error: 'Unauthorized' });
+    const { upi_id } = req.body;
+    if (!upi_id || !upi_id.includes('@')) {
+        return reply.status(400).send({ error: 'Please enter a valid UPI ID (e.g. name@paytm)' });
+    }
+    try {
+        await db.query('UPDATE users SET upi_id = $1, updated_at = NOW() WHERE id = $2', [upi_id.trim(), userId]);
+        return reply.send({ success: true, upi_id: upi_id.trim() });
+    }
+    catch (error) {
+        console.error("updateUpi error:", error);
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+exports.updateUpi = updateUpi;
