@@ -33,6 +33,7 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
         }
 
         const user = userResult.rows[0];
+        delete user.password_hash; // SECURITY: never expose password hash
         const wallet = walletResult.rows[0] || { balance: 0, total_earned: 0 };
         const balance = parseFloat(wallet.balance) || 0;
         const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
