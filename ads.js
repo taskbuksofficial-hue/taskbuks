@@ -175,6 +175,9 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 console.log("Reward received:", amount);
                 if (callback) callback(amount);
+                if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(amount);
+                }
             };
             window.Android.showRewarded();
         } else {
@@ -194,6 +197,9 @@ window.ads = {
             window.onAdRewardReceived = function (amount) {
                 console.log("Reward received:", amount);
                 if (callback) callback(amount);
+                if (window.controller && window.controller.claimVideoReward) {
+                    window.controller.claimVideoReward(amount);
+                }
             };
             window.Android.showRewarded();
             return;
