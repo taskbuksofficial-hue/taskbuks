@@ -332,6 +332,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public String getDeviceId() {
+            return android.provider.Settings.Secure.getString(
+                    getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        }
+
+        @JavascriptInterface
         public void showToast(String toast) {
             Toast.makeText(MainActivity.this, toast, Toast.LENGTH_SHORT).show();
         }
