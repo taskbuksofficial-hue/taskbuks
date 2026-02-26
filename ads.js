@@ -238,6 +238,14 @@ window.ads = {
         window.location.href = url.toString();
     },
 
+    setBannerVisible: function (visible) {
+        if (window.Android && window.Android.setBannerVisible) {
+            window.Android.setBannerVisible(visible);
+        } else {
+            console.log("Web Mode: Banner Visibility set to " + visible);
+        }
+    },
+
     checkEnvironment: function () {
         if (window.Android && window.Android.showRewarded) {
             // if (window.showToast) window.showToast('📱 Native App Mode Detected');
