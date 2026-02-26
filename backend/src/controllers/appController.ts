@@ -12,19 +12,19 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // Lifetime earnings = all credits (EARNING, BONUS, REFERRAL)
         const earningsResult = await db.query(
-            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type IN ('EARNING', 'BONUS', 'REFERRAL')",
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type IN ('EARNING', 'BONUS', 'REFERRAL')",
             [userId]
         );
 
-        // Total withdrawn
+        // Total withdrawn (COMPLETED only)
         const withdrawnResult = await db.query(
-            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type = 'WITHDRAWAL'",
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'COMPLETED'",
             [userId]
         );
 
-        // Pending withdrawals (no status column, so we count all WITHDRAWAL type)
+        // Pending withdrawals
         const pendingResult = await db.query(
-            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type = 'WITHDRAWAL'",
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'PENDING'",
             [userId]
         );
 

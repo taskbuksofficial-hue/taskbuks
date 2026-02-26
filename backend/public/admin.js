@@ -56,14 +56,16 @@ async function fetchAdmin(endpoint, options = {}) {
 async function refreshData() {
     const stats = await fetchAdmin('/admin/stats');
     if (stats) {
+        document.getElementById('connection-status').innerHTML = '<span class="text-emerald-500">● Connected</span>';
         document.getElementById('stat-users').innerText = stats.totalUsers;
         document.getElementById('stat-tasks').innerText = stats.totalTasks;
-        document.getElementById('stat-payouts').innerText = '₹' + stats.totalPayouts.toFixed(2);
+        document.getElementById('stat-payouts').innerText = '₹' + (stats.totalPayouts || 0).toFixed(2);
         document.getElementById('stat-active').innerText = stats.activeUsers;
         document.getElementById('stat-pending-count').innerText = stats.pendingWithdrawals || 0;
         document.getElementById('stat-pending-amount').innerText = '₹' + (stats.pendingAmount || 0).toFixed(2);
     }
 
+    // Always try to load users regardless of stats success
     loadUsers();
 }
 
