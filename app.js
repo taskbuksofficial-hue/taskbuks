@@ -761,7 +761,7 @@
                 console.warn("Safety timeout triggered - forcing cleanup");
                 cleanup();
             }
-        }, 4000);
+        }, 1500);
 
         const cleanup = () => {
             if (safetyTimer) clearTimeout(safetyTimer);

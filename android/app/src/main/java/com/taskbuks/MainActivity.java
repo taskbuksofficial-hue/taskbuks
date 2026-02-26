@@ -81,6 +81,15 @@ public class MainActivity extends AppCompatActivity {
                     loadBanner();
                     loadInterstitial();
                     loadRewarded();
+
+                    // Auto-show banner at bottom after 3 seconds
+                    new android.os.Handler().postDelayed(() -> {
+                        isBannerVisible = true;
+                        if (mBannerView != null) {
+                            mBannerView.setVisibility(View.VISIBLE);
+                            mBannerView.bringToFront();
+                        }
+                    }, 3000);
                 });
             }
 
@@ -90,6 +99,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Prevent black flash on launch
+        myWebView.setBackgroundColor(android.graphics.Color.WHITE);
+
         // WebView Settings
         WebSettings webSettings = myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -98,6 +110,12 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
         WebView.setWebContentsDebuggingEnabled(true);
+
+        // === AGGRESSIVE CACHING for fast loads ===
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+        webSettings.setDatabaseEnabled(true);
+        String cachePath = getApplicationContext().getCacheDir().getAbsolutePath();
+        webSettings.setAppCachePath(cachePath);
 
         // WebViewAssetLoader setup
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
@@ -141,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onBannerFailedToLoad(BannerView bannerView, BannerErrorInfo errorInfo) {
                 Log.e(TAG, "Banner Load Failed: " + errorInfo.errorMessage);
+                // Retry after 10 seconds
+                new android.os.Handler().postDelayed(() -> loadBanner(), 10000);
             }
 
             @Override
