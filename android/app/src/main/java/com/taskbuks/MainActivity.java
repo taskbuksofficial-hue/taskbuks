@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
                         if (state == UnityAds.UnityAdsShowCompletionState.COMPLETED) {
                             myWebView.post(() -> myWebView.evaluateJavascript(
-                                    "if(window.onAdRewardReceived) window.onAdRewardReceived(10);", null));
+                                    "if(window.onAdRewardReceived) window.onAdRewardReceived(50);", null));
                         }
                         loadRewarded();
                     }

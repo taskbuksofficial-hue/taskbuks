@@ -190,11 +190,19 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
             }
         }
 
-        const baseBonusCoins = 100 + (newStreak - 1) * 10;
-        let bonusCoins = baseBonusCoins * rewardMultiplier;
-
+        // NEW ECONOMY: ₹0.10/ad revenue, 50% margin = ₹0.05/ad to user
+        // Free daily: 10 coins (₹0.01) + streak bonus of 2 coins/day
+        // Ad-based: fixed 50 coins (₹0.05) = 50% of ₹0.10 ad revenue
+        let bonusCoins;
         if (fixed_reward) {
+            // Watch & Earn or ad-based claim
             bonusCoins = fixed_reward;
+        } else if (rewardMultiplier === 10) {
+            // 10X daily with ad = fixed 50 coins
+            bonusCoins = 50;
+        } else {
+            // Free daily claim: 10 + (streak * 2), max 30 coins
+            bonusCoins = Math.min(10 + (newStreak - 1) * 2, 30);
         }
 
         const bonusRupees = bonusCoins / 1000;
@@ -245,7 +253,7 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 export const claimVideoReward = async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = (req as any).userId;
-    const rewardAmount = 10.0; // Consistent with JS reward amount
+    const rewardAmount = 0.05; // 50 coins = ₹0.05 (50% of ₹0.10 ad revenue)
 
     try {
         await db.query(

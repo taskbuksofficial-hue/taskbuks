@@ -242,7 +242,7 @@ window.controller = {
                         id: Date.now(),
                         amount: res.reward / 1000,
                         coins: res.reward,
-                        description: fixed_reward ? "Watch & Earn (20 Coins)" : (multiplier > 1 ? `Daily Bonus 10X` : `Daily Bonus`),
+                        description: fixed_reward ? `Watch & Earn (${fixed_reward} Coins)` : (multiplier > 1 ? `Daily Bonus 10X` : `Daily Bonus`),
                         date: new Date().toISOString(),
                         type: 'credit'
                     }, ...s.transactions]
@@ -270,11 +270,11 @@ window.controller = {
         return new Promise((resolve) => {
             // 1. Trigger Rewarded Video
             if (window.ads && window.ads.showRewarded) {
-                window.showToast("Loading Video Ad for 10 Coins...");
+                window.showToast("Loading Video Ad for 50 Coins...");
                 window.ads.showRewarded(async (amount) => {
                     if (amount > 0) {
-                        // Ad completed - claim 10 coins
-                        const res = await this.claimDailyBonus(null, 10); // fixed_reward = 10
+                        // Ad completed - claim 50 coins (₹0.05)
+                        const res = await this.claimDailyBonus(null, 50); // fixed_reward = 50
                         resolve(res);
                     } else {
                         window.showToast("Ad not completed. Bonus cancelled.");
@@ -345,7 +345,7 @@ window.controller = {
                         currentBalance: res.newBalance
                     }
                 });
-                window.showToast(`Congrats! +₹10 credited.`);
+                window.showToast(`Congrats! +50 coins (₹0.05) credited.`);
             }
         } catch (error) {
             console.error("Video Reward failed:", error);

@@ -102,8 +102,8 @@ function showUnityRewardedAd(callback) {
             placementId: UNITY_REWARDED_PLACEMENT,
             onComplete: function (placementId) {
                 console.log('[UnityAds] Ad completed, rewarding user');
-                if (callback) callback(10);
-                if (window.onAdRewardReceived) window.onAdRewardReceived(10);
+                if (callback) callback(50);
+                if (window.onAdRewardReceived) window.onAdRewardReceived(50);
                 loadUnityRewardedAd();
             },
             onSkipped: function (placementId) {
