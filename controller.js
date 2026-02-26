@@ -121,7 +121,9 @@ window.controller = {
                 wallet: {
                     currentBalance: parseFloat(profile.balance) || 0,
                     lifetimeEarnings: parseFloat(profile.lifetimeEarnings) || 0,
-                    totalCoins: parseInt(profile.total_coins || 0)
+                    totalCoins: parseInt(profile.total_coins || 0),
+                    totalWithdrawn: parseFloat(profile.totalWithdrawn) || 0,
+                    pendingAmount: parseFloat(profile.pendingAmount) || 0
                 },
                 tasks: {
                     ...store.getState().tasks,

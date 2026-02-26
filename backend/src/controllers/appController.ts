@@ -9,8 +9,22 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
         const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
         const walletResult = await db.query('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+
+        // Lifetime earnings = all credits (EARNING, BONUS, REFERRAL)
         const earningsResult = await db.query(
-            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = $1 AND type = 'credit'",
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type IN ('EARNING', 'BONUS', 'REFERRAL')",
+            [userId]
+        );
+
+        // Total withdrawn
+        const withdrawnResult = await db.query(
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type = 'WITHDRAWAL'",
+            [userId]
+        );
+
+        // Pending withdrawals (no status column, so we count all WITHDRAWAL type)
+        const pendingResult = await db.query(
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE wallet_id = (SELECT id FROM wallets WHERE user_id = $1) AND type = 'WITHDRAWAL'",
             [userId]
         );
 
@@ -19,14 +33,22 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
         }
 
         const user = userResult.rows[0];
-        const wallet = walletResult.rows[0] || { balance: 0 };
+        const wallet = walletResult.rows[0] || { balance: 0, total_earned: 0 };
+        const balance = parseFloat(wallet.balance) || 0;
         const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
+        const totalWithdrawn = parseFloat(withdrawnResult.rows[0]?.total || '0');
+        const pendingAmount = parseFloat(pendingResult.rows[0]?.total || '0');
+
+        // Coins = balance * 1000 (1000 coins = ₹1)
+        const totalCoins = Math.round(balance * 1000);
 
         return reply.send({
             ...user,
-            balance: parseFloat(wallet.balance) || 0,
-            total_coins: parseInt(wallet.total_coins || '0'),
+            balance,
+            total_coins: totalCoins,
             lifetimeEarnings,
+            totalWithdrawn,
+            pendingAmount,
             isEmailVerified: true
         });
     } catch (error) {

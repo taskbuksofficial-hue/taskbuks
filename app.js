@@ -160,6 +160,14 @@
             el.textContent = `₹${parseFloat(wallet.lifetimeEarnings || 0).toFixed(2)}`
         );
 
+        // Pending & Withdrawn amounts in wallet card
+        document.querySelectorAll('.user-pending-amount').forEach(el =>
+            el.textContent = `₹${parseFloat(wallet.pendingAmount || 0).toFixed(2)}`
+        );
+        document.querySelectorAll('.user-withdrawn-amount').forEach(el =>
+            el.textContent = `₹${parseFloat(wallet.totalWithdrawn || 0).toFixed(2)}`
+        );
+
         // Withdraw progress (min ₹100)
         const progressBar = document.getElementById('withdraw-progress-bar');
         const progressText = document.getElementById('withdraw-progress-text');
