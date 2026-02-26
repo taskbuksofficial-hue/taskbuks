@@ -34,19 +34,17 @@ export const getProfile = async (req: FastifyRequest, reply: FastifyReply) => {
 
         const user = userResult.rows[0];
         delete user.password_hash; // SECURITY: never expose password hash
-        const wallet = walletResult.rows[0] || { balance: 0, total_earned: 0 };
+        const wallet = walletResult.rows[0] || { balance: 0, total_earned: 0, total_coins: 0 };
         const balance = parseFloat(wallet.balance) || 0;
+        const totalCoinsEarned = parseInt(wallet.total_coins) || 0;
         const lifetimeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
         const totalWithdrawn = parseFloat(withdrawnResult.rows[0]?.total || '0');
         const pendingAmount = parseFloat(pendingResult.rows[0]?.total || '0');
 
-        // Coins = balance * 1000 (1000 coins = ₹1)
-        const totalCoins = Math.round(balance * 1000);
-
         return reply.send({
             ...user,
             balance,
-            total_coins: totalCoins,
+            total_coins: totalCoinsEarned,
             lifetimeEarnings,
             totalWithdrawn,
             pendingAmount,
@@ -297,7 +295,7 @@ export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
 
     try {
         await db.query(
-            'UPDATE wallets SET balance = balance + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3',
+            'UPDATE wallets SET balance = balance + $1, total_earned = total_earned + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3',
             [rupees, coins, userId]
         );
 
@@ -316,152 +314,6 @@ export const addCoins = async (req: FastifyRequest, reply: FastifyReply) => {
     }
 };
 
-export const handleAdGemPostback = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { player_id, amount, transaction_id } = req.query as { player_id: string, amount: string, transaction_id: string };
-    const query = req.query as any;
-
-    // Security Verification (Postback Hashing v2)
-    if (process.env.ADGEM_POSTBACK_KEY && query.verifier) {
-        try {
-            const protocol = req.headers['x-forwarded-proto'] || 'https';
-            const host = req.headers['host'];
-            const originalUrl = `${protocol}://${host}${req.url}`;
-
-            // AdGem says: remove verifier from the end of the URL
-            const urlToHash = originalUrl.split('&verifier=')[0];
-
-            const expectedSignature = crypto
-                .createHmac('sha256', process.env.ADGEM_POSTBACK_KEY)
-                .update(urlToHash)
-                .digest('hex');
-
-            if (expectedSignature !== query.verifier) {
-                console.warn("AdGem Postback: Signature mismatch");
-                return reply.status(401).send({ error: 'Invalid verifier' });
-            }
-        } catch (e) {
-            console.error("Verification failed", e);
-        }
-    }
-
-    if (!player_id || !amount) {
-        return reply.status(400).send({ error: 'Missing parameters' });
-    }
-
-    try {
-        await db.query(
-            'UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2',
-            [amount, player_id]
-        );
-        return reply.send({ success: true });
-    } catch (error) {
-        console.error("handleAdGemPostback error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
-
-export const handleCPXPostback = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { user_id, amount_local, trans_id, status, hash } = req.query as {
-        user_id: string,
-        amount_local: string,
-        trans_id: string,
-        status: string,
-        hash: string
-    };
-
-    console.log("CPX Postback received:", req.query);
-
-    // Basic status check
-    if (status !== 'qualified') {
-        return reply.send({ success: true, message: 'Status not qualified' });
-    }
-
-    if (!user_id || !amount_local) {
-        return reply.status(400).send({ error: 'Missing parameters' });
-    }
-
-    // Security check (if CPX_SECRET_KEY is provided)
-    if (process.env.CPX_SECRET_KEY && hash) {
-        const expectedHash = crypto
-            .createHash('md5')
-            .update(`${trans_id}-${process.env.CPX_SECRET_KEY}`)
-            .digest('hex');
-
-        if (expectedHash !== hash) {
-            console.warn("CPX Hash mismatch");
-            // return reply.status(401).send({ error: 'Invalid hash' });
-        }
-    }
-
-    try {
-        await db.query(
-            'UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2',
-            [amount_local, user_id]
-        );
-
-        // Log transaction
-        await db.query(
-            'INSERT INTO transactions (user_id, amount, description, type) VALUES ($1, $2, $3, $4)',
-            [user_id, amount_local, 'Survey Reward (CPX)', 'SURVEY']
-        );
-
-        return reply.send({ success: true });
-    } catch (error) {
-        console.error("handleCPXPostback error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
-
-export const getCPXSurveys = async (req: FastifyRequest, reply: FastifyReply) => {
-    const userId = (req as any).userId;
-    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
-
-    const appId = process.env.CPX_APP_ID || "31412"; // User provided App ID
-    const secretKey = process.env.CPX_SECRET_KEY;
-
-    if (!secretKey) {
-        console.warn("CPX_SECRET_KEY not set, cannot fetch surveys securely.");
-        return reply.send([]);
-    }
-
-    try {
-        // Generate Secure Hash: md5(ext_user_id + secret_key)
-        const secureHash = crypto
-            .createHash('md5')
-            .update(`${userId}-${secretKey}`)
-            .digest('hex');
-
-        const ipUser = req.ip; // Might need x-forwarded-for if behind proxy
-        const userAgent = req.headers['user-agent'] || '';
-
-        const url = `https://live-api.cpx-research.com/api/get-surveys.php?app_id=${appId}&ext_user_id=${userId}&output_method=api&ip_user=${ipUser}&user_agent=${encodeURIComponent(userAgent)}&limit=20&secure_hash=${secureHash}`;
-
-        console.log("Fetching CPX Surveys:", url);
-
-        const response = await fetch(url);
-        const data = await response.json() as any;
-
-        // DEBUG: Log CPX Response
-        console.log("CPX API Status:", response.status);
-        console.log("CPX API Response:", JSON.stringify(data).substring(0, 500)); // Log first 500 chars
-
-        if (Array.isArray(data)) {
-            return reply.send(data);
-        } else if (data.surveys) {
-            return reply.send(data.surveys); // CPX sometimes returns { surveys: [...] }
-        } else if (data.error || data.status === 'error') {
-            console.error("CPX API Error:", data.error || data.message || "Unknown Error");
-            return reply.send([]);
-        }
-
-        console.warn("CPX returned unexpected format:", JSON.stringify(data).substring(0, 100));
-        return reply.send([]); // Fallback empty array
-
-    } catch (error) {
-        console.error("getCPXSurveys error:", error);
-        return reply.status(500).send({ error: 'Internal Server Error' });
-    }
-};
 
 export const getTransactions = async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = (req as any).userId;
@@ -523,10 +375,11 @@ export const handleRapidReachPostback = async (req: FastifyRequest, reply: Fasti
             [userId]
         );
 
-        // Credit wallet
+        // Credit wallet (added total_earned and total_coins to fix vanishing history)
+        const coins = Math.round(amount * 1000);
         await db.query(
-            'UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2',
-            [amount, userId]
+            'UPDATE wallets SET balance = balance + $1, total_earned = total_earned + $1, total_coins = COALESCE(total_coins, 0) + $2, updated_at = NOW() WHERE user_id = $3',
+            [amount, coins, userId]
         );
 
         // Record transaction

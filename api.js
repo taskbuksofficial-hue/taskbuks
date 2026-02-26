@@ -136,10 +136,6 @@ window.api = {
         });
     },
 
-    // 8. Get CPX Surveys
-    async getSurveys() {
-        return await fetchJson('/api/surveys');
-    },
 
     // 9. Get Transactions
     async getTransactions() {

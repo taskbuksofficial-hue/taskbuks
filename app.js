@@ -246,32 +246,7 @@
         if (taskContainer) {
             const availableTasks = tasks.available || [];
 
-            // Handle Top Offer (Show the first AdGem offer as Top Offer)
-            const adgemOffer = availableTasks.find(t => t.type === 'adgem');
-            if (adgemOffer && topOfferContainer) {
-                topOfferContainer.innerHTML = `
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
-                                <img src="${adgemOffer.icon_url}" class="w-full h-full object-cover" alt="${adgemOffer.title}">
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-base dark:text-white leading-none">${adgemOffer.title}</h4>
-                                <p class="text-[10px] text-slate-400 mt-1">High-paying game</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-500 dark:text-gray-400 mb-4 leading-relaxed w-2/3">${adgemOffer.description}</p>
-                        <div class="flex items-center gap-2">
-                            <div class="bg-orange-500 text-white text-[11px] font-bold px-4 py-2 rounded-full shadow-lg shadow-orange-500/30">Start Earning ₹${adgemOffer.reward}</div>
-                            <span class="text-[10px] font-bold text-orange-500 animate-pulse">Hot 🔥</span>
-                        </div>
-                    </div>
-                    <div class="absolute right-[-10px] top-1/2 -translate-y-1/2 opacity-10">
-                         <img src="${adgemOffer.icon_url}" class="w-32 h-32 object-cover rounded-full grayscale" alt="decoration">
-                    </div>
-                `;
-                topOfferContainer.onclick = () => window.open(adgemOffer.link, '_blank');
-            }
+            // AdGem Top Offer removed
 
             if (availableTasks.length === 0) {
                 taskContainer.innerHTML = `<div class="w-full text-center py-8 text-slate-400 text-xs">No tasks available right now.</div>`;
@@ -279,7 +254,7 @@
                 taskContainer.innerHTML = availableTasks.map(task => {
                     const reward = task.reward || task.payout_amount || 0;
                     const subtitle = task.description || task.subtitle || "Complete this task";
-                    const bgColor = task.bg_color || task.bgColor || (task.type === 'adgem' ? 'bg-orange-500' : 'bg-indigo-500');
+                    const bgColor = task.bg_color || task.bgColor || 'bg-indigo-500';
                     const iconUrl = task.icon_url || task.icon;
 
                     return `
@@ -308,9 +283,7 @@
                         const id = btn.dataset.id;
                         const link = btn.dataset.link;
 
-                        if (id.startsWith('adgem_') && link) {
-                            window.open(link, '_blank');
-                        } else {
+                        if (id) {
                             console.log("Start Task Clicked:", id);
                             controller.startTask(id);
                             showToast("Task started! Check 'Ongoing'");

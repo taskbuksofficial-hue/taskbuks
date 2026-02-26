@@ -39,7 +39,7 @@ const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 
 import { register, login } from './controllers/authController';
-import { getProfile, updateProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, handleAdGemPostback, handleCPXPostback, getCPXSurveys, getTransactions, handleRapidReachPostback, addCoins, requestWithdrawal, getWithdrawalStatus, updateUpi } from './controllers/appController';
+import { getProfile, updateProfile, getOffers, getStreak, startTask, claimBonus, claimVideoReward, getTransactions, handleRapidReachPostback, addCoins, requestWithdrawal, getWithdrawalStatus, updateUpi } from './controllers/appController';
 
 // Auth Routes (Custom)
 server.post('/auth/register', register);
@@ -64,13 +64,9 @@ server.post('/api/reward/video', { preHandler: [authenticate] }, claimVideoRewar
 server.post('/api/coins/add', { preHandler: [authenticate] }, addCoins);
 
 // Postbacks (Public - S2S)
-server.get('/api/postback/adgem', handleAdGemPostback);
-server.get('/api/postback/cpx', handleCPXPostback);
 server.get('/api/postback/rapidreach', handleRapidReachPostback);
 server.get('/api/pb/rr', handleRapidReachPostback); // Short alias (< 100 chars)
 
-// Surveys (Protected)
-server.get('/api/surveys', { preHandler: [authenticate] }, getCPXSurveys);
 
 // Transactions (Protected)
 server.get('/api/transactions', { preHandler: [authenticate] }, getTransactions);
