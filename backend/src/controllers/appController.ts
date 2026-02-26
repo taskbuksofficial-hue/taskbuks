@@ -254,17 +254,31 @@ export const claimBonus = async (req: FastifyRequest, reply: FastifyReply) => {
 };
 export const claimVideoReward = async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = (req as any).userId;
-    const rewardAmount = 0.05; // 50 coins = ₹0.05 (50% of ₹0.10 ad revenue)
+    const bonusCoins = 50; // Watch Video = 50 Coins
+    const rewardAmount = bonusCoins / 1000; // 50 coins = ₹0.05
 
     try {
+        // 1. Credit Wallet
         await db.query(
-            'UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2',
-            [rewardAmount, userId]
+            `UPDATE wallets SET 
+                balance = balance + $1, 
+                total_earned = total_earned + $1,
+                total_coins = COALESCE(total_coins, 0) + $2,
+                updated_at = NOW() 
+             WHERE user_id = $3`,
+            [rewardAmount, bonusCoins, userId]
+        );
+
+        // 2. Log Transaction
+        await db.query(
+            `INSERT INTO transactions (user_id, amount, coins, description, type, status, created_at)
+             VALUES ($1, $2, $3, $4, 'BONUS', 'COMPLETED', NOW())`,
+            [userId, rewardAmount, bonusCoins, 'Watch & Earn (Video Reward)']
         );
 
         const walletRes = await db.query('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
 
-        return reply.send({ success: true, newBalance: walletRes.rows[0].balance });
+        return reply.send({ success: true, newBalance: walletRes.rows[0].balance, reward: bonusCoins });
     } catch (error) {
         console.error("claimVideoReward error:", error);
         return reply.status(500).send({ error: 'Internal Server Error' });

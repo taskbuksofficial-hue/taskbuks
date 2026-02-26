@@ -236,7 +236,8 @@ window.controller = {
                     wallet: {
                         ...s.wallet,
                         currentBalance: res.newBalance,
-                        totalCoins: (res.newBalance * 1000)
+                        totalCoins: s.wallet.totalCoins + res.reward,
+                        lifetimeEarnings: s.wallet.lifetimeEarnings + (res.reward / 1000)
                     },
                     transactions: [{
                         id: Date.now(),
@@ -342,10 +343,12 @@ window.controller = {
                 store.setState({
                     wallet: {
                         ...currentWallet,
-                        currentBalance: res.newBalance
+                        currentBalance: res.newBalance,
+                        lifetimeEarnings: currentWallet.lifetimeEarnings + (res.reward / 1000), // res.reward is coins
+                        totalCoins: currentWallet.totalCoins + res.reward
                     }
                 });
-                window.showToast(`Congrats! +50 coins (₹0.05) credited.`);
+                window.showToast(`Congrats! +${res.reward || 50} coins (₹${(res.reward || 50) / 1000}) credited.`);
             }
         } catch (error) {
             console.error("Video Reward failed:", error);
