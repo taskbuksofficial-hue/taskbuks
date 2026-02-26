@@ -198,6 +198,8 @@
         const statusBanner = document.getElementById('withdrawal-status-banner');
         if (statusBanner && withdrawal && withdrawal.hasWithdrawal) {
             const w = withdrawal.withdrawal;
+            if (!w) return; // Defensive check for old corrupted cache
+
             statusBanner.classList.remove('hidden');
 
             const icon = document.getElementById('withdrawal-status-icon');

@@ -435,8 +435,10 @@ window.controller = {
                 store.setState(s => ({
                     withdrawal: {
                         hasWithdrawal: true,
-                        ...res.withdrawal,
-                        createdAt: new Date().toISOString()
+                        withdrawal: {
+                            ...res.withdrawal,
+                            createdAt: new Date().toISOString()
+                        }
                     },
                     wallet: {
                         ...s.wallet,
