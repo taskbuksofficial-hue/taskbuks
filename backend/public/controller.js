@@ -9,6 +9,24 @@ const store = window.store;
 const api = window.api;
 
 window.controller = {
+    // Persist current store state to localStorage so coins survive app restarts
+    syncCache() {
+        try {
+            const s = store.getState();
+            const cacheData = {
+                user: s.user,
+                wallet: s.wallet,
+                tasks: s.tasks,
+                dailyStreak: s.dailyStreak,
+                transactions: s.transactions,
+                withdrawal: s.withdrawal
+            };
+            localStorage.setItem('tb_dashboard_cache', JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('syncCache failed:', e);
+        }
+    },
+
     // Login with Email/Pass
     async login(email, password) {
         try {
@@ -250,7 +268,8 @@ window.controller = {
                 }));
 
                 window.showToast(`Success! +${res.reward} coins credited.`);
-                this.loadDashboard(); // Refresh full state
+                this.syncCache(); // Persist coins to localStorage immediately
+                this.loadDashboard(); // Refresh full state from server
                 return res; // Return response for UI
             }
             return res;
@@ -371,6 +390,8 @@ window.controller = {
                 const creditedCoins = Number(res.reward) || rewardAmount;
                 applyRewardToState(creditedCoins, res.newBalance, 'Watch & Earn (Video Reward)');
                 window.showToast(`Congrats! +${creditedCoins} coins (₹${(creditedCoins / 1000).toFixed(2)}) credited.`);
+                this.syncCache(); // Persist coins to localStorage immediately
+                this.loadDashboard(); // Refresh full state from server
                 return res;
             }
             throw new Error(res?.error || "Video reward response invalid");
@@ -382,6 +403,8 @@ window.controller = {
                 if (fallbackRes && fallbackRes.success !== false) {
                     applyRewardToState(fallbackCoins, fallbackRes.newBalance, 'Watch & Earn (Video Reward)');
                     window.showToast(`Congrats! +${fallbackCoins} coins credited.`);
+                    this.syncCache(); // Persist coins to localStorage immediately
+                    this.loadDashboard(); // Refresh full state from server
                     return { success: true, reward: fallbackCoins, newBalance: fallbackRes.newBalance, fallback: true };
                 }
                 throw new Error(fallbackRes?.error || "Fallback reward failed");
@@ -455,7 +478,8 @@ window.controller = {
         });
         console.log('[Wallet] +' + coins + ' coins (₹' + rupees.toFixed(4) + ') | ' + description);
 
-        // Trigger re-render
+        // Persist coins to cache and trigger re-render
+        this.syncCache();
         if (window.render) window.render();
 
         // Server Sync

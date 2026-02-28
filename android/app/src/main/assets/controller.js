@@ -9,6 +9,24 @@ const store = window.store;
 const api = window.api;
 
 window.controller = {
+    // Persist current store state to localStorage so coins survive app restarts
+    syncCache() {
+        try {
+            const s = store.getState();
+            const cacheData = {
+                user: s.user,
+                wallet: s.wallet,
+                tasks: s.tasks,
+                dailyStreak: s.dailyStreak,
+                transactions: s.transactions,
+                withdrawal: s.withdrawal
+            };
+            localStorage.setItem('tb_dashboard_cache', JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('syncCache failed:', e);
+        }
+    },
+
     // Login with Email/Pass
     async login(email, password) {
         try {
@@ -236,7 +254,8 @@ window.controller = {
                     wallet: {
                         ...s.wallet,
                         currentBalance: res.newBalance,
-                        totalCoins: (res.newBalance * 1000)
+                        totalCoins: s.wallet.totalCoins + res.reward,
+                        lifetimeEarnings: s.wallet.lifetimeEarnings + (res.reward / 1000)
                     },
                     transactions: [{
                         id: Date.now(),
@@ -249,7 +268,8 @@ window.controller = {
                 }));
 
                 window.showToast(`Success! +${res.reward} coins credited.`);
-                this.loadDashboard(); // Refresh full state
+                this.syncCache(); // Persist coins to localStorage immediately
+                this.loadDashboard(); // Refresh full state from server
                 return res; // Return response for UI
             }
             return res;
@@ -273,8 +293,8 @@ window.controller = {
                 window.showToast("Loading Video Ad for 50 Coins...");
                 window.ads.showRewarded(async (amount) => {
                     if (amount > 0) {
-                        // Ad completed - claim daily bonus with fixed 50 coins
-                        const res = await this.claimDailyBonus(null, 50);
+                        // Ad completed - claim 50 coins (₹0.05)
+                        const res = await this.claimDailyBonus(null, 50); // fixed_reward = 50
                         resolve(res);
                     } else {
                         window.showToast("Ad not completed. Bonus cancelled.");
@@ -362,14 +382,16 @@ window.controller = {
                     type: 'credit'
                 }, ...(s.transactions || [])]
             }));
-        }
+        };
 
         try {
             const res = await api.claimVideoReward();
             if (res && res.success) {
                 const creditedCoins = Number(res.reward) || rewardAmount;
                 applyRewardToState(creditedCoins, res.newBalance, 'Watch & Earn (Video Reward)');
-                window.showToast(`Congrats! +${creditedCoins} coins credited.`);
+                window.showToast(`Congrats! +${creditedCoins} coins (₹${(creditedCoins / 1000).toFixed(2)}) credited.`);
+                this.syncCache(); // Persist coins to localStorage immediately
+                this.loadDashboard(); // Refresh full state from server
                 return res;
             }
             throw new Error(res?.error || "Video reward response invalid");
@@ -381,6 +403,8 @@ window.controller = {
                 if (fallbackRes && fallbackRes.success !== false) {
                     applyRewardToState(fallbackCoins, fallbackRes.newBalance, 'Watch & Earn (Video Reward)');
                     window.showToast(`Congrats! +${fallbackCoins} coins credited.`);
+                    this.syncCache(); // Persist coins to localStorage immediately
+                    this.loadDashboard(); // Refresh full state from server
                     return { success: true, reward: fallbackCoins, newBalance: fallbackRes.newBalance, fallback: true };
                 }
                 throw new Error(fallbackRes?.error || "Fallback reward failed");
@@ -454,7 +478,8 @@ window.controller = {
         });
         console.log('[Wallet] +' + coins + ' coins (₹' + rupees.toFixed(4) + ') | ' + description);
 
-        // Trigger re-render
+        // Persist coins to cache and trigger re-render
+        this.syncCache();
         if (window.render) window.render();
 
         // Server Sync
@@ -474,8 +499,10 @@ window.controller = {
                 store.setState(s => ({
                     withdrawal: {
                         hasWithdrawal: true,
-                        ...res.withdrawal,
-                        createdAt: new Date().toISOString()
+                        withdrawal: {
+                            ...res.withdrawal,
+                            createdAt: new Date().toISOString()
+                        }
                     },
                     wallet: {
                         ...s.wallet,
